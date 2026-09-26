@@ -302,9 +302,29 @@ ledger becoming useful to another contributor; distributed concurrent allocation
 conflict resolution and synchronization require a concrete multi-user use case.
 The current local ignored-ledger default is unchanged.
 
-Broader public distribution should support Linux, macOS and Windows with native
-CLI/frontend checks before claiming support. Versions, architectures and release
-channels are not yet a completed support matrix. Nix stays optional. An Emacs-first
-installer may explicitly offer a compatible CLI download when needed, respecting
-an explicitly configured executable. Manual binaries and source builds remain
-alternatives; no automatic installer or silent replacement is implemented.
+### Public installation direction (planned)
+
+The target is a normal Emacs package installation with package-managed setup of a
+compatible, precompiled Rust executable. On first use, Isled offers the download
+with a brief confirmation and completes setup inside Emacs. This timing works
+across package managers without downloading during package loading or compilation.
+Users should not need a checkout, Rust toolchain, manual CLI download or
+executable-path setup for the ordinary route. The two parts work as one product,
+while downloadable CLI binaries remain available for standalone use.
+
+Public distribution should support Linux, macOS and Windows, with native CLI and
+frontend checks before claiming support. Architectures, minimum OS versions,
+release/version compatibility, package archive and upgrade policy still need
+design. Reliable platform builds and versioned release artifacts must
+precede the package-managed installer and clean-system installation/upgrade checks.
+
+Deliver this as one sequence: release contract, native CI, versioned artifacts,
+archive preparation, Emacs-managed installation, clean-install/upgrade acceptance,
+then publication. Check archive constraints during the initial design, but complete
+archive preparation against real staged artifacts. This keeps each step grounded
+in the preceding result and leaves final acceptance to the integrated package.
+
+Nix stays optional. Respect explicitly configured executables and retain manual
+binaries and source builds as alternatives. The installer is not implemented;
+current installation instructions continue to describe the working source-based
+route until the packaged route is available.
