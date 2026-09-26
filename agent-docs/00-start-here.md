@@ -10,7 +10,8 @@ Read only the routes relevant to the change:
 - Cache architecture and performance: [cache design](cache-design.md).
 - Accepted rationale: [decisions](decisions.md) and [dependency view](dependency-graph-view.md).
 - User-facing CLI, storage and wire contracts: [user guide](../user-docs/README.md).
-- Emacs setup, behavior, code map and isolation: [frontend guide](../frontends/emacs/README.md).
+- Emacs setup and use: [frontend README](../frontends/emacs/README.md) and [user guide](../frontends/emacs/user-guide.md).
+- Emacs implementation, code map and isolated validation: [frontend contributor guide](../frontends/emacs/CONTRIBUTING.md).
 - Optional contributor tools: [script guide](../scripts/README.md) and [Rust navigation](rust-navigation.md).
 - Optional local release installation: [dogfooding](dogfooding.md).
 - Optional issue-ledger workflow: [ledger guidance](issue-ledger.md).

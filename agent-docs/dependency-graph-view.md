@@ -164,7 +164,7 @@ performance claims require measurements of both Rust and Emacs:
   keeps ordinary summaries free of edges and adds an explicit opt-in layout;
   fetching complete snapshots or every body to discover edges would undo the
   established loading boundary.
-- Reuse the [bounded loading model](../frontends/emacs/README.md#bounded-loading):
+- Reuse the [bounded loading model](../frontends/emacs/CONTRIBUTING.md#bounded-loading):
   one heading per issue, retained bodies by identity, and nearby expanded-body
   loading and presentation. Do not recompute the graph during scrolling or
   ordinary redisplay. Changes to graph membership/edges and direction can require

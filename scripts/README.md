@@ -17,7 +17,7 @@ in this directory. Python 3.9+ supports the core check/archive entry points.
 - `repository_files.py` supplies Git tracked-file/revision selection for those checks.
 - `test-contributor-checks.py` exercises the checks in disposable Git repositories,
   including initial commits, private files, missing links and source archives.
-- `package-emacs.py` produces the frontend source tar with its license, using
+- `package-emacs.py` produces the frontend source tar with its user/contributor guides, demo GIFs and license, using
   Python's portable tar writer. It takes the version from `isled-pkg.el` and does
   not copy compiled output or tests. `make -C frontends/emacs package` is a wrapper.
 
@@ -41,7 +41,7 @@ checks. They are not gates every contributor must run.
   Linux Xvfb display, using private state and process-identity checks. It requires
   Xvfb and Emacs with the scenario's explicit dependencies. Its process-lifecycle
   regressions are in `test-private-graphical-emacs.py`; product assertions stay in
-  frontend test scripts. [Frontend validation](../frontends/emacs/README.md#private-graphical-checks)
+  frontend test scripts. [Frontend validation](../frontends/emacs/CONTRIBUTING.md#private-graphical-checks)
   owns startup, result and cleanup requirements.
 - `emacs-preview.py` starts an interactive exact-jj-candidate preview on Linux with
   Bubblewrap, private HOME/XDG/server state and a disposable ledger. A personal

@@ -19,8 +19,12 @@ def main():
     temporary = destination.with_suffix(".tar.tmp")
     try:
         with tarfile.open(temporary, "w", format=tarfile.USTAR_FORMAT) as archive:
-            for path in [*sorted(frontend.glob("isled*.el")), frontend / "README.md", root / "LICENSE"]:
-                archive.add(path, arcname=f"{name}/{path.name}", recursive=False)
+            sources = [*sorted(frontend.glob("isled*.el")),
+                       *(frontend / doc for doc in ("README.md", "user-guide.md", "CONTRIBUTING.md")),
+                       *(frontend / "images" / image for image in ("hierarchy.gif", "filtering.gif"))]
+            for path in sources:
+                archive.add(path, arcname=f"{name}/{path.relative_to(frontend).as_posix()}", recursive=False)
+            archive.add(root / "LICENSE", arcname=f"{name}/LICENSE", recursive=False)
         temporary.replace(destination)
     finally:
         temporary.unlink(missing_ok=True)

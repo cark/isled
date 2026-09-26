@@ -143,7 +143,11 @@ frontends/emacs/
 ├── isled-auto-refresh.el # notification watches, timers, polling fallback
 ├── isled-pkg.el      # local package archive metadata
 ├── Makefile                   # reproducible local package archive
-├── README.md                  # installation, use, code map, validation
+├── README.md                  # illustrated introduction, installation, everyday use
+├── user-guide.md              # full interaction and customization reference
+├── CONTRIBUTING.md            # validation, package building, code map, recording
+├── demo/record.el             # isolated fictional-ledger recording
+├── images/                    # README demonstration GIFs
 └── test/                      # focused ERT tests, wire fixture, resettable recovery demo
 
 skills/
@@ -407,7 +411,7 @@ symbolic Open/Closed/All defaults remain supported. Query parsing/status rewriti
 shared completion context and live prompt lifetime have separate focused modules.
 Three small adapters own inline suggestions, a recursive token picker, and
 whole-query minibuffer suggestions; the prompt captures the selected interface
-once per invocation. See the [frontend code map](../frontends/emacs/README.md#code-map). Rust receives parsed criteria retained through prompt acceptance and request queuing;
+once per invocation. See the [frontend code map](../frontends/emacs/CONTRIBUTING.md#code-map). Rust receives parsed criteria retained through prompt acceptance and request queuing;
 noninteractive loading parses its destination filter at the queue boundary. Normal loading
 owns coalescing and generations; history and duplicated views retain the complete
 query through the existing opaque view state.
@@ -445,8 +449,8 @@ a layout fixed point before redisplay; background preparation stays incremental.
 and typed diagnostics independently of section positions and folding.
 `isled-auto-refresh.el` still owns notification watches and fallback,
 now scheduling asynchronous refresh. The
-[frontend guide](../frontends/emacs/README.md#bounded-loading) owns sequencing and
-[automatic refresh](../frontends/emacs/README.md#automatic-refresh) owns watch
+[frontend guide](../frontends/emacs/CONTRIBUTING.md#bounded-loading) owns sequencing and
+[automatic refresh](../frontends/emacs/CONTRIBUTING.md#automatic-refresh) owns watch
 behavior. Markdown View supplies properties in an isolated temporary buffer;
 Rust's typed coordinates supply compact references without semantic reparsing.
 Each canonical ledger root owns a shared session and independently named view

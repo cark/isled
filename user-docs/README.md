@@ -135,11 +135,12 @@ interface, not a replacement for focused CLI queries.
 
 The [Emacs getting-started guide](../frontends/emacs/README.md#getting-started)
 explains the default `C-x p i` shortcut and expandable issue views. See
-[issue filtering](../frontends/emacs/README.md#issue-filtering) for query syntax,
-examples, and completion choices, [appearance customization](../frontends/emacs/README.md#theme-and-identity-styling)
-for colors and fonts, or [key binding configuration](../frontends/emacs/README.md#key-binding)
-to change the shortcut. The frontend guide also owns navigation, refresh,
-installation, and package validation.
+[issue filtering](../frontends/emacs/user-guide.md#issue-filtering) for query syntax,
+examples, and completion choices, [appearance customization](../frontends/emacs/user-guide.md#theme-and-identity-styling)
+for colors and fonts, or [key binding configuration](../frontends/emacs/user-guide.md#key-binding)
+to change the shortcut. The frontend user guides also cover navigation, refresh
+and installation. Package validation lives in the
+[frontend contributor guide](../frontends/emacs/CONTRIBUTING.md#validation).
 
 ## Issue lifecycle and integrity
 

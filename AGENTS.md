@@ -13,7 +13,7 @@ Read [compatibility](agent-docs/parity-contract.md) for CLI, storage, error or
 wire changes; [module ownership](agent-docs/code-organization.md) when boundaries
 change; and [refactoring](agent-docs/refactoring.md) before refactors.
 
-Automated Emacs checks use the [isolated validation procedure](frontends/emacs/README.md#validation).
+Automated Emacs checks use the [isolated validation procedure](frontends/emacs/CONTRIBUTING.md#validation).
 Never run tests against a working daemon or real issue ledger. Preserve unrelated
 changes and unsaved work. Publishing, installed-tool replacement and issue closure
 require the applicable maintainer or consuming-project authorization.

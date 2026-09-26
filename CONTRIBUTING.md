@@ -89,7 +89,7 @@ The same entry point runs ERT against the selected CLI using temporary ledgers.
 Alternatively set `ISLED_CHECK_LOAD_PATH` to explicit dependency directories,
 separated by the platform's PATH separator. The optional Nix shell supplies those
 packages automatically; `make -C frontends/emacs check` calls the same runner.
-See [frontend validation](frontends/emacs/README.md#validation) for optional graphical
+See [frontend validation](frontends/emacs/CONTRIBUTING.md#validation) for optional graphical
 checks and isolation requirements. Never run this runner through a working daemon.
 
 ## Optional tooling
@@ -97,7 +97,7 @@ checks and isolation requirements. Never run this runner through a working daemo
 - [Nix environment and source filtering](scripts/README.md#source-boundary).
 - [Maintainer jj validation/promotion](agent-docs/dogfooding.md).
 - [Rust semantic navigation](agent-docs/rust-navigation.md).
-- [Frontend source archive](frontends/emacs/README.md#package-archive).
+- [Frontend source archive](frontends/emacs/CONTRIBUTING.md#package-archive).
 
 Public documentation and checks must remain independent of those optional workflows
 and private state. Keep root metadata, help, skill, code maps and user documentation

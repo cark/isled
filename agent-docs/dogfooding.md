@@ -31,7 +31,7 @@ and installed behavior after an authorized installation or rollback. Configure a
 stable launcher locally; no workstation path is part of the public procedure.
 
 Emacs checks compile into temporary directories. Loading or installing an accepted
-frontend is separate from CLI promotion; follow the [source-loading guide](../frontends/emacs/README.md#local-configuration)
+frontend is separate from CLI promotion; follow the [source-loading guide](../frontends/emacs/user-guide.md#local-configuration)
 and preserve any active user session. Do not let stale bytecode shadow source.
 
 ## Input-scoped evidence reuse

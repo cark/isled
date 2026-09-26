@@ -202,7 +202,7 @@ Retain content by stable ID/hash while recomputing membership after filtering or
 updates. Reject obsolete membership and preserve the destination when possible.
 Batch missing detail requests through the shared queue, then present incrementally
 with visible work first; do not eagerly format all replies in one callback.
-The [frontend guide](../frontends/emacs/README.md#bounded-loading) owns current bounds
+The [frontend guide](../frontends/emacs/CONTRIBUTING.md#bounded-loading) owns current bounds
 and behavior. The chosen lookahead is a responsiveness policy, not a hard guarantee
 for arbitrary issue body sizes or machines.
 

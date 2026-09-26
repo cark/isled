@@ -276,7 +276,7 @@ for large ledgers and update the [module map](code-organization.md) when ownersh
 Use the [contributor commands](../CONTRIBUTING.md#validation) and the
 [workflow's evidence-reuse rules](workflow.md#validation-scope). The size checker
 reports a review signal only; a below-threshold file still needs cohesion review.
-Emacs static/ERT checks run in isolation under the [frontend validation contract](../frontends/emacs/README.md#validation).
+Emacs static/ERT checks run in isolation under the [frontend validation contract](../frontends/emacs/CONTRIBUTING.md#validation).
 Optional Nix and maintainer-helper gates apply when their inputs change. Core
 contribution does not require jj, local release receipts or installed dogfood tools.
 
@@ -285,7 +285,8 @@ contribution does not require jj, local release receipts or installed dogfood to
 | Knowledge | Owner |
 | --- | --- |
 | CLI use, storage and wire formats | `user-docs/`, with exact syntax in CLI help |
-| Emacs behavior, setup, validation and code map | `frontends/emacs/README.md` |
+| Emacs setup and user behavior | `frontends/emacs/README.md` and `frontends/emacs/user-guide.md` |
+| Emacs implementation, code map and validation | `frontends/emacs/CONTRIBUTING.md` |
 | Compatibility guarantees and change policy | `agent-docs/parity-contract.md` |
 | Accepted rationale and design constraints | `agent-docs/decisions.md` and focused design pages |
 | Contributor rules, architecture and optional operations | The corresponding routed project guide |
