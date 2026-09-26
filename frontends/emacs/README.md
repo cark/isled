@@ -90,8 +90,8 @@ If there is no ledger, Isled offers to create one, open an existing parent ledge
 or cancel. It creates files only when you choose **Create ledger here**.
 A new view shows open issues in a dependency hierarchy.
 
-`C-x p i` means Control-x, then `p`, then `i`. The shortcut is installed only if
-that key is free; `M-x isled-open-project` is always available.
+The `C-x p i` shortcut is installed only if that key is free;
+`M-x isled-open-project` is always available.
 
 <a id="opening-projects-and-directories"></a>
 
@@ -113,8 +113,8 @@ explains parent ledgers, view reuse and duplication.
 | `?` | Show commands and keys. |
 | `q` | Quit the view. |
 
-Use ordinary arrow keys, `C-n` and `C-p` to move through text. Some modified Tab
-keys depend on terminal support; all commands are also available through `M-x`.
+Some modified Tab keys depend on terminal support; all commands are also
+available through `M-x`.
 
 <a id="dependency-graph-view"></a>
 
