@@ -1,7 +1,7 @@
 # Emacs user guide
 
 Start with the [README](README.md) for installation and a short tour. This guide
-covers browsing, editing and configuration in more detail.
+covers everyday use, then the options for making Isled feel at home in your setup.
 
 - [Projects and independent views](#opening-projects-and-directories)
 - [Navigation, folding and source files](#navigation-and-folding)
@@ -14,314 +14,266 @@ covers browsing, editing and configuration in more detail.
 
 ## Opening projects and directories
 
-| Command | Location selection |
+| Command | Open |
 | --- | --- |
-| `isled` | Current Emacs project root, otherwise current directory; no chooser. |
-| `isled-open-project` (`C-x p i`) | Always choose, defaulting to the current project. |
-| `isled-open-directory` | Choose any existing local directory; no project registration. |
+| `isled` | The current project's ledger, or the current directory's ledger outside a project. |
+| `isled-open-project` (`C-x p i`) | A project chosen from Emacs's known projects. You can also enter a directory. |
+| `isled-open-directory` | Any existing local directory, without registering it as a project. |
 
-Only the project command has a default key. The project chooser uses Emacs's
-known project roots and permits entering a directory; it does not scan their
-ledgers to populate completion. Directory entry requires no Git project or
-project history. Remote directories and symlinked `.issues` stores are unsupported;
-symlinked paths to a project resolve to its canonical location.
+The project chooser lists known roots without scanning their ledgers. A directory
+needs neither Git nor project history. Remote directories and symlinked `.issues`
+stores are unsupported; a symlink to a project resolves to its canonical location.
 
-If the selected location has no ledger, choose Open parent ledger (the default
-when present), Create ledger here, or Cancel. Prompts show the actual paths. When
-no parent exists, choose Create or Cancel. Creation happens only after explicitly
-choosing Create, using the CLI's existing `init` behavior, including `.gitignore`.
-The asynchronous command reports failure without retrying it. If you move away
-before successful creation finishes, it reports completion without redirecting
-you; invoke the entry command again when ready.
+### Choosing a ledger
 
-View reuse follows the selected location. Two projects or directories using the
-same parent ledger share data but keep independent filters, folds and positions.
-Selecting a project's exact root through either chooser reuses the same context;
-plain entry returns to its most recently used view. A parent choice is remembered
-while a view for that context remains open, not saved as a permanent association.
-If a local ledger appears meanwhile, choose between it and the retained parent.
-Existing views keep their original ledger until explicitly replaced or closed.
+If the location has no ledger, Isled offers **Open parent ledger**, **Create ledger
+here**, or **Cancel**. The parent is the default when one exists. Each choice shows
+its path, so you can decide where the issues belong.
 
-Inside a view, `isled` stays there. Both chooser commands still prompt and default
-to that view's selected location, including when it uses a parent ledger.
-A prefix argument creates another view: copy that location's most recent view's
-filters, folds and position if available, otherwise start Open with issues
-collapsed. `C-u M-x isled` inside a view duplicates that specific view, as does
-`isled-duplicate-view`. Duplication selects a sensible
-split, first using the preferred split function, then retrying with automatic
-display thresholds relaxed. Minimum window sizes still apply; if neither split
-fits, the duplicate uses the invoking window. Global split settings are unchanged.
-Ordinary window splitting continues to display the same shared view buffer.
-Refreshing any view updates the others while preserving their own filters.
-Closing a window keeps its view available; kill the buffer to discard it.
+Choosing Create runs `isled init`, including its `.gitignore` setup. If creation
+fails, Isled reports the error. If you leave before it finishes, completion does
+not pull you back: run an opening command again when ready.
+
+Isled remembers your parent-ledger choice while a view for that location remains
+open. If a local ledger appears later, it offers a choice between the two.
+Existing views keep their ledger until you replace or close them.
+
+### Keeping separate views
+
+Each selected project or directory has its own filters, folds and position, even
+when several use the same parent ledger. Opening the same location returns to
+its most recently used view. Selecting a project's exact root through either
+chooser uses that same set of views.
+
+Inside a view, `isled` stays there. The chooser commands still prompt, using the
+view's selected location as their default.
+
+Use a prefix argument to open another view. It copies the location's most recent
+view, or starts with Open issues collapsed if there is none. Inside a view,
+`C-u M-x isled` and `isled-duplicate-view` duplicate that particular view.
+
+The duplicate opens in a split when space permits, otherwise in the current
+window. Ordinary window splitting displays the same view buffer: its filters
+and folds remain shared. Use duplication when you want to browse independently.
+
+Refreshing one view updates the others without replacing their filters. Closing
+a window leaves its view available; killing the buffer discards it.
 
 ## Navigation and folding
 
-Press `j` (`isled-jump-to-issue`) to choose a readable issue by ID or title from
-this ledger, including closed issues and issues hidden by the active filter.
-Completion shows titles and status through the configured minibuffer framework;
-short numeric IDs with an optional `#` are accepted too. Choosing an issue reveals
-and expands it through the shared navigation API. `M-,` restores the starting
-filter and position. Canceling or entering an unknown ID leaves the view alone.
-The metadata request is asynchronous; moving away before it returns cancels the
-prompt. This command does not select a different ledger or create issues.
+| Key | Action |
+| --- | --- |
+| `TAB` / `S-TAB` | Move between issue headings and links or buttons in expanded issues. |
+| `C-TAB` / `C-S-TAB` | Move directly to the next or previous issue heading, without wrapping. |
+| `RET` | Expand or collapse the current issue, or activate the target at point. |
+| `C-RET` | Collapse every issue in this view. |
+| `j` | Find an issue by ID or title. |
+| `M-.` | Follow the issue reference at point. |
+| `M-,` / `C-M-,` | Go back or forward through issue navigation. |
 
-Expanded issues with Rust-generated relation diagnostics show a compact
-theme-aware `Warnings` section above their stored content. This generated block
-and its indentation do not use the expanded issue body's background; stored
-content retains its usual background. Controls and gutter remain unchanged.
-These are local checks, not a whole-ledger audit. Related existing IDs use
-normal issue navigation and history; absent IDs are non-actionable. Generated
-warnings are separate from canonical content and disappear after a fresh payload
-no longer reports them. Rust automatically corrects stale copied titles before
-rendering; no relation is silently added or removed. Missing mirrors offer
-`[Complete relation] [Remove relation]` on both endpoints. Completion prompts
-for a reason if only the Blocking half survives. Missing targets offer
-`[Remove relation]`. Either surviving half still blocks readiness when its
-blocker is unresolved or unavailable.
+Modified Tab keys depend on terminal support. All commands can be rebound;
+see the [key binding reference](#key-binding).
 
-Unreadable files appear separately with the actual error and
-`[Open file] [Move to trash]`, also available beneath related warnings.
-The ledger-wide list occupies a conditional `Ledger warnings` area above the
-issues, using a theme-aware `header-line`-derived background distinct from the
-expanded-body face. Two uncolored left margin columns precede two columns of
-inner padding; wrapped lines keep that inset. An uncolored blank row above the
-area, blank inner rows above and below,
-and an uncolored separator keep it distinct from the issue list. No area or
-spacing is inserted when there are no ledger-wide diagnostics. This presentation
-does not change warning scope or recovery actions.
-Diagnostic details and their controls are inset two further columns beneath
-`Ledger warnings`, including wrapped lines, without shifting the background.
-Opening uses an ordinary editable file buffer; trashing confirms the exact
-path and refuses non-regular files or symlinks. Relations remain until explicitly
-removed. Buttons use the same TAB/S-TAB,
-RET, and mouse navigation as links. After a successful action, point lands on
-a remaining warning in the same issue (next in order when available, otherwise
-the last), or its heading when none remain. A ledger-level action instead lands
-on the next available recovery control or the start of the view. Failures keep
-the current view and report the error.
+### Finding and following issues
 
-Refresh retains issue-relative screen anchors rather than obsolete absolute
-buffer positions. Action refresh prefers the affected issue's heading as its
-anchor. Keeping that issue at the same screen position is best effort: buffer
-bounds and keeping point visible take precedence; no blank rows are invented
-above the beginning of the buffer. Ordinary notification refresh uses the same
-anchoring so the follow-up filesystem event does not undo the position.
+Press `j` (`isled-jump-to-issue`) to search the current ledger by ID or title.
+Completion includes closed issues and issues outside your filter. Short IDs,
+with or without `#`, work too. Selecting an issue reveals and expands it;
+canceling or entering an unknown ID leaves the view unchanged.
 
-`TAB` and `S-TAB` move between issue headings and
-actionable targets in expanded bodies. `C-TAB` and `C-S-TAB` move directly to the
-next or previous issue
-heading, skipping links and the rest of the containing issue without wrapping.
-These distinct key events target graphical Emacs; terminal support varies.
-Cursor keys retain ordinary character-precise movement.
-`RET`, `M-.`, and mouse-2 select and expand an
-existing referenced issue in the same buffer, switching the open/closed filter
-when required, retaining All when active. `M-.` is issue-reference-only and reports when point is not on
-one. These jumps use semantic history belonging to each window/view pair: `M-,` goes back,
-`C-M-,` goes forward, and a new issue jump after going back discards the
-forward branch. History restores the opaque filter view, including selection,
-expansion, and issue-relative point, through the same boundary used by filter
-memory; refreshed or removed issues therefore use its normal restoration
-fallbacks. Other Markdown file navigation remains in Emacs's buffer history.
-Routing adds no global xref or mark entries; link callers retain their own
-ordinary history behavior.
-Back/Forward restores the saved filter and folds in the shared view buffer,
-affecting all windows displaying it; other windows retain their semantic
-positions where possible and keep their own histories. Navigation memories
-survive ordinary buffer switches and are detached when a window or view dies.
-Delayed navigation applies only while its originating window still displays
-the view at the expected point, and never steals focus from another window.
-Markdown links resolve relative to the canonical issue file. Plain local issue
-file targets use [issue-file routing](#opening-issue-files); other targets retain
-Markdown's normal behavior. Missing issue references remain non-actionable. Away
-from a target, `RET` toggles the containing issue. `C-RET` collapses all issues
-in the current view; there is no expand-all menu action. `n` and `p` no longer
-navigate. Explicit `M-x isled-open` still opens the record read-only.
-Explicit toggles and issue-reference jumps make a best-effort, minimal scroll
-adjustment in the invoking window to show the expanded issue. If the issue is
-taller than the window, point stays visible and takes priority over showing the
-whole body. Fitting uses Emacs display geometry, including wrapped lines, and
-does not move point or adjust other windows. If details arrive later, fitting
-is retried only while the originating window still shows this view with unchanged
-point and scroll position; navigating away cancels fitting, not body delivery.
-When automatic fitting changes that window's viewport, folding the same issue
-restores its original pre-fit viewport while point and scroll remain unchanged.
-Delayed body delivery and further automatic fits retain that first viewport.
-Any intervening point movement or scrolling, including moving away and back,
-cancels restoration, as do full refresh, filter change and window resize. Point
-visibility and buffer bounds take precedence over exact restoration. Fitting and
-restoration remain per-window even though folds are shared by a view buffer.
-Filter previews and history restoration retain their existing positioning.
+Follow an issue reference with `RET`, `M-.` or mouse-2. A target already in the
+results keeps the current query. A target outside them opens its status view
+without the other filter constraints. An All view stays All. Missing references
+cannot be followed.
 
-Each window/view pair remembers, per filter, only its most recently collapsed issue and issue-relative
-cursor position. Expanding that issue again restores point, clamped if its body
-has shortened after refresh. Collapsing another issue replaces that filter's
-memory; `C-RET` clears only the active filter's memory. This is window/view-local
-filter memory, independent of jump history, not a per-issue position cache.
-Matching row identities are updated in place during refresh and detail delivery.
-Unchanged bodies and their presentation are retained, preserving external markers
-and avoiding repeated Markdown work. Structural membership or ledger-diagnostic
-changes rebuild the list and use the established semantic anchor restoration.
+Use `M-,` to return to your previous query, folds and position. `C-M-,` moves
+forward again; following a new reference after going back replaces the forward
+history. Each window and view has its own history, which survives buffer switches.
+Other Markdown links use Emacs's normal navigation history.
+
+Windows showing the same view share its query and folds, so restoring history
+changes those in every such window. Their cursor positions are preserved where
+possible, and their histories remain separate. If you move away while a jump is
+loading, the delayed result will not take over another window or move you back.
+
+### Reading expanded issues
+
+Opening an issue scrolls just enough to show its details when possible. If the
+body is taller than the window, keeping point visible takes priority. Folding
+it again restores the earlier viewport if you have not moved or scrolled since
+opening it. Refreshing, filtering or resizing also ends that restoration.
+
+For each filter, each window remembers the last issue you collapsed and your
+position inside it. Reopening that issue restores point. Collapsing a different
+issue replaces the memory; `C-RET` clears it for the current filter. This memory
+is separate from navigation history.
+
+Refresh tries to keep the same issue at the same screen position. Buffer limits
+and keeping point visible can require a small adjustment. Other windows keep
+their own positions even though the view's folds are shared.
+
+Warnings appear above an issue's stored content. See [Known warnings](#known-warnings)
+for their meaning and recovery actions.
 
 <a id="issue-search"></a>
 
 ### Opening issue files
 
-Opening a well-formed local `.issues/NNNN-name.md` file reveals and expands its
-issue in the target ledger's most recently used view. This includes ordinary
-`find-file`, other-window/frame variants, Markdown and Org file links, and
-agent-shell file links. Routing uses the window selected by the original open
-operation; it does not introduce another split. Other independent views keep
-their filters and browsing state. When the target is outside the current filter,
-normal issue navigation reveals it, and `M-,` restores the preceding filter,
-folds and position.
+Opening a valid local `.issues/NNNN-name.md` file normally reveals its issue in
+the ledger view. This works with `find-file`, its other-window and other-frame
+variants, and Markdown, Org and agent-shell file links.
 
-The originating buffer stays visible while Rust validates the complete record
-and canonical identity asynchronously. A successful route opens the ledger view
-without visiting or creating a Markdown file buffer. Invalid records or
-validation/executable failures use the original file-opening command and show a
-brief explanation. Opening never initializes a ledger. Moving away, editing the
-origin, opening another file, or changing the destination view cancels stale
-navigation. Existing modified issue-file buffers open as Markdown with their
-drafts intact; already open, unmodified file buffers are preserved.
+Isled uses the target ledger's most recent view and the window chosen by the
+original open command. It adds no extra split. If the issue is outside that
+view's filter, navigation reveals it; `M-,` returns to the previous view state.
+Other independent views keep their filters and folds.
 
-For agent-shell links, ledger views use `agent-shell-file-display-action` when
-available, including its no-display setting; standalone agent-shell Markdown
-uses the current window. Its path-based file callback is used for source links
-and validation fallback. Org retains application selection and its configured
-standard file-window/frame command. Recognized opens complete asynchronously;
-callers needing a file buffer must continue to use `find-file-noselect`.
+While Isled checks the record, the originating buffer stays visible. A successful
+check opens the issue view without creating a Markdown buffer. If validation or
+the CLI fails, the original file-opening command runs with a brief explanation.
+Opening a file never creates a ledger.
 
-Explicit source-line destinations (including agent-shell line/column arguments)
-and fragment links such as `issue.md#statement` retain the caller's normal
-Markdown navigation. Remote files and symlinks, including symlinked ancestor
-directories, never route. Background `find-file-noselect` calls still return
-ordinary file buffers; arbitrary third-party display functions need their own
-adapter. The `s` action and explicit source/recovery commands always open source.
+Some opens deliberately stay in Markdown:
 
-Routing is enabled by `isled-setup`. Disable it at any time with:
+- Files with unsaved edits in an existing buffer.
+- Links to a source line, column or fragment such as `issue.md#statement`.
+- Remote files and paths containing symlinks.
+- Explicit source and recovery actions, including `s`.
+
+Moving away, editing the originating buffer, opening another file or changing
+the destination view cancels a pending jump. Existing file buffers are preserved.
+
+Agent-shell links honor `agent-shell-file-display-action`, including no-display;
+standalone agent-shell Markdown uses the current window. Org keeps its application
+selection and configured file-opening command.
+
+Routing is enabled by `isled-setup`. To disable it:
 
 ```emacs-lisp
 (setq isled-file-routing nil)
 ```
 
+For Lisp integrations, `find-file-noselect` still returns an ordinary file buffer.
+Recognized display commands route asynchronously; other display functions need
+an adapter.
+
 ### Open Markdown source
 
-Press `s` in an issue heading or body, or choose **Markdown source** under **Read** in
-`?`, to visit that issue's canonical file in the current window.
-The action uses `switch-to-buffer` and does not split the window. The command
-`isled-open-source` is also available for personal bindings, for example
-`(keymap-set isled-mode-map "s" #'isled-open-source)`.
-The Transient menu closes before the file is displayed.
+Press `s` (`isled-open-source`), or choose **Markdown source** under **Read** in
+`?`, to open the current issue's file in the same window. This always opens
+Markdown, even when automatic file routing is enabled.
 
-Existing file buffers retain their point, unsaved edits and read-only state.
-A newly visited file starts at its heading. Malformed source opens normally for
-repair; a missing or renamed file reports that source is unavailable without
-creating an empty file. Away from an issue, the command reports “No issue at
-point”. File permission errors and read-only files use ordinary Emacs behavior.
-Saving uses normal Emacs file saving; existing issue-view notifications and
-refresh pick up the result. The action does not save, repair or validate content.
+Existing buffers keep their point, unsaved edits and read-only state. A newly
+visited file starts at its heading. Malformed files open for repair; a missing
+or renamed file reports that source is unavailable without creating an empty file.
 
-Use the structured editor (`e`) for validated field edits. The source command
-always opens Markdown, even when automatic issue-file routing is enabled.
+Save normally to let the issue view pick up your changes. Source editing does
+not validate or repair the record for you. Use `e` for validated field edits,
+or `M-x isled-open` to open the record read-only.
 
 ## Add, edit and close issues
 
-Use `a` (`isled-add-issue`) for a new draft and `e` (`isled-edit-issue`) for the
-issue at point. The editor uses a separate split, respects `display-buffer-alist`,
-and reuses an existing draft of the same issue across ledger views. New drafts
-start at Title, are independent and receive an ID only on a successful save. The usual header
-shows ledger/issue identity, draft state and a persistent Help hint. It marks
-unsaved drafts, failed saves and changes on disk without taking over the keys.
-Statement starts with at least three display lines and grows with its content;
-its extra display space does not add whitespace to the issue.
+Press `a` (`isled-add-issue`) for a new draft or `e` (`isled-edit-issue`) to edit
+the issue at point. The editor opens in a separate split and respects
+`display-buffer-alist`. Editing the same issue from another view reuses its draft.
 
-Editable fields have customizable `isled-editor-field` and
-`isled-editor-active-field` faces with contrasting light/dark colors and visible
-blank field space. Separate tags with spaces or commas (for example, `hello coucou` or
-`hello, coucou`). Empty Kind and Tags fields offer existing ledger values on TAB.
-Errors are selectable, copyable protected text outside field values; labels remain
-protected while ordinary cursor movement and copying remain available. Edit title, kind, tags, Statement,
-Evidence entries, Outcome and dependencies in either direction. Kind/tag
-completion accepts new valid names. Use `#` for issue completion in Title,
-Statement, Evidence and Outcome; accepting an ID ends that reference so following
-spaces and prose do not restart it. Adding Evidence or a relation focuses the new entry. Removing an entry stays
-on a neighbor, or its section’s Add button when none remain. Re-rendering retains
-the current field and offset when it still exists.
-Field text uses a consistent normal weight; the active background indicates focus. Outer Statement whitespace is trimmed for validation and saving; internal
-Markdown whitespace remains intact. Repeated tags save once, in first-occurrence
-order, and completion omits tags already entered. Empty Evidence saves as Pending.
-Ordinary editing never closes an issue; status is informational.
+New drafts are independent and receive an ID only after a successful save. The
+header shows the ledger, issue and draft state, including unsaved edits, failed
+saves and changes on disk.
 
-- `C-x C-s`: save and keep editing.
-- `C-c C-c`: save and return to the issue in the ledger.
-- `C-c C-k`: cancel unsaved edits after confirmation; earlier saves remain.
-- `C-TAB` / `C-S-TAB`: next/previous field or button; commands can be rebound.
-- `TAB`: completion, or indentation in multiline bodies; it never inserts a tab
-  into a single-line field. `C-c ?`: Transient help below the selected editor
-  window, with the same placement and dismissal behavior as ledger help.
-- Revert draft: reload the saved issue, or reset a new draft after confirmation.
+### Working with fields
 
-Rust validates after `isled-editor-validation-delay` idle seconds without
-publishing or allocating. Errors appear beside fields without entering issue
-text; old replies cannot replace newer edits. Failed saves leave point and scroll
-context in place, show a brief minibuffer explanation and retain a header marker.
-Use Next error in Help to move explicitly to a diagnostic. A stale save offers
-Compare, Revert (reload) and confirmed Overwrite in Help; it does not open the
-menu automatically. Save rechecks under the ledger lock. Overwrite checks
-that the confirmed version has not changed again. Modified Markdown source
-buffers must be dealt with before a structured save; they are never auto-reverted.
-Uncertain or partial saves preserve the draft and require inspecting/reconciling
-saved state before retrying, especially after creation.
+Edit the title, kind, tags, Statement, Evidence, Outcome and dependencies. Tags
+can be separated by spaces or commas. Repeated tags are saved once. Empty
+Evidence is saved as Pending; ordinary editing leaves status unchanged.
 
-Open drafts subscribe to the ledger's shared directory watch, including while no
-ledger view remains. After a coalesced notification (or the existing polling
-fallback), Rust checks the saved version. A difference marks Changed on disk;
-it never replaces the draft or advances its baseline. Failed checks are visible
-in the header. This follows the ledger's automatic-refresh setting and remains
-best effort; save-time version checking is authoritative.
+Statement grows as you type. Its extra display space is not saved as whitespace.
+Saving trims whitespace around the Statement while preserving Markdown whitespace
+within it. Field labels and validation messages stay outside the editable values.
 
-Issue completion matches IDs or titles in the current ledger; prose references
-insert `#NNNN` and do not create dependencies. Local Markdown link targets complete
-relative to the ledger root. Standard completion-at-point metadata supports stock
-Emacs, Corfu and Company without requiring those packages or changing preview
-visibility settings. On request, documentation shows up to 16 KiB of the selected
-local issue's Markdown; no web links are fetched.
+| Key or action | Result |
+| --- | --- |
+| `C-x C-s` | Save and keep editing. |
+| `C-c C-c` | Save and return to the issue in the ledger. |
+| `C-c C-k` | Cancel unsaved edits after confirmation; earlier saves remain. |
+| `C-TAB` / `C-S-TAB` | Move to the next or previous field or button. |
+| `TAB` | Complete a value, or indent multiline text. Never inserts a tab in a single-line field. |
+| `C-c ?` | Open editor help. |
+| **Revert draft** | Reload the saved issue, or reset a new draft after confirmation. |
 
-The [draft wire contract](../../user-docs/editor.md) owns Rust save semantics.
+Adding Evidence or a dependency focuses the new entry. Removing one leaves point
+on a neighbor, or on the section's Add button when no entries remain. Field faces
+are customizable through `isled-editor-field` and `isled-editor-active-field`.
 
-Use `c` (`isled-close-issue`) to prepare closure in the shared editor. Existing
-unsaved draft fields are retained. Point starts at Outcome, the header says
-Closing issue, and status shows Open → Closed until save succeeds. In this mode,
-`C-x C-s` saves and closes while staying; `C-c C-c` saves and closes then returns.
-Cancel leaves the saved issue open. Revert confirms discarding edits, reloads the
-saved fields, keeps closing intent and returns point to Outcome. After successful
-closure the buffer becomes an ordinary editor for the closed issue. Rust enforces
-Evidence/Outcome and stale-save rules before any publication.
+### Completion while editing
+
+`TAB` offers existing kinds and tags, including in empty fields, and accepts new
+valid names. Tag completion omits tags already entered.
+
+Type `#` in Title, Statement, Evidence or Outcome to complete an issue by ID or
+title. Selecting one inserts `#NNNN`; it does not create a dependency. Continue
+typing prose after the reference as usual. Local Markdown link targets complete
+relative to the ledger root.
+
+Completion works with stock Emacs, Corfu and Company. Optional documentation
+previews show up to 16 KiB of the selected local issue's Markdown; they do not
+fetch web links.
+
+### Validation and changes on disk
+
+After `isled-editor-validation-delay` idle seconds, Isled validates the draft
+without saving it or allocating an ID. Errors appear beside the relevant fields.
+Use **Next error** in Help to visit them. A failed save keeps your draft, point
+and scroll position, and marks the failure in the header.
+
+Open drafts watch for file changes even after the ledger view is closed. A change
+marks the draft **Changed on disk** without replacing your edits. Failed checks
+also appear in the header. The watch follows `isled-auto-revert`; saving always
+checks the current file version, even when automatic checks are unavailable.
+
+If the saved issue has changed, Help offers:
+
+- **Compare** to inspect the differences.
+- **Revert** to reload the saved version.
+- **Overwrite** to confirm replacing that version with your draft.
+
+Overwrite checks again that the version you confirmed has not changed. Resolve
+unsaved edits in a Markdown source buffer before saving through the structured
+editor; Isled never reverts those buffers for you.
+
+If a save reports an uncertain or partial result, inspect the saved record before
+retrying. This is especially important after creating an issue: it may already
+have an ID. The draft remains available while you reconcile the result.
+
+### Closing an issue
+
+Press `c` (`isled-close-issue`) to prepare closure. Existing draft edits are kept,
+point moves to Outcome, and the header shows **Closing issue**. Status remains
+**Open → Closed** until the save succeeds.
+
+Add concrete Evidence and an Outcome, then save. `C-x C-s` closes the issue and
+keeps the editor open; `C-c C-c` closes it and returns to the ledger. Closure is
+terminal. Canceling the closing draft leaves the saved issue open.
+
+Revert reloads the saved fields after confirmation, keeps the intent to close,
+and returns to Outcome. After successful closure, the buffer becomes an ordinary
+editor for the closed issue.
+
+For the exact validation and save rules, see the [editor contract](../../user-docs/editor.md).
+
 ## Issue filtering
 
-Press `f` (or use Filter issues in `?`) to edit the complete current query in
-the minibuffer. Initially Open prefills `s:open `, Closed prefills `s:closed `,
-and All has no status term. Filtering combines all terms with AND:
+Press `f` to edit the current query. Results update as you type. `RET` keeps the
+query; `C-g` restores the previous query and position. Incomplete or invalid input
+leaves the last valid results visible until you finish it.
 
-- `t:rust` requires the tag; `k:bug` requires the kind.
-- `s:open` or `s:closed` sets status. In manually typed queries the last status
-  term wins. Selecting a status through completion replaces all status terms,
-  keeping other terms in their original order. No status term means both statuses;
-  there is no `s:all`.
-- Ordinary words match case-insensitively anywhere in the complete Markdown
-  record, including title, Statement, Evidence, Outcome and relation reasons.
-  Words may occur in different sections. `"two words"` matches a literal phrase.
-- Recognized unquoted prefixes always mean filters. Quote `"t:rust"` or `"t:"`
-  to find that literal text. Empty structured values and unfinished quotes need
-  completion before the query can be accepted; they leave the last results visible.
+All terms must match. Words match case-insensitively anywhere in the complete
+Markdown record, including relation reasons. Different words can match different
+sections; quotes require a literal phrase.
 
 <a id="search-examples"></a>
 
 ### Filter examples
-
-These examples are complete queries; replace the current minibuffer text to try
-one. Leaving `s:open` in place continues to restrict results to open issues.
 
 | Query | Find |
 | --- | --- |
@@ -329,355 +281,297 @@ one. Leaving `s:open` in place continues to restrict results to open issues.
 | `k:bug` | Bugs with either status. |
 | `s:closed "disk full"` | Closed issues containing the phrase `disk full`. |
 | `t:rust t:emacs startup` | Issues with both tags and the word `startup`. |
-| `"t:rust"` | The literal text `t:rust`, rather than a tag filter. |
+| `"t:rust"` | The literal text `t:rust`. |
 
-Remove every term for an unfiltered view. Remove just `s:open` or `s:closed` to
-include both statuses while keeping the other terms. Status values are `open`
-and `closed`; there is no `s:all` term. To keep refining an existing filter,
-press `f` again: its text is prefilled with a trailing space ready for another term.
+These are complete queries. Replace the minibuffer text to try one; leaving
+`s:open` in place keeps the search limited to open issues.
 
-Rust owns matching and returns compact summaries. Results preview asynchronously
-while typing, keeping the current display until a valid current reply arrives.
-Edits coalesce while a request runs; obsolete replies cannot replace newer input.
-`RET` keeps the full input. `C-g` cancels the filter and restores the previous query and
-position and rejects abandoned replies. Text filters read metadata-selected
-candidate records; there is no new filter cache or response-time guarantee.
+Remove the status term to include both statuses. There is no `s:all`. Remove
+every term for an unfiltered view. Press `f` again to refine a query; it returns
+with a trailing space ready for the next term.
+
+Unquoted `t:`, `k:` and `s:` prefixes select a tag, kind or status. Quote them to
+search for the text itself. Empty values and unfinished quotes must be completed
+before you can accept the query. If you type several status terms, the last wins;
+choosing a status through completion replaces them all.
+
+`O`, `C` and `A` change only status, keeping your tag, kind and text terms.
+Refresh keeps the whole query. Duplicated views copy it and then remain independent.
+Following a reference outside the results can temporarily leave the query;
+`M-,` restores it, along with your folds and position.
 
 ### Completion interfaces
 
-A short syntax hint stays in the invoking view's header while the prompt is
-active. Completion offers tags inside `t:`, kinds inside `k:`, statuses
-inside `s:`, and all structured choices between terms. Choices come only from
-readable cached issues matching the other provisional AND constraints, including
-words and quoted phrases. The exact token being edited is excluded; duplicate
-terms elsewhere still constrain choices. Status choices ignore all existing
-status terms, matching their replacement behavior. When no readable issue matches,
-there are no choices. Quoted tokens stay literal.
+A syntax hint appears in the view's header while filtering. Completion offers
+tags after `t:`, kinds after `k:`, statuses after `s:`, and all structured choices
+between terms. Quoted terms remain literal.
 
-Use `M-x customize-option RET isled-filter-interface RET` to choose
-and save your preferred interaction:
+Choices come from readable cached issues matching the rest of your query. The
+term at point is left out of that calculation; other copies of it still apply.
+Status choices ignore existing status terms because selecting one replaces them.
+If nothing matches the remaining constraints, there are no suggestions.
 
-| Choice | Behavior |
+Choose an interface with `M-x customize-option RET isled-filter-interface RET`:
+
+| Interface | How it works |
 | --- | --- |
-| **Inline suggestions** (default) | Suggestions appear automatically for the token at point. Uses Corfu when it owns completion, or the standard Emacs completion window when stock completion owns it. Other completion UIs retain control. `TAB` also completes explicitly. |
-| **Separate filter picker** | `TAB` immediately opens an ordinary completion prompt for one structured token, showing “Loading choices…” until a pending reply arrives. Choices update automatically; `RET` inserts one and `C-g` returns to the unchanged filter. Uses Vertico when enabled. |
-| **Minibuffer suggestions** | Shows ordinary minibuffer choices while editing the whole query. `TAB` inserts a selected Vertico candidate while keeping later terms. Uses the standard completion window when stock completion owns the prompt. |
+| **Inline suggestions** (default) | Suggests values for the term at point. Uses Corfu when active, otherwise stock completion when it owns the prompt. `TAB` also completes explicitly. |
+| **Separate filter picker** | `TAB` opens a completion prompt for one term. `RET` inserts a choice; `C-g` returns to the unchanged query. Uses Vertico when enabled. |
+| **Minibuffer suggestions** | Shows choices while you edit the whole query. With Vertico, `TAB` inserts the selected choice and keeps later terms. Stock Emacs uses its completion window. |
 
-For example, to select the separate picker:
+For example:
 
-```elisp
+```emacs-lisp
 (use-package isled
   :custom
   (isled-filter-interface 'separate-filter-picker))
 ```
 
-To require TAB before inline suggestions appear, set
-`isled-filter-inline-auto` to nil with `M-x customize-option`, or use:
+The other values are `inline-suggestions` and `minibuffer-suggestions`. All three
+work without optional packages. If your completion reader does not support
+minibuffer suggestions, that invocation falls back to the separate picker without
+changing your saved preference. Other completion UIs keep control of their display.
 
-```elisp
+#### Opening and dismissing suggestions
+
+To open inline suggestions only when you press `TAB`:
+
+```emacs-lisp
 (setq isled-filter-inline-auto nil)
 ```
 
-It defaults to t. The setting controls opening only: an open completion UI still
-updates its choices and previews highlighted candidates. Dismissing it in manual
-mode keeps it closed until another TAB. A TAB pressed while choices are pending
-opens suggestions when that exact input's reply arrives. This affects only inline
-filter prompts; other filter interfaces and global completion settings are unchanged.
+The default is `t`. Once suggestions are open, they continue updating. In manual
+mode, dismissing them keeps them closed until another `TAB`. If choices are still
+loading when you press it, they open when the reply for that input arrives.
 
-The other values are `inline-suggestions` and `minibuffer-suggestions`.
-When whole-query suggestions are selected with an unsupported completion reader,
-that invocation uses the existing separate filter picker: edit the query normally
-and press TAB to choose one token through your native completion UI. The saved
-`isled-filter-interface` preference stays unchanged.
-`M-x isled-filter` opens the same prompt as `f`. The former command
-`isled-search` and option `isled-search-interface` remain
-compatibility aliases for existing configurations.
-All three work without optional completion packages. In the stock completion
-window, `M-v` selects the window and `RET` inserts a choice while leaving filter
-open; `RET` back in the filter prompt keeps the complete query. In the separate
-picker, this accepts the inner token prompt first. Choices resize with normal
-Emacs window rules. Dismissing inline or minibuffer suggestions keeps them closed
-until the input or point changes. Type a space after completing a term to continue.
-If a completion popup or the separate picker is active, `C-g` may dismiss that
-first; press it again in the outer filter prompt to cancel the filter itself.
+With automatic inline or minibuffer suggestions, dismissing them keeps them
+closed until you change the input or move point. The separate picker shows
+“Loading choices…” while waiting and updates when choices arrive.
 
-In an owned stock, Vertico or Corfu completion session, highlighting a candidate
-also previews the results that inserting it would produce. The typed query and
-completion choices stay unchanged. Dismissing suggestions restores typed-query
-results (or the last valid view for incomplete input); cancelling the entire
-filter restores its original view. Inserting a candidate and accepting the full
-query keep their usual meanings. Candidate observation runs only while the filter
-prompt is open, with a short delay; the existing request queue coalesces rapid
-movement and rejects obsolete results. Other completion frameworks receive no
-highlight adapter or forced stock popup. Their settings and ordinary completion
-outside the filter prompt remain unchanged.
+In the stock completion window, `M-v` selects the window and `RET` inserts a
+choice. The filter stays open; `RET` in its prompt accepts the whole query.
+In the separate picker, accepting a choice first closes the inner prompt.
 
-Open/Closed/All commands replace or remove only status when a filter is active;
-tag, kind and text constraints survive. Duplicated views copy the whole query
-and then remain independent. Following a reference outside the results opens its
-status view without the filter constraints; Back restores the full prior query,
-folds and position. References already in the results retain the query.
-`g` and automatic refresh retain the current query. Native buffer filter and
-fold previews remain separate from Rust issue filtering.
+If a popup or picker is active, `C-g` may dismiss that first. Use it again in the
+outer filter prompt to cancel the filter itself.
+
+#### Previewing a choice
+
+With stock completion, Vertico or Corfu, highlighting a candidate previews the
+results it would produce. Your typed query and available choices stay unchanged.
+Dismissing suggestions returns to the typed query's results, or the last valid
+view if the input is incomplete.
+
+Preview replies cannot replace newer input. Other completion frameworks still
+receive completion data, but do not get highlighted-candidate previews. Isled
+leaves global completion settings unchanged.
+
+`M-x isled-filter` opens the same prompt as `f`. Existing configurations can still
+use the aliases `isled-search` and `isled-search-interface`.
 
 ## Dependency graph view
 
-Hierarchical mode is enabled by default. Press `v` to switch between hierarchical
-and flat presentation of the same selection. Flat mode lists issues in ID order
-without a dependency gutter. Switching preserves the query, selected issue and
-expanded bodies; returning to hierarchical mode restores its last direction.
-Filtering, status shortcuts and navigation work the same way in both modes.
+The hierarchy shows what is ready and what depends on it. By default,
+prerequisites come first: for a sequence such as storage → resumable downloads →
+field trial → release, storage appears before the work it unblocks. Press `d`
+to read dependencies in the opposite direction.
 
-Hierarchical mode displays existing wait relations. Every selected issue appears
-once; titles stay aligned beside a gutter showing branches and joins. Long chains
-run vertically. Readiness colors and body expansion retain their meaning. The
-initial direction is prerequisites first; press `d` in hierarchical mode to reverse
-it while preserving the query and selected issue when present.
+Press `v` to switch to a flat list in issue-ID order. Switching keeps your query,
+selected issue and expanded bodies. Returning to the hierarchy restores its last
+direction. Filtering and navigation work the same way in both presentations.
 
-`O`, `C` and `A` choose Open, Closed or All, preserving other query terms. Status
-selection is strict: Open never adds closed issues as context. Press `f` for the
-ordinary [filter prompt](#issue-filtering), with live previews and completion;
-`RET` keeps the query and `C-g` restores the original view. Only matching issues
-appear. An edge appears only when both endpoints are selected; hidden intermediates
-are never replaced by invented edges. Following an issue outside the selection
-uses normal navigation; Back restores the previous query and direction.
+### Reading the gutter
 
-The gutter uses `•` for an issue independent within the status selection, `○`
-for a connected issue, and `│` for a continuing dependency. When tag, kind or text
-filters hide direct neighbors, the circle remains without adding notes to the
-heading. Connections outside Open/Closed/All do not affect this distinction;
-reversing direction preserves it. A visible root with a filtered prerequisite may
-still be blocked; readiness colors remain authoritative.
+Every matching issue appears once. Titles stay aligned, while the gutter shows
+chains, branches and joins.
 
-For example, `s:open t:rust timeout` shows only open Rust-tagged issues containing
-`timeout` anywhere in their complete record. Rust computes matching, omitted
-connection counts and layout without requiring Emacs to load every body. Full-text
-matching may still scan candidate records in Rust. Ordinary `C-s` retains its
-[buffer-only search scope](#search-and-preview). The header shows the complete query
-and the active presentation or dependency direction.
+| Mark | Meaning |
+| --- | --- |
+| `•` | An issue with no connections within the selected status set. |
+| `○` | A connected issue. |
+| `│` | A dependency continuing past this row. |
 
-Each connected group of visible issues stays together; groups and independent
-issues are placed by their smallest issue ID. Independents can appear before,
-between or after groups, but never interrupt a thread. Within a group, dependency
-order takes precedence and newly unblocked branches are followed first, preferring
-narrower branches and then issue ID when several become ready together.
+Connected groups stay together, ordered by their smallest issue ID. Independent
+issues can appear between groups, but never interrupt one. Within a group,
+dependency order comes first; newly unblocked branches follow, with narrower
+branches and then issue ID breaking ties.
 
-Relations excluded by status do not affect the marker, so changing Open/Closed/All
-can change a dot to a circle or vice versa. Multiple roots feeding a shared dependent
-all keep their circles. Column one is reserved for starts in the displayed direction,
-including independent issues; connected threads move into higher columns and stay
-there through their ends.
-Consecutive circles in an active higher lane form a straight chain. A separate
-connector line appears only for a horizontal route, using rounded corners and
-T junctions (`├`, `┤`, `┬`, `┴`). Merges and splits use separate lines; there are
-no four-way junctions. Sources with identical destinations can share a segment,
-preserving every direct dependency. At an unavoidable crossing without a join,
-the horizontal stroke interrupts the vertical stroke for that line.
-Column placement distinguishes chains from independent issues even when
-all bodies are folded. Connectors continue beside expanded bodies and
-wrapped lines. Body panels remain to the right of the gutter. Folding changes vertical
-spacing without recalculating lanes. Very wide graphs may look awkward or extend
-past the window. When the gutter itself is at least as wide as a displaying
-window, the buffer temporarily truncates lines to avoid unusable wrapping;
-normal wrapping returns after widening the window or filtering to a narrower graph.
-The initial view does not compact lanes or omit relations.
+The first gutter column holds starts in the displayed direction and independent
+issues. Connected threads continue in later columns. Consecutive circles in the
+same later column form a straight chain; branches and joins add horizontal lines.
+A horizontal stroke crossing a vertical one without a junction is not a join.
 
-In the Open prerequisites-first view, ready work normally appears in column one;
-closing a prerequisite moves the next unblocked issue there. Column one denotes
-a visible graph root, while readiness colors reflect the actual ledger. All or
-Closed selections, additional filters and unavailable blockers can make those meanings differ.
+Connectors continue beside expanded bodies and wrapped lines. Folding changes
+their height without moving their columns. If a graph is too wide, widen the
+window or narrow the filter. When the gutter fills the window, Isled temporarily
+truncates lines to avoid unusable wrapping.
+
+### Filters and readiness
+
+The graph shows only matching issues and direct connections between them. Open
+never adds closed issues as context, and a hidden intermediate issue is never
+replaced by an invented connection.
+
+A circle can remain after a tag, kind or text filter hides its neighbors. Changing
+Open/Closed/All can change circles to dots, because that distinction uses the
+selected statuses. Reversing direction does not change the markers.
+
+In an unfiltered Open view with prerequisites first, ready work normally appears
+in column one. Closing a prerequisite lets the next unblocked issue move there.
+With other filters or unavailable blockers, a visible root can still be waiting.
+**Use the issue-ID color to judge readiness**, rather than its position alone.
+
+The header shows your query and the current presentation or dependency direction.
+For full-record text matching, use `f`; ordinary `C-s` has the narrower scope
+explained below.
 
 ## Search and preview
 
-Ordinary buffer search covers headings and materialized bodies. Once a body has
-been displayed, collapsing it retains its text for search. Bodies that have
-never been materialized are not in-buffer search candidates; search does not
-fetch the whole ledger. A new filtered view need not materialize its cached but
-never-displayed bodies just to search them.
+`C-s` searches headings and bodies already displayed in this buffer. Once you
+have opened a body, its text stays searchable after folding. Bodies that have
+never been displayed are not searched; use `f` to search the complete ledger.
 
-Temporary search/preview reveals use standard Emacs invisible-overlay hooks.
-They change visibility without changing logical expansion or requesting fresh
-details for that issue. Moving away or cancelling restores its fold; accepting
-the match opens it normally and permits bounded revalidation. Consult/Vertico
-are optional user tools, not frontend dependencies.
-
-<a id="customization"></a>
+Search and completion previews can temporarily reveal a folded body. Moving away
+or canceling restores its fold. Accepting the match opens it normally. Consult
+and Vertico are optional; neither is required by Isled.
 
 ## Filter memory
 
-Use `O`, `C`, or `A` to choose status, or `f` to edit the
-[filter query](#issue-filtering). Lowercase `a` adds an issue and `c` closes one;
-`o` has no package binding. A new view starts with Open issues; the header
-shows the active query and visible issue count. Filter changes do not add
-jump-history entries.
+A new view starts with Open issues. `O`, `C` and `A` choose Open, Closed or All
+without changing the other query terms. Filter changes do not add navigation
+history entries.
 
-The named commands `isled-filter-open`, `isled-filter-closed`,
-and `isled-filter-all` also remain available through `M-x` and personal
-bindings. They replace or remove only the status constraint. For example:
+Open and Closed each remember a position for every window and view. All has no
+separate saved destination. When you switch status:
 
-```emacs-lisp
-(with-eval-after-load 'isled-browser
-  (keymap-set isled-mode-map "o" #'isled-filter-open))
-```
+- If the current issue remains visible, point stays with it.
+- Otherwise, Isled restores the destination's saved selection, folds and position.
+- If that position is gone, it selects a nearby issue, or none for an empty result.
 
-On an authorized reload from the older version, only bindings still pointing
-to their former default status commands are cleared. Other personal bindings
-and already unassigned keys are preserved.
+Entering All keeps current expansions. An issue retained across another status
+switch keeps its expansion alongside those restored for the destination. There
+is no separate position memory for every tag query.
 
-Only Open and Closed retain separate cursor memories per window/view pair,
-saved before leaving them. Filters and folding remain shared by the view buffer. All has no saved destination view. Switching status retains the current
-issue and its cursor when visible; otherwise it restores the destination's saved
-selection, expanded sections, and issue-relative cursor. Without a usable saved
-position, the nearest visible replacement is selected, or none for an empty
-result. Entering All retains current expansions; when the current issue survives
-another status switch, its expansion is retained alongside the destination's.
-No per-tag view cache is created. If refresh removes the issue containing
-the saved cursor, the next issue in ID order takes its row; the preceding final
-issue is used when there is no successor. Point lands on that replacement's
-heading rather than inheriting the vanished issue's offset. Invalid expanded
-IDs are discarded without otherwise moving point.
+If refresh removes the issue at a saved position, Isled selects the next issue in
+ID order, or the previous final issue when no successor exists. Point goes to its
+heading. Removed issues are also dropped from the saved folds.
+
+Filters and folds belong to the view buffer; cursor memories belong to each
+window. See [independent views](#keeping-separate-views) if you need separate
+browsing state.
 
 ## Automatic refresh
 
-Views and open drafts notice changes to the ledger automatically. Refresh keeps
-your query and browsing position; a changed file marks its draft **Changed on disk**
+Views and open drafts notice ledger changes automatically. Refresh keeps your
+query and browsing position. A changed file marks its draft **Changed on disk**
 without replacing your edits. Press `g` to refresh manually.
 
-If directory notifications are unavailable, the header reports polling fallback.
-On an error, the last good view remains visible and the header shows what failed;
-`g` retries. Set `isled-auto-revert` to nil before opening a view to disable
-automatic refresh. See [known warnings](#known-warnings) for issue diagnostics.
+If directory notifications are unavailable, the header reports a polling fallback.
+On an error, the last good view stays visible and the header shows what failed;
+`g` retries. Set `isled-auto-revert` to `nil` before opening a view to disable
+automatic refresh.
 
 ## Known warnings
 
-The header shows a compact clickable **⚠ Known warnings** indicator whenever Rust reports
-a retained issue finding, including on issues hidden by the current filter.
-Click it, press `!` in the ledger buffer, or choose **Known warning** in the Help menu to reveal a
-warning. Repeating the action advances through warnings in issue-ID order,
-including multiple warnings within one issue, and wraps after the last. Unreadable records lead to their ledger
-diagnostic and existing file actions. `M-,` restores the starting filter, folds
-and position through ordinary jump history. Consecutive duplicate destinations
-coalesce in the shared history API; jumping to the current location adds no entry.
-Delayed navigation keeps the existing
-window and cursor-movement fences.
+The header shows **⚠ Known warnings** when Isled has retained a finding, including
+one on an issue hidden by your filter. Press `!`, click the indicator, or choose
+**Known warning** in Help to visit it.
 
-The indicator stays visible while scrolling and has no adjacent button. It
-disappears when the last known finding clears. Its absence is not
-a whole-ledger health certificate. The [shared cache contract](../../user-docs/cache.md#known-warnings)
-owns retention, neighbor rechecks and excluded temporary failures.
+Repeat the action to move through findings in issue-ID order, then wrap to the
+first. `M-,` restores your starting query, folds and position. The indicator
+stays visible while scrolling and disappears when the last known finding clears.
+It reports known problems, not the result of a full-ledger audit.
+
+### Relation problems
+
+An expanded issue shows relation warnings above its stored content. These are
+generated diagnostics; they are not written into the issue. Existing issue IDs
+act as links, while missing IDs cannot be followed.
+
+Isled corrects stale copied titles automatically. Adding or removing a relation
+requires your choice:
+
+| Finding | Available actions |
+| --- | --- |
+| A relation exists at only one endpoint | **Complete relation** or **Remove relation**, from either endpoint. Completion asks for a reason if only the Blocking half remains. |
+| A relation points to a missing issue | **Remove relation**. |
+
+An incomplete relation still blocks readiness when its prerequisite is unresolved
+or unavailable. A fresh result clears a warning once its cause is gone.
+
+### Unreadable files
+
+Unreadable records appear in **Ledger warnings** above the issue list, with their
+error and **Open file** / **Move to trash** actions. Related issue warnings offer
+the same controls.
+
+Open file visits an ordinary editable buffer for repair. Move to trash confirms
+the exact path and refuses symlinks or non-regular files. Trashing a record does
+not remove its relations; remove those explicitly if needed.
+
+After a successful action, point moves to another warning in the issue, or to
+its heading when none remain. A ledger-level action moves to the next recovery
+control or the start of the view. Failed actions keep the view and report the error.
+
+See the [warning retention rules](../../user-docs/cache.md#known-warnings) for
+which findings persist and when they are checked again.
 
 ## Identity header
 
-The theme-aware header shows `Isled`, the selected context directory, visible
-issue count, the complete filter in one bracket group, and `[?] Help`. It does
-not repeat a buffer-body title. A shared parent ledger is shown beside the title
-when space allows; the directory tooltip retains both context and ledger paths.
-Each window fits its own header: reduce the path
-to its final directory name first, then shorten filter text with an ellipsis,
-retaining a recognizable portion where space allows. Only then drop decorative
-title/count information and truncate the directory further. Extremely narrow
-windows prioritize what fits; filter cannot remain readable at zero width.
-Hover over shortened directory/filter text for its full value. Buffer names and
-Uniquify settings remain unchanged. Refresh diagnostics take priority and expose
-their full message on hover. During issue filtering, the syntax hint or input error
-occupies the header.
+The header shows the selected directory, visible issue count, query and `[?] Help`.
+A shared parent ledger appears beside the title when space permits. Hover over the
+directory to see both paths.
+
+Narrow windows shorten the path and query; their tooltips keep the full values.
+Refresh errors take priority and also expose their full text on hover. While
+filtering, the header shows a syntax hint or input error.
 
 ## Help menu
 
-Press `?` for a conventional
-Transient menu arranged in three columns with focused headings: Navigate and
-History; Filter and Display; Read, Change and Exit. `O`, `C` and `A`
-stay together with `f` under Filter. Navigate's next/previous item commands visit issue
-headings and actionable links; the issue-only commands skip links.
-Actions run in the originating issue view.
-Help includes filtering, the hierarchical/flat toggle and Open/Closed/All status
-actions. Direction reversal is shown in hierarchical mode. Both presentations
-use the same filtering commands for every query.
-Help stays open for filters, folding,
-refresh, issue navigation, and ordinary cursor movement or scrolling. Opening
-a menu does not transfer keyboard focus: arrow keys, `C-n`/`C-p`, and paging
-keys move the issue view even after menu actions refresh its bindings. Opening
-a file or invoking another outside command dismisses it. `q` or `C-g` dismisses
-the menu; `Q` quits the view from the menu. The popup splits only the selected
-issue window below it; other windows are not reused. If that window cannot
-split, help reports insufficient room rather than displacing another buffer.
-These settings apply only to this menu. Outside the menu, all existing
-shortcuts remain unchanged, including `q` to quit the view. The header still
-reports refresh errors and polling fallback.
+Press `?` for the Transient menu. It groups navigation and history, filtering and
+display, and reading and editing actions. Direction reversal appears only in the
+hierarchical view.
+
+Help stays open while you filter, fold, refresh or navigate. Keyboard focus stays
+in the issue view, so you can keep moving and scrolling while consulting the menu.
+Opening a file or running an outside command dismisses it.
+
+Inside the menu, `q` or `C-g` dismisses Help; `Q` quits the view. Outside it,
+`q` quits the view as usual. Help opens below the selected issue window without
+reusing another window. If there is too little room to split, it reports that.
 
 ## Customization
 
-The frontend uses ordinary Emacs faces for colors, font family, size, weight,
-slant, underlining and other text attributes. Use the
-[appearance faces](#theme-and-identity-styling) for visual changes and the
-[keymap guide](#key-binding) for the project shortcut, issue-mode keys, command
-remapping, and load-order-safe examples. The package adds neither a separate
-binding framework nor individual options for face attributes or keys.
-
-<a id="theme-and-identity-styling"></a>
+Isled uses ordinary Emacs faces and keymaps. Browse its options with
+`M-x customize-group RET isled RET`, or use the examples below in your configuration.
 
 ### Theme and identity styling
 
-Expanded bodies hide the canonical first-line title without deleting its text
-or parsing Markdown. The expanded issue panel embeds the expanded
-title in a subdued `┌──` top border. The title has no colored background;
-one space of padding and one additional margin space remain on each side.
-The remaining rule extends to each
-window's right text edge at redisplay time. Wrapped title rows continue the
-left vertical rather than repeating the corner. Collapsed headings remain plain.
-Set `isled-title-background` to non-nil to color expanded titles and
-their inner padding; the default is nil. The body background and outer title
-margins are unaffected. Refresh with `g` after changing the option, or toggle
-a section to apply it there.
-There is no separate underline row or outside top margin. The boundary prefix
-is cleared when folded so it cannot affect the next heading.
-The background is inset two columns; inside it, text has one column of left
-padding and a blank line above and below. Wrapped lines use the same left inset.
-The top padding line shares the body's inset.
-Adjacent expanded issues retain a background-free separator regardless of
-expansion order.
-Panel corners and the right rule are anchored to each title's overlay so
-folding a neighbor cannot suppress the opening corner during redisplay.
-The panel places a subdued, theme-aware `│` in the first
-column on body and wrapped lines, ending with `└────` on the bottom
-separator. These are display prefixes, not issue text or navigation targets.
-There is no right padding. The trailing outside blank line is retained. Display
-properties preserve authored text and reference coordinates.
-Markdown headings stay at the padded body edge; their content, including bullets
-and wrapped lines, is inset two more columns without shifting the background.
-Heading recognition is reused from Markdown mode, not a second Markdown parser.
-Expanded bodies use a distinct `mode-line-inactive`-derived background. The
-body face borrows only that face's background and leaves its foreground
-unspecified, so ordinary prose and Markdown syntax retain their normal theme
-faces. A direct customization of `isled-expanded-body-face` remains
-authoritative, including across theme changes.
-Issue IDs, titles, filters, Markdown syntax, expanded-body backgrounds, and the
-persistent help hint all inherit standard Emacs or dependency faces, so the
-active theme owns their actual colors. The hint's activation key, brackets,
-and description use three distinct semantic faces for restrained contrast.
-Live font locking is disabled in the generated buffer because
-expanded Markdown bodies arrive with stable display faces already applied.
-Section headings display the Rust-provided ID using canonical compact-reference
-spelling such as `#0001`. Only that complete spelling is state-colored: ready
-uses semantic success, waiting uses link color without an underline, and
-closed uses struck-through shadow. The adjacent title retains the ordinary
-heading face. Between ID and title, headings show the Rust-provided kind, for
-example `#0007  [maintenance] Review the backup procedure`.
-Kind text inherits `font-lock-type-face`; its brackets inherit `shadow`, both
-at normal weight without a badge background or per-kind color palette. The
-active theme supplies the colors. The label remains visible when expanded and
-is part of the issue heading, not a separate navigation target. Custom kinds
-are displayed verbatim. The executable must provide the snapshot `kind` field;
-the frontend does not derive classification from Markdown content.
+Issue headings show an ID, kind and title, for example:
 
-Customize one face interactively with, for example, `M-x customize-face RET
-isled-issue-title-face RET`, or browse them together with `M-x
-customize-group RET isled RET`. Customize writes standard face
-settings, which apply whether the browser is already open or loads later.
+```text
+#0007  [maintenance] Review the backup procedure
+```
 
-The same settings can live in a `use-package` declaration. This example changes
-both colors and typography; `Monospace` is the portable generic fixed-width
-family name:
+The ID's appearance carries the state: ready inherits success colors, waiting
+inherits link colors without an underline, and closed uses struck-through shadow.
+Kinds inherit `font-lock-type-face`, with subdued brackets. Custom kinds appear
+as written; there is no fixed color palette for them.
+
+Expanded issues sit in a bordered panel with a padded Markdown body. The title
+sits in the top border. By default its background is uncolored; set
+`isled-title-background` to non-nil to color it and its inner padding. Press `g`
+or toggle the issue to apply that change.
+
+The body normally takes its background from `mode-line-inactive`, while prose
+and Markdown keep their normal theme faces. Set `isled-expanded-body-face` to
+choose your own background or typography. Explicit settings remain in effect
+through refresh, theme changes and package reloads.
+
+#### Setting faces
+
+Use `M-x customize-face RET isled-issue-title-face RET` for one face, or keep your
+settings in `use-package`. For example:
 
 ```emacs-lisp
 (use-package isled
@@ -692,8 +586,8 @@ family name:
    ((t (:foreground "#5faf5f" :weight bold)))))
 ```
 
-Themes use the same faces. Place forms like these in a theme definition after
-its `deftheme` form:
+`Monospace` is the generic fixed-width family name. Themes can set the same faces;
+place this after the theme's `deftheme` form:
 
 ```emacs-lisp
 (custom-theme-set-faces
@@ -704,11 +598,9 @@ its `deftheme` form:
    ((t (:background "#303030")))))
 ```
 
-Without an explicit background, `isled-expanded-body-face` follows the
-active theme's `mode-line-inactive` background. Explicit Customize, theme,
-`use-package :custom-face`, and direct face settings take precedence and survive
-rendering, refresh, theme changes and package reload. Other unspecified body
-attributes continue to come from ordinary text and Markdown faces.
+Without an explicit background, `isled-expanded-body-face` follows the active
+theme. Other unspecified body attributes continue to use ordinary text and
+Markdown faces.
 
 #### Face reference
 
@@ -725,21 +617,16 @@ attributes continue to come from ordinary text and Markdown faces.
 | Diagnostic controls, loading/empty text and pointer highlight | `isled-action-face`, `isled-subdued-face`, `isled-target-highlight-face` |
 | Persistent help key, delimiters and text | `isled-help-key-face`, `isled-help-delimiter-face`, `isled-help-text-face` |
 
-Expanded Markdown deliberately reuses `markdown-mode` faces rather than copying
-them into package-specific options. Customize `markdown-header-face`,
+Markdown uses `markdown-mode` faces directly. Customize `markdown-header-face`,
 `markdown-bold-face`, `markdown-italic-face`, `markdown-code-face`,
 `markdown-inline-code-face`, `markdown-list-face`, `markdown-blockquote-face`
-and the other `markdown-*` faces to style the corresponding syntax. Ordinary
-Markdown links inherit `markdown-link-face` through
-`isled-markdown-link-face`, which keeps the browser's link behavior.
+and other `markdown-*` faces as usual. Links inherit `markdown-link-face`
+through `isled-markdown-link-face`.
 
 ## Local configuration
 
-Source loading and package installation are separate choices. Configure your
-checkout path explicitly and preserve any running editor session when upgrading.
-
 To load a checkout instead of installing the package, first install its
-[dependencies](README.md#installation), then use an explicit local path:
+[dependencies](README.md#installation), then set your checkout path:
 
 ```emacs-lisp
 (defvar my-isled-checkout (expand-file-name "~/src/isled"))
@@ -752,26 +639,28 @@ To load a checkout instead of installing the package, first install its
   :config (isled-setup))
 ```
 
+A packaged installation resolves dependencies through your configured package
+archives. Source loading with `:ensure nil` requires you to install them first.
+See [installation](README.md#installation) for the required Transient version
+and built-in package upgrades.
+
 ### Key binding
 
-`isled-setup` installs `C-x p i` for `isled-open-project` when that slot
-is unbound. An existing binding is preserved. `C-u C-x p i` shows the same
-chooser and creates an additional view for the selected location. Package installation loads
-this registration automatically through generated autoloads; the source setup
-above calls the public setup function. Both keep the browser unloaded. Repeated
-setup calls preserve later overrides, including removal of the binding. No personal binding snippet is needed.
+`isled-setup` binds `C-x p i` to `isled-open-project` only when that key is free.
+Package autoloads run setup automatically; the source-loading example above
+calls it explicitly. Repeated setup preserves your later overrides and unbindings.
 
-Use ordinary keymap configuration to remove or replace the default. The binding belongs to the built-in `project-prefix-map`; Projectile is not
-required. Run overrides
-after the lightweight `isled` entry file, so they work whether project.el or the package
-loads first and survive later browser loading. For example, to remove it:
+#### Project shortcut
+
+The shortcut belongs to Emacs's `project-prefix-map`; Projectile is not required.
+Apply overrides after the `isled` entry file loads. To remove it:
 
 ```emacs-lisp
 (with-eval-after-load 'isled
   (keymap-unset project-prefix-map "i" t))
 ```
 
-Or move it to `C-x p j` (choosing a key whose existing binding you intend to replace):
+To move it to `C-x p j`, replacing any existing binding there:
 
 ```emacs-lisp
 (with-eval-after-load 'isled
@@ -779,8 +668,7 @@ Or move it to `C-x p j` (choosing a key whose existing binding you intend to rep
   (keymap-set project-prefix-map "j" #'isled-open-project))
 ```
 
-The same override can be expressed in `use-package` (add these keywords to an
-existing declaration; keep its local checkout recipe when applicable):
+Or add this to your `use-package` declaration:
 
 ```emacs-lisp
 (use-package isled
@@ -788,14 +676,13 @@ existing declaration; keep its local checkout recipe when applicable):
   :config (keymap-unset project-prefix-map "i" t))
 ```
 
-Issue-view keys live in `isled-mode-map`. The map is initialized with
-its defaults by the lightweight `isled` entry module, so `use-package
-:bind` can configure it before the browser loads. Loading or reloading the
-browser does not reinstall defaults, reset the map parent, or overwrite later
-bindings, command remappings, and intentional unbindings.
+#### Issue-view keys
 
-This ordinary Emacs configuration runs when the browser is first loaded and
-also works when it is already present:
+View keys live in `isled-mode-map`. You can configure the map before opening a
+view; loading or reloading the browser preserves custom bindings, remappings
+and deliberate unbindings.
+
+For example, move refresh from `g` to `r` and remap next-item navigation:
 
 ```emacs-lisp
 (with-eval-after-load 'isled-browser
@@ -805,8 +692,8 @@ also works when it is already present:
               "<remap> <isled-next>" #'next-line))
 ```
 
-The equivalent `use-package` form can configure both the project entry and the
-mode map before opening a view:
+A combined `use-package` configuration can set both the project shortcut and view
+keys before you open a ledger:
 
 ```emacs-lisp
 (use-package isled
@@ -823,11 +710,11 @@ mode map before opening a view:
               "<remap> <isled-next>" #'next-line))
 ```
 
-Keep `:ensure nil` and the `:load-path` from the [local checkout
-recipe](#local-configuration) when using that setup. A packaged installation
-does not need them.
+For a checkout, keep `:ensure nil` and `:load-path` from the
+[source-loading example](#local-configuration). A packaged installation does
+not need them.
 
-The default issue-view bindings are:
+#### Default bindings
 
 | Key | Command | Purpose |
 | --- | --- | --- |
@@ -854,36 +741,15 @@ The default issue-view bindings are:
 | `?` | `isled-help` | Open the issue-view help menu. |
 | `q` | `quit-window` | Quit the issue view. |
 
-`n` and `p` are deliberately undefined in the mode map; ordinary line movement
-uses `C-n`, `C-p`, and the arrow keys. Terminal representations of shifted Tab
-can vary, so the map also recognizes `C-S-<iso-lefttab>` for previous-issue
-movement.
+`n`, `p` and `o` have no package binding. Lowercase `a` and `c` add and close issues;
+uppercase `A` and `C` select status. Terminals encode shifted Tab differently, so
+`C-S-<iso-lefttab>` is also accepted for previous-issue movement.
 
-All package commands remain callable through `M-x` or personal bindings,
-independently of the defaults. In addition to the commands above,
-`isled-open` visits the selected canonical issue file,
-`isled-duplicate-view` creates an independent view, and
-`isled-filter-open`, `isled-filter-closed`, and
-`isled-filter-all` change only the status part of the current query.
-`isled-search` remains a compatibility alias of
-`isled-filter`. Rendered issue and link targets use
-`isled-target-map`, whose default mouse binding is `<mouse-2>` to
+Commands remain available through `M-x` or personal bindings. Beyond the table,
+`isled-open` opens a record read-only and `isled-duplicate-view` creates an
+independent view. Mouse targets use `isled-target-map`, with `<mouse-2>` bound to
 `isled-activate-mouse`.
 
-The header derives its Help key from `isled-mode-map`; if the command
-has no local key, it honestly shows `M-x isled-help`. The Transient
-help menu has its own displayed suffix keys and invokes the documented commands
-directly. Changing the mode-map binding for a command does not rewrite that
-menu's legend or suffix keys.
-
-The package declares `markdown-mode` and Transient 0.8.0+
-dependencies. Another local setup must
-install them before source-loading with `:ensure nil`. Installing the packaged
-tar through `package-install-file` resolves them through configured package
-archives.
-
-The help menus use the per-prefix `display-action` slot introduced in
-[Transient 0.8.0](https://github.com/magit/transient/blob/v0.8.0/CHANGELOG).
-Emacs 30's bundled Transient is too old. With `package.el`, enable
-`package-install-upgrade-built-in` before installing Transient, then restart
-Emacs if the older version was already loaded.
+The header's Help hint follows your binding for `isled-help`, falling back to
+`M-x isled-help` when it has no local key. The Transient menu keeps its own suffix
+keys; rebinding a mode command does not change the menu's keys or legend.
