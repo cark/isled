@@ -259,7 +259,9 @@ visible windows; offscreen rows preserve both gutter width and routing height
 with spacing placeholders. Connector lines have real buffer positions outside
 foldable bodies, so ordinary line-by-line scrolling can place them at the window
 top without blank or stuck rows. Painting changes display properties without
-inserting text or moving rows. Bodies continue using bounded loading.
+inserting text or moving rows. Expanded panels continue their border and background
+across these routing rows; folding removes that panel styling while retaining the
+connectors. Bodies continue using bounded loading.
 The [wire contract](../../user-docs/frontend.md#dependency-layout)
 owns conditional tokens, edge limits and failure behavior. Graph view requires
 the updated CLI and frontend; older CLI versions have no graph fallback.

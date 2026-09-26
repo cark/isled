@@ -71,10 +71,34 @@
            do (error "Wrong collapsed spacing for issue %s: %s" (isled-row-value row) height)))
 
 (isled-graph-fold-check-spacing)
+
+(defun isled-graph-fold-check-panels ()
+  "Check that expanded panel borders continue beside every routing line."
+  (cl-loop for row across isled-rows do
+           (goto-char (isled-row-start row))
+           (set-window-start nil (point))
+           (isled-viewport-update)
+           (redisplay t)
+           (let ((column (length (isled-graph-glyphs-heading
+                                  (isled-graph-glyphs-render
+                                   isled-graph-layout (isled-row-index row))))))
+             (cl-loop for position from (isled-row-heading-end row)
+                      below (isled-row-content row) by 2 do
+                      (let* ((y (+ (cdr (posn-x-y (posn-at-point position)))
+                                   (window-header-line-height)))
+                             (shown (posn-string
+                                     (posn-at-x-y
+                                      (+ (* column (frame-char-width))
+                                         (/ (frame-char-width) 2)) (1+ y)))))
+                        (unless (and shown (= (aref (car shown) (cdr shown)) ?│))
+                          (error "Gap in expanded panel: issue %s routing position %s: %S"
+                                 (isled-row-value row) position shown)))))))
+
 ;; Materialize several neighboring bodies, then refold them repeatedly.
 (dotimes (_ 2)
   (cl-loop for row across isled-rows do (isled-sections-show row))
   (isled-graph-fold-check-display)
+  (isled-graph-fold-check-panels)
   (cl-loop for row across isled-rows do (isled-sections-hide row))
   (isled-graph-fold-check-display)
   (isled-graph-fold-check-spacing))

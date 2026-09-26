@@ -12,6 +12,7 @@
 
 ;;; Code:
 (require 'isled-graph-glyphs)
+(require 'isled-presentation)
 (require 'isled-rows)
 (declare-function isled-windows-visible "isled-windows" ())
 
@@ -92,10 +93,14 @@ Each line owns one placeholder character; bounded painting supplies its glyphs."
       (apply #'concat (make-list (isled-graph-glyphs-line-count isled-graph-layout index) " \n")))))
 
 (defun isled-graph-gutter--routing (row connector blank)
-  "Paint ROW's routing placeholders with CONNECTOR lines or shared BLANK."
-  (let ((lines (and connector (split-string connector "\n"))))
+  "Paint ROW's CONNECTOR lines or shared BLANK, continuing its expanded panel."
+  (let ((lines (and connector (split-string connector "\n")))
+        (panel (unless (isled-row-hidden row) (isled-sections--body-prefix))))
     (cl-loop for position from (isled-row-heading-end row) below (isled-row-content row) by 2
-             do (put-text-property position (1+ position) 'display (or (pop lines) blank)))))
+             do (put-text-property position (1+ position) 'display
+                                   (concat (or (pop lines) blank) panel))
+             do (put-text-property (1+ position) (+ position 2) 'face
+                                   (and panel 'isled-expanded-body-face)))))
 
 (defun isled-graph-gutter-style (row &optional glyphs)
   "Apply ROW's GLYPHS, or its retained/blank glyphs, after body styling."
