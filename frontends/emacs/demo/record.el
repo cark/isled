@@ -37,48 +37,39 @@
   (isled-demo-cli "init")
   (dolist
       (issue
-       '(("Ship the offline reading beta" "release" "beta"
-          "Let the first group of readers try Trail Notes on a weekend trip. Saved guides, reading progress and keyboard navigation should work together before we send invitations.")
-         ("Keep saved guides available offline" "feature" "offline"
-          "Readers should be able to open a saved guide on a train or trail without a connection. Keep downloaded text and maps available after restarting the app.")
-         ("Sync reading progress across devices" "feature" "sync"
-          "Resume a guide on the same paragraph when moving from a phone to a tablet. Keep local progress while offline and reconcile it after reconnecting.")
-         ("Make the library keyboard-friendly" "feature" "accessibility"
-          "Let readers reach every saved guide and download action using a keyboard. Keep focus visible and return it to the card after closing its details.")
-         ("Resume interrupted downloads" "bug" "offline"
+       '(("Ship the offline reading beta" "milestone" "beta"
+          "Invite the first readers to try Trail Notes on a weekend trip. Release the beta once downloading and reading a saved guide have passed a complete offline trial.")
+         ("Verify offline reading on a weekend trip" "validation" "offline"
+          "Save a guide, interrupt the download, then finish it and switch to airplane mode. Check that every page remains available after restarting the app before inviting beta readers.")
+         ("Resume interrupted guide downloads" "feature" "offline"
           "A dropped connection currently restarts the whole download. Resume from the last complete chunk and keep the previous saved guide usable until its replacement is ready.")
-         ("Store guides and progress locally" "feature" "offline"
-          "Keep downloaded guides and reading positions on the device. Store them together so a guide is never marked available before its content is complete.")
-         ("Merge progress after reconnecting" "bug" "sync"
+         ("Store saved guides on the device" "feature" "offline"
+          "Keep downloaded text and maps available after restarting the app. Save each guide together with its download state so incomplete content is never shown as ready to read.")
+         ("Sync reading progress across devices" "feature" "sync"
+          "Resume a guide on the same paragraph when moving from a phone to a tablet. Connect the progress merge to sign-in and check the complete journey on both devices.")
+         ("Merge progress after reconnecting" "feature" "sync"
           "Reconnecting a tablet must not replace newer phone progress with an older position. Preserve deliberate resets and explain conflicts only when a reader needs to choose.")
-         ("Keep focus visible in library cards" "bug" "accessibility"
-          "The download button loses its focus outline in the compact layout. Make keyboard focus clear in both light and dark themes.")
-         ("Handle edits made on two devices" "feature" "sync"
-          "Retain the order of reading-position changes made on separate devices. Use the recorded edit time and preserve an explicit return to the beginning.")
-         ("Explain storage use before downloading" "docs" "offline"
-          "Show the expected download size before saving a guide. Explain how to remove downloads without losing bookmarks or reading progress.")
-         ("Fix long titles on narrow screens" "bug" "mobile"
+         ("Keep a local history of reading progress" "feature" "sync"
+          "Record reading-position changes while the device is offline. Keep their order and distinguish an explicit return to the beginning from a reader who has not started yet.")
+         ("Choose a rule for conflicting progress" "design" "sync"
+          "Decide which position to keep when two devices change the same guide while offline. Write down examples for ordinary reading, deliberate resets and changes made at the same time.")
+         ("Fix long guide titles on small phones" "bug" "mobile"
           "Long guide titles overlap the saved indicator on small phones. Let titles wrap while keeping the download action reachable.")
          ("Polish the empty-library message" "docs" "onboarding"
           "Tell new readers how to save their first guide and where it will appear. Keep the message short and useful before the first download.")))
     (isled-demo-cli "add" (nth 0 issue) (nth 3 issue)
                     "--kind" (nth 1 issue) "--tag" (nth 2 issue)))
-  (isled-demo-cli "tag" "add" "6" "sync")
   (dolist (relation
-           '(("1" "2" "Beta readers need guides available without a connection.")
-             ("1" "3" "Reading position must follow readers between devices.")
-             ("1" "4" "Include keyboard users in the first beta.")
-             ("2" "5" "Downloads must survive a dropped connection.")
-             ("2" "6" "Save the guide locally before making it available offline.")
-             ("3" "6" "Keep a local reading position while disconnected.")
-             ("3" "7" "Reconnecting must keep the newer reading position.")
-             ("4" "8" "Clear focus is needed to navigate the library cards.")
-             ("7" "9" "Define conflict order before implementing the merge.")
-             ("10" "2" "Document the download behavior readers will actually get.")))
+           '(("1" "2" "Complete the offline trial before inviting beta readers.")
+             ("2" "3" "The trial must include recovery from an interrupted download.")
+             ("3" "4" "Resuming a download needs durable local content and download state.")
+             ("5" "6" "The cross-device journey needs a working progress merge.")
+             ("6" "7" "The merge needs the ordered changes retained while offline.")
+             ("6" "8" "Settle conflict behavior before implementing the merge.")))
     (isled-demo-cli "wait" "add" (car relation) (cadr relation)
                     (nth 2 relation)))
-  (isled-demo-cli "evidence" "add" "12" "Reviewed the empty library on phone and tablet layouts.")
-  (isled-demo-cli "close" "12" "--outcome" "New readers can find and save their first guide."))
+  (isled-demo-cli "evidence" "add" "10" "Reviewed the empty library on phone and tablet layouts.")
+  (isled-demo-cli "close" "10" "--outcome" "New readers can find and save their first guide."))
 
 (defun isled-demo-capture ()
   "Export the real displayed frame, preserving the package's rendering."
@@ -148,13 +139,13 @@
       (setq mode-line-format nil)
       (setq isled-demo-timer (run-at-time 0 0.25 #'isled-demo-capture)
             isled-demo-clip "hierarchy")
-      (isled-demo-hold 2.5 "Dependencies keep the next useful step in view")
-      (isled-demo-select "0005")
+      (isled-demo-hold 2.5 "Ready work first, followed by the steps it unblocks")
+      (isled-demo-select "0004")
       (isled-demo-hold 0.7 "RET  ·  Read the issue")
       (isled-activate)
       (isled-demo-wait)
       (isled-demo-hold 3 "RET  ·  Read the issue")
-      (search-forward "#0002")
+      (search-forward "#0003")
       (backward-char)
       (isled-jump-to-reference)
       (isled-demo-wait)
@@ -162,7 +153,7 @@
       (isled-history-back)
       (isled-demo-wait)
       (isled-demo-hold 1.5 "M-,  ·  Return to your place")
-      (isled-demo-select "0005")
+      (isled-demo-select "0004")
       (isled-activate)
       (goto-char (point-min))
       (set-window-start nil (point-min))
@@ -185,13 +176,13 @@
       (isled-demo-filter-input "s:open t:sync")
       (isled-demo-wait)
       (isled-demo-hold 2.5 "Only open sync work, with its visible dependencies")
-      (isled-demo-filter-input "s:open t:sync reconnecting")
+      (isled-demo-filter-input "s:open t:sync tablet")
       (isled-demo-wait)
       (isled-demo-hold 2.5 "Combine tags with words anywhere in the issue")
       (setq isled-demo-clip nil)
       (cancel-timer isled-demo-timer)
       (with-temp-file (getenv "PI_RESULT")
-        (prin1 '(:passed t :clips (hierarchy filtering) :fictional-issues 12)
+        (prin1 '(:passed t :clips (hierarchy filtering) :fictional-issues 10)
                (current-buffer)))
       (kill-emacs 0))
   (error

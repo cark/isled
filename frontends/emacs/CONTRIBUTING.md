@@ -460,9 +460,11 @@ does not cover the ledger's required child-file and shared-view refresh semantic
 ## Recording README demos
 
 The README GIFs show the actual frontend with a fictional Trail Notes backlog.
-[`demo/record.el`](demo/record.el) creates its twelve issues and dependencies through
-the CLI in the runner's private HOME, then uses normal frontend commands and
-exports the displayed Emacs frames as PNGs. The capture uses the built-in Modus
+[`demo/record.el`](demo/record.el) creates its ten issues and dependencies through
+the CLI in the runner's private HOME: an offline release sequence, a sync sequence
+with two prerequisites, an independent fix and a completed task. Keep the example
+focused on ordinary work sequences with few joins. It uses normal frontend
+commands and exports the displayed Emacs frames as PNGs. The capture uses the built-in Modus
 Vivendi Tinted theme, hides the mode line, and shows key hints in the echo area.
 Keep the default line spacing so vertical gutter strokes meet between rows.
 It loads no user init and must never
