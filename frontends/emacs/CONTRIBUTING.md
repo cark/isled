@@ -464,6 +464,7 @@ The README GIFs show the actual frontend with a fictional Trail Notes backlog.
 the CLI in the runner's private HOME, then uses normal frontend commands and
 exports the displayed Emacs frames as PNGs. The capture uses the built-in Modus
 Vivendi Tinted theme, hides the mode line, and shows key hints in the echo area.
+Keep the default line spacing so vertical gutter strokes meet between rows.
 It loads no user init and must never
 run in a working daemon. Capture currently requires Linux/Xvfb, graphical Emacs
 with PNG frame export, DejaVu Sans Mono, and ImageMagick for GIF encoding.

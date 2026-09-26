@@ -141,7 +141,6 @@
       (set-frame-font "DejaVu Sans Mono-13" nil t)
       (set-frame-parameter nil 'internal-border-width 16)
       (set-frame-size nil 1080 680 t)
-      (setq-default line-spacing 0.12)
       (isled-demo-fixture)
       (isled isled-demo-root)
       (delete-other-windows)
