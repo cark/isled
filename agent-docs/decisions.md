@@ -312,17 +312,189 @@ Users should not need a checkout, Rust toolchain, manual CLI download or
 executable-path setup for the ordinary route. The two parts work as one product,
 while downloadable CLI binaries remain available for standalone use.
 
-Public distribution should support Linux, macOS and Windows, with native CLI and
-frontend checks before claiming support. Architectures, minimum OS versions,
-release/version compatibility, package archive and upgrade policy still need
-design. Reliable platform builds and versioned release artifacts must
-precede the package-managed installer and clean-system installation/upgrade checks.
+The first release will target three platforms. These are design commitments;
+native CI and release artifact validation still need implementation.
+
+| Compatibility target | Rust binary target | Routine native checks |
+| --- | --- | --- |
+| Linux kernel 5.4+, x86-64 | `x86_64-unknown-linux-musl` | `ubuntu-24.04` |
+| Windows 10+, x86-64 | `x86_64-pc-windows-msvc` | `windows-latest` (Windows Server) |
+| macOS 15+, Apple Silicon | `aarch64-apple-darwin` | `macos-15` |
+
+Keep the initial build and support scope small. Intel Macs, Linux ARM64 and
+native Windows ARM64 releases are deferred; revisit them if users need them.
+Keep CI to one standard native runner per platform, running Rust tests and
+isolated Emacs integration checks. Record actual OS, kernel and tool versions;
+runner image updates must not silently redefine compatibility targets. Additional
+VMs, emulation jobs and self-hosted runners are outside the initial CI scope.
+
+When managed setup has no supported binary for the user's platform, explain
+that limit and link to source-build instructions. Do not compile automatically.
+Users can explicitly configure a matching executable they built themselves;
+this does not extend the tested platform commitment.
+
+Windows 10 compatibility is required, with native Windows Server testing accepted
+in place of Windows 10/11 desktop jobs. Use the ordinary x86-64 MSVC toolchain on
+`windows-latest` and check dependencies for newer OS requirements. Windows 10
+remains an explicitly untested compatibility target.
+
+Distribute Linux builds as a self-contained `x86_64-unknown-linux-musl`
+executable, with the C runtime and SQLite linked statically. This avoids a
+dependency on the host's glibc version or separately installed runtime libraries,
+at the cost of a larger executable. Use the generic x86-64 CPU baseline for Rust
+and native dependencies, without requiring AVX or build-machine CPU features.
+Kernel 5.4, the [original Ubuntu 20.04 baseline](https://ubuntu.com/kernel/lifecycle),
+is a moderate older-system target. It accommodates older installations without
+committing to the toolchain's much older theoretical floor.
+
+Verify Linux artifact linkage and run the musl executable through the applicable
+CLI and Emacs integration checks on the Ubuntu runner. Kernel 5.4 compatibility
+is a build target, not a claim of testing on that kernel. Keep that gap explicit;
+add targeted older-system checks if a concrete compatibility problem requires
+them, rather than maintaining a separate guest system from the outset.
+
+macOS 15 is the minimum so the project can test it directly on a maintained
+Apple Silicon runner. The [macOS 14 runner retires on November 2, 2026](https://github.com/actions/runner-images/issues/13518).
+Set the deployment target to 15.0 consistently for Rust and bundled C code.
+Older macOS releases are outside the initial support commitment.
+
+The existing Emacs 30.1+ requirement still applies. Distinguish intended
+compatibility, completed tests and known gaps in release documentation; do not
+turn toolchain support or a proposed test route into a claim of passing tests.
+
+Tagged releases use one shared version for the Rust executable and Emacs
+package, starting at 0.32.0. This advances the current frontend version rather
+than restarting its version sequence. Release tags use `vMAJOR.MINOR.PATCH`,
+beginning with `v0.32.0`. Keep Cargo, the tagged Emacs package and Nix package
+metadata aligned during release preparation. The current Rust 0.1.0 and Emacs
+0.31.1 declarations have not yet been changed by this design work.
+
+Stage the complete binary set, Emacs package, artifact manifest and SHA-256
+checksums in a draft GitHub release. Publish it with
+[release immutability](https://docs.github.com/en/code-security/concepts/supply-chain-security/immutable-releases)
+enabled, after checking the staged artifacts. Published assets and their tag
+must remain fixed; corrections require a new version. Advancing a frontend pin
+or release branch follows successful publication of the required assets.
+
+Download binaries and their release-specific verification metadata over HTTPS
+from the project's GitHub releases. Verify the selected artifact's SHA-256 before
+running it, including before invoking `isled --version`, and reject missing,
+invalid or mismatched checksums. Verification must not require users to install
+extra tools. This trusts GitHub and the project's release process: checksums
+distributed alongside the binaries are integrity checks, not independent
+publisher signatures. Platform signing and notarization remain release
+implementation concerns; checksum verification does not establish their status.
+
+Each frontend revision declares one known compatible published CLI release.
+Tagged releases keep the shared release version: frontend 0.32.0 pins CLI 0.32.0.
+Unreleased frontend revisions can retain that CLI pin while their requirements
+remain compatible. Select that exact published CLI for managed downloads, using
+the local cached copy when available. Do not search for an arbitrary latest
+release or guess compatibility from a version range. This explicit pin keeps the
+first release free of a compatibility matrix.
+
+Check executable identity and version through `isled --version` before use.
+An explicitly configured release executable, including a Nix-managed one, must
+match the declared CLI pin too; report a different or unreportable version and
+leave it untouched. Do not silently substitute a managed executable for an
+explicit override. Explicit development builds remain a contributor workflow;
+identify them as such rather than presenting them as published release binaries.
+
+After the initial download consent, upgrading the Emacs package automatically
+fetches its pinned CLI on first use when that binary is not already cached,
+with progress and cancellation. A frontend update that retains the same CLI pin
+reuses the existing binary. Keep executables in version-specific locations and
+retain the previous binary so
+rolling back the Emacs package can reuse it. If download, verification or
+activation fails, preserve existing binaries and offer retry; the new frontend
+waits for its matching executable instead of using an incompatible older one.
+This managed upgrade policy does not replace or bypass an explicit executable
+override. Package loading and compilation still perform no downloads.
+
+Use regular MELPA as the planned package channel, with its recipe tracking a
+`release` branch. Advance that branch to a tested release revision only after
+the matching CLI artifacts and verification metadata are publicly available.
+Development continues on `main`; it does not require publishing a binary for
+every commit. This keeps ordinary package updates paired with available binaries
+without maintaining a separate package archive. MELPA supports branch selection;
+its [tree-sitter Rust component](https://github.com/melpa/melpa/blob/master/recipes/tsc)
+uses this arrangement.
+
+MELPA's generated package version is separate from the shared Isled release
+version. Select the CLI using the explicit required version in the frontend,
+never by interpreting an archive-assigned package version. Test the recipe
+locally against real staged artifacts before submission. MELPA inclusion remains
+subject to its maintainers' review; choosing the channel does not publish or
+submit the package.
+
+Keep CLI setup independent of the Emacs package manager. Package managers install
+the Lisp files and declared dependencies; Isled provisions its CLI when a user
+first invokes a command that needs it. Package loading, autoload generation and
+compilation must not provision the CLI. Store managed binaries outside package
+installation directories so package updates and removal do not erase them.
+
+The frontend source carries its required CLI identity. Select the binary from
+that identity, without inspecting the package manager, its generated metadata,
+the checkout's branch name or Git metadata. Following the `release` branch, or
+selecting a published release tag or its exact commit, therefore uses the same
+first-use download and upgrade behavior as an archive installation. Unreleased
+frontend revisions use that same setup with their declared compatible CLI pin.
+
+Document and verify the archive route through `package.el` and representative
+direct Git routes through
+[Elpaca](https://github.com/progfolio/elpaca/blob/master/doc/manual.md#recipes),
+[straight.el](https://github.com/radian-software/straight.el#the-recipe-format)
+and built-in [package-vc](https://www.gnu.org/software/emacs/manual/html_node/emacs/Fetching-Package-Sources.html),
+including their `use-package` integration where applicable. Recipes must select
+the intended revision, include the frontend files and resolve its dependencies.
+Keep runtime provisioning shared; package managers need no Isled-specific download
+hooks. Other managers that install the same package should fit this contract,
+but list completed installation checks separately from expected compatibility.
+Exercise recipe differences with focused checks rather than multiplying the
+native OS matrix by every package manager.
+
+There will be no nightly releases. Lisp-only development can continue using a
+known compatible published CLI. When the frontend needs new CLI behavior,
+publish a CLI release with that behavior and update the pin before advancing
+`main` or the `release` branch to the dependent frontend. The trigger includes
+wire changes, new commands or fields and relied-upon fixes; an unchanged schema
+number alone does not prove compatibility. The existing
+[graph extension](../user-docs/frontend.md#dependency-layout), for example,
+requires updated CLI behavior without changing schema 3.
+
+Once the first CLI release is available, CI must exercise the frontend against
+its pinned published binary as well as the repository-built CLI. Missing release
+assets or a compatibility failure block publication of a dependent frontend.
+An unavailable pin is a retryable setup error, not permission to choose another
+version or compile automatically. Contributors changing Rust can still build
+and explicitly configure a CLI from the same checkout; distinguish those builds
+from published releases and document this source workflow separately.
+
+Reliable platform builds and versioned release artifacts must precede the
+package-managed installer and clean-system installation/upgrade checks.
 
 Deliver this as one sequence: release contract, native CI, versioned artifacts,
 archive preparation, Emacs-managed installation, clean-install/upgrade acceptance,
 then publication. Check archive constraints during the initial design, but complete
 archive preparation against real staged artifacts. This keeps each step grounded
 in the preceding result and leaves final acceptance to the integrated package.
+
+Bootstrap the first release without requiring it to be public before acceptance.
+Initial native CI tests the repository-built CLI. Packaging then supplies real
+staged archives for recipe preparation and installer validation. Once the installer
+is integrated, rebuild the complete candidate from one final revision and test
+the actual staged files through an isolated download source. Exercise the normal
+verification and setup path; do not bypass it with a preinstalled executable or
+weaken the production download policy. Upgrade and rollback checks can use two
+locally staged versioned builds before any public release exists.
+
+Publication owns the final external steps: enable release immutability, publish
+the complete validated draft, verify anonymous downloads and the live installer
+path, then advance the distribution branch and submit the package recipe.
+Activate ongoing frontend checks against the pinned published CLI at that point.
+The staged checks establish prepublication acceptance; the live checks establish
+that the public endpoints deliver those same artifacts. Preserve this distinction
+in the release evidence, and use a new version if a published artifact needs a fix.
 
 Nix stays optional. Respect explicitly configured executables and retain manual
 binaries and source builds as alternatives. The installer is not implemented;
