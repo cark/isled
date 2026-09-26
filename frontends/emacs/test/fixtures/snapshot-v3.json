@@ -1,0 +1,95 @@
+{
+  "schema_version": 3,
+  "root": {
+    "encoding": "utf-8",
+    "value": "/tmp/example"
+  },
+  "issues": [
+    {
+      "id": "0001",
+      "status": "open",
+      "ready": true,
+      "kind": "feature",
+      "title": {
+        "encoding": "utf-8",
+        "value": "First issue"
+      },
+      "path": {
+        "encoding": "utf-8",
+        "value": "/tmp/example/.issues/0001-first-issue.md"
+      },
+      "content": {
+        "encoding": "utf-8",
+        "value": "# 0001 — First issue\n\n## Metadata\n\n- **Status:** open\n- **Kind:** feature\n- **Created:** 2026-09-03\n- **Waiting on:**\n  - #0002 — Second issue\n    - **Reason:** Need it.\n\n## Statement\n\nBody. References #2 and #9999.\n\n- *Emphasis* and [documentation](guide.md).\n\n## Evidence\n\n- Pending.\n\n## Outcome\n\nPending.\n"
+      },
+      "warnings": [],
+      "references": [
+        {
+          "field": "waiting_on",
+          "entry": 0,
+          "authored": "#0002",
+          "target_id": "0002",
+          "resolution": "resolved",
+          "byte_start": 124,
+          "byte_length": 5,
+          "character_start": 122,
+          "character_length": 5
+        },
+        {
+          "field": "statement",
+          "entry": 0,
+          "authored": "#2",
+          "target_id": "0002",
+          "resolution": "resolved",
+          "byte_start": 206,
+          "byte_length": 2,
+          "character_start": 202,
+          "character_length": 2
+        },
+        {
+          "field": "statement",
+          "entry": 0,
+          "authored": "#9999",
+          "target_id": "9999",
+          "resolution": "missing",
+          "byte_start": 213,
+          "byte_length": 5,
+          "character_start": 209,
+          "character_length": 5
+        }
+      ]
+    },
+    {
+      "id": "0002",
+      "status": "closed",
+      "ready": false,
+      "kind": "feature",
+      "title": {
+        "encoding": "utf-8",
+        "value": "Second issue"
+      },
+      "path": {
+        "encoding": "utf-8",
+        "value": "/tmp/example/.issues/0002-second-issue.md"
+      },
+      "content": {
+        "encoding": "utf-8",
+        "value": "# 0002 — Second issue\n\n## Metadata\n\n- **Status:** closed\n- **Kind:** feature\n- **Created:** 2026-09-03\n- **Blocking:**\n  - #0001 — First issue\n\n## Statement\n\nDone.\n\n## Evidence\n\n- Verified.\n\n## Outcome\n\nCompleted.\n"
+      },
+      "warnings": [],
+      "references": [
+        {
+          "field": "blocking",
+          "entry": 0,
+          "authored": "#0001",
+          "target_id": "0001",
+          "resolution": "resolved",
+          "byte_start": 125,
+          "byte_length": 5,
+          "character_start": 123,
+          "character_length": 5
+        }
+      ]
+    }
+  ]
+}

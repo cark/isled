@@ -1,0 +1,16 @@
+/target/
+/.direnv/
+/.agent-shell/
+/.worker-handoff.md
+/.issues/
+/frontends/emacs/dist/
+/.dogfood/
+/frontends/emacs/*.elc
+
+__pycache__/
+*.pyc
+/.codex/
+/research/
+/agent-docs/current-work.md
+/agent-docs/work-board.md
+/.check-packages/

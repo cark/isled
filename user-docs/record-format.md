@@ -1,0 +1,88 @@
+# Structured Markdown record format
+
+This is the current storage grammar. Use semantic CLI mutations for ordinary
+changes. Legacy layouts are not silently converted by ordinary commands.
+
+```markdown
+# 0002 — Add search to the project overview
+
+## Metadata
+
+- **Status:** open
+- **Kind:** task
+- **Created:** 2026-09-04
+- **Tags:** rust, frontend
+- **Waiting on:**
+  - #0001 — Add a project overview
+    - **Reason:** The overview must exist before it can be searched.
+- **Blocking:**
+  - #0003 — Document project search
+
+## Statement
+
+The issue statement, with ordinary Markdown.
+
+### Optional statement subsection
+
+Prose headings begin at level three.
+
+## Evidence
+
+- First evidence item.
+- Second evidence item.
+
+## Outcome
+
+Pending.
+```
+
+## Existing ledgers
+
+The former `## Disposition` heading is not accepted by the current parser.
+Existing ledgers require an explicit, backed-up heading migration before use;
+ordinary commands do not convert them automatically. Keep authored prose
+unchanged, including historical uses of the word. Historical one-time migration
+tools are not part of the supported CLI.
+
+## Grammar
+
+- The existing strict level-one `# NNNN — Title` heading and canonical filename
+  identity remain unchanged.
+- `## Metadata`, `## Statement`, `## Evidence`, and `## Outcome` are
+  mandatory, unique, and ordered. Prose may use headings at level three or
+  below, but no additional level-two headings.
+- Metadata is a Markdown list. `Status`, `Kind`, and `Created` are mandatory,
+  unique, and ordered. `Tags` is one optional comma-and-space-separated line;
+  tag order is preserved and an empty collection omits the line. Optional
+  unique `Waiting on` and `Blocking` entries follow tags and contain nested
+  relation lists. Each relation stores canonical `#NNNN — Title` text so the
+  raw record is understandable without opening another file. Every `Waiting
+  on` relation has one immediately nested, non-empty, single-line `Reason`;
+  `Blocking` relations have no reason because the authoritative reason lives
+  on the outgoing edge.
+- Wait relations are intentionally mirrored. If A waits on B, A contains B in
+  `Waiting on` and B contains A in `Blocking`. Reading relation-aware data
+  validates the direct reciprocal entry and copied title. Changing a title
+  updates that issue and the copied title in each directly related neighbor.
+  Graph traversal remains lazy and operation-specific rather than making an
+  ordinary record read recursively load a fixed number of hops.
+- Closure preserves both mirrored entries. A dependency is a durable logical
+  fact which blocks only while its target is open; a closed target satisfies
+  the relation without deleting it. Closure is terminal, so no edge-state or
+  later reactivation mechanism is required. True deletion semantics remain
+  deferred until deletion is a concrete feature.
+- Stored status, kind, tags, dates, and IDs retain their current canonical
+  value grammar. Semantic frontends may display friendlier labels.
+- Statement is non-empty Markdown. Evidence is a non-empty Markdown list whose
+  entries retain the current non-empty single-line mutation boundary.
+  `- Pending.` remains the generated no-evidence marker.
+- Outcome is one non-empty Markdown paragraph, not a list. Existing wrapped
+  paragraphs retain their physical line breaks; semantic CLI
+  mutations continue to accept one non-empty line. `Pending.` remains the
+  generated no-outcome marker.
+- Permissive compact issue references are recognized only in Statement,
+  Evidence, and Outcome. Canonical relation targets in Metadata remain
+  structural but receive typed snapshot annotations so frontends can present
+  them without parsing Markdown.
+- Generated records use the exact blank-line structure shown and
+  end with one newline. Free-form prose bytes are preserved by edits outside that prose field.
