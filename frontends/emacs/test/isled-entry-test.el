@@ -13,7 +13,7 @@
 (defmacro isled-entry-test--fixtures (&rest body)
   "Run BODY with a private root, views, and typed asynchronous process seam."
   (declare (indent 0) (debug t))
-  `(let* ((root (make-temp-file "isled-entry-" t))
+  `(let* ((root (file-truename (make-temp-file "isled-entry-" t)))
           (child (expand-file-name "child" root))
           (other (expand-file-name "other" root))
           (isled-auto-revert nil)
@@ -225,7 +225,7 @@
                            (executable-find "isled")))
          (isled-auto-revert nil)
          (isled-process-function #'isled-process-start)
-         (root (make-temp-file "isled-entry-real-" t))
+         (root (file-truename (make-temp-file "isled-entry-real-" t)))
          (location (expand-file-name "new directory" root))
          (bad (expand-file-name "invalid" root)))
     (skip-unless isled-program)

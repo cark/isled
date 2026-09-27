@@ -9,6 +9,10 @@
 
 (require 'package)
 
+;; Preserve the original download/signature error instead of package.el's
+;; generic "Failed to download archive" message in unattended checks.
+(setq debug-on-error t)
+
 (let ((directory (getenv "ISLED_CHECK_PACKAGE_DIR")))
   (unless (and directory (not (equal directory "")))
     (error "Set ISLED_CHECK_PACKAGE_DIR to an isolated dependency directory"))

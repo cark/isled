@@ -11,7 +11,7 @@
 (defmacro isled-file-routing-test--with-file (&rest body)
   "Run BODY with a disposable candidate FILE under ROOT."
   (declare (indent 0) (debug t))
-  `(let* ((root (make-temp-file "isled-route-" t))
+  `(let* ((root (file-truename (make-temp-file "isled-route-" t)))
           (file (expand-file-name ".issues/0042-example.md" root))
           (isled-file-routing t)
           (isled-auto-revert nil)
