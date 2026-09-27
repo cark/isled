@@ -69,11 +69,12 @@ jobs:
       - name: Check staging tools
         run: python -B scripts/test-release-staging.py
       - name: Build, inspect, extract and test native release
-        run: python -B scripts/stage-release.py build --target '${{ matrix.target }}' --output target/release-part
+        # Rust's target directory is restored from cache; candidate output must be fresh.
+        run: python -B scripts/stage-release.py build --target '${{ matrix.target }}' --output "$RUNNER_TEMP/isled-release-part"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: part-${{ matrix.target }}
-          path: target/release-part/
+          path: ${{ runner.temp }}/isled-release-part/
           if-no-files-found: error
           retention-days: 14
 
