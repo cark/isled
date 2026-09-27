@@ -163,7 +163,12 @@ class ReleaseStaging(unittest.TestCase):
 
     def test_upgrade_fixture_is_reproducible_and_preserves_source(self):
         first = prepare(self.root, self.base / 'upgrade-a', self.revision)
-        second = prepare(self.root, self.base / 'upgrade-b', self.revision)
+        shallow = self.base / 'shallow-source'
+        subprocess.run(['git', 'clone', '--quiet', '--depth=1', self.root.as_uri(), str(shallow)],
+                       check=True)
+        self.assertEqual(subprocess.check_output(['git', '-C', str(shallow), 'rev-parse',
+                                                 '--is-shallow-repository'], text=True).strip(), 'true')
+        second = prepare(shallow, self.base / 'upgrade-b', self.revision)
         self.assertEqual(release_version(first), '1.2.4')
         self.assertEqual(release_version(self.root), '1.2.3')
         first_revision = source_revision(first, 'HEAD')

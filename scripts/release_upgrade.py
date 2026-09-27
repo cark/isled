@@ -24,7 +24,8 @@ def prepare(root, destination, revision):
                        env=env, check=True)
 
     git('init', '--quiet')
-    git('fetch', '--quiet', str(root), revision)
+    # Actions checks out a shallow source; retain that boundary in the fixture.
+    git('fetch', '--quiet', '--update-shallow', str(root), revision)
     git('checkout', '--quiet', '-b', 'upgrade-fixture', 'FETCH_HEAD')
     edits = {
         'Cargo.toml': [(r'(^version = ")[^"]+("$)', 1)],
