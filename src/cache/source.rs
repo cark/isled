@@ -182,13 +182,15 @@ mod tests {
     fn timestamps_preserve_fractional_precision_on_both_sides_of_epoch() {
         assert_eq!(unix_timestamp_parts(None), (None, None));
         assert_eq!(unix_timestamp_parts(Some(UNIX_EPOCH)), (Some(0), Some(0)));
+        // Representable by both Windows' 100 ns ticks and Unix nanoseconds.
+        let fraction = 123_400;
         assert_eq!(
-            unix_timestamp_parts(Some(UNIX_EPOCH + Duration::new(2, 123))),
-            (Some(2), Some(123))
+            unix_timestamp_parts(Some(UNIX_EPOCH + Duration::new(2, fraction))),
+            (Some(2), Some(fraction))
         );
         assert_eq!(
-            unix_timestamp_parts(Some(UNIX_EPOCH - Duration::new(2, 123))),
-            (Some(-3), Some(999_999_877))
+            unix_timestamp_parts(Some(UNIX_EPOCH - Duration::new(2, fraction))),
+            (Some(-3), Some(1_000_000_000 - fraction))
         );
         assert_eq!(
             unix_timestamp_parts(Some(UNIX_EPOCH - Duration::from_secs(2))),

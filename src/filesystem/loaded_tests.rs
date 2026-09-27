@@ -44,6 +44,10 @@ fn successful_creation_invalidates_the_retained_inventory() {
 fn inventory_reuse_preserves_snapshot_identity_safety_checks() {
     use std::os::unix::{ffi::OsStringExt, fs::symlink};
     for damage in ["symlink", "invalid-utf8", "invalid-identity"] {
+        // macOS rejects this filename at creation; Linux exercises its recovery.
+        if damage == "invalid-utf8" && cfg!(target_os = "macos") {
+            continue;
+        }
         let (temp, root) = fixture();
         let directory = temp.path().join(".issues");
         match damage {

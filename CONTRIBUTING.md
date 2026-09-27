@@ -69,6 +69,9 @@ the logs identify the actual runner, compiler, Emacs and resolved package versio
 
 These jobs exercise newer hosted systems. They do not test Windows 10 or Linux
 kernel 5.4 directly, nor do batch Emacs checks establish graphical behavior.
+Invalid-byte filename recovery is exercised on Linux; the native macOS filesystem
+rejects those fixtures during creation. Unix permission/symlink tests retain their
+platform guards.
 Keep these gaps separate from the [planned compatibility targets](agent-docs/decisions.md#public-installation-direction-planned).
 No release binary is required for this initial workflow. Once releases exist,
 the same frontend checks will also run against the explicitly selected published

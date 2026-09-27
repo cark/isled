@@ -49,7 +49,11 @@ fn title_set_changes_only_semantic_title_and_preserves_stable_path() {
     assert_eq!(value["issues"][0]["title"]["value"], "Renamed café");
     assert_eq!(
         value["issues"][0]["path"]["value"],
-        record.to_str().expect("UTF-8 temporary path")
+        record
+            .canonicalize()
+            .expect("canonical record path")
+            .to_str()
+            .expect("UTF-8 temporary path")
     );
     let check = run(root.path(), &["check"]);
     assert_eq!(check.status.code(), Some(0));

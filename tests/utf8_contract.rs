@@ -157,7 +157,8 @@ fn relation_mutations_read_headers_and_participating_records() {
     );
 }
 
-#[cfg(unix)]
+// The native macOS filesystem rejects the invalid byte before Isled can read it.
+#[cfg(all(unix, not(target_os = "macos")))]
 #[test]
 fn invalid_filename_is_escaped_in_recovery_output() {
     use std::ffi::OsString;

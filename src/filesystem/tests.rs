@@ -75,7 +75,7 @@ fn initialization_reconciles_counter_and_releases_lock() {
 
     let initialized = super::initialize_ledger(temporary.path()).unwrap();
 
-    assert_eq!(initialized, issues);
+    assert_eq!(initialized, issues.canonicalize().unwrap());
     assert_eq!(fs::read(issues.join(".next-id")).unwrap(), b"8\n");
     assert_eq!(
         fs::read(temporary.path().join(".gitignore")).unwrap(),
