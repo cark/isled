@@ -49,20 +49,56 @@ Bash-oracle history is not needed for the retained Rust suite. The manually igno
 not universal CI thresholds. Native macOS/Windows acceptance belongs to the CI
 work and is not established merely by running these checks on Linux.
 
+## GitHub CI
+
+The [CI workflow](.github/workflows/ci.yml) runs on pushes, pull requests and
+manual dispatch. Its three native jobs use Rust 1.97.1 and Emacs 30.1:
+
+| Runner | CLI target |
+| --- | --- |
+| `ubuntu-24.04` | `x86_64-unknown-linux-musl` |
+| `macos-15` (Apple Silicon) | `aarch64-apple-darwin` |
+| `windows-latest` (Windows Server) | `x86_64-pc-windows-msvc` |
+
+Each job runs the contributor Python checks, Rust tests and isolated Emacs
+static/ERT checks against the CLI it builds. Linux also runs formatting and
+Clippy, builds bundled SQLite with musl and a generic x86-64 CPU baseline, and
+rejects an executable requiring a dynamic loader or shared libraries. macOS uses
+deployment target 15.0 for Rust and bundled C code. Actions are pinned to commits;
+the logs identify the actual runner, compiler, Emacs and resolved package versions.
+
+These jobs exercise newer hosted systems. They do not test Windows 10 or Linux
+kernel 5.4 directly, nor do batch Emacs checks establish graphical behavior.
+Keep these gaps separate from the [planned compatibility targets](agent-docs/decisions.md#public-installation-direction-planned).
+No release binary is required for this initial workflow. Once releases exist,
+the same frontend checks will also run against the explicitly selected published
+CLI pin; a missing or incompatible release must fail that check.
+
+To reproduce a target locally, install Rust 1.97.1 with that target, set
+`CARGO_BUILD_TARGET`, then run `cargo test --locked --no-fail-fast`
+and `cargo build --locked`. For Linux musl, install `musl-tools` and use
+`CC_x86_64_unknown_linux_musl=musl-gcc`,
+`CFLAGS_x86_64_unknown_linux_musl="-march=x86-64 -mtune=generic"` and
+`RUSTFLAGS="-C target-cpu=x86-64"`. Follow the Emacs setup below with
+`ISLED_CHECK_PROGRAM` pointing at `target/TARGET/debug/isled` (`isled.exe` on Windows).
+Use a native machine to establish native acceptance; record actual run results
+and any skips when reporting validation.
+
 ## Emacs checks without Nix
 
 Use Emacs 30.1+ and an isolated directory containing `markdown-mode`, Transient
-and `package-lint` with their dependencies. For example, from the checkout root,
-this explicitly installs test dependencies into ignored `.check-packages/` using
-GNU ELPA and MELPA; it does not load your init or alter your normal package directory.
-This installation example uses POSIX shell quoting:
+and `package-lint` with their dependencies. The same explicit setup used by CI
+installs stable GNU/NonGNU ELPA packages and logs their resolved versions.
+From the checkout root, in a POSIX shell:
 
 ```console
-emacs -Q --batch --eval "(progn (require 'package) (setq package-user-dir (expand-file-name \".check-packages\" default-directory) package-install-upgrade-built-in t) (add-to-list 'package-archives '(\"melpa\" . \"https://melpa.org/packages/\") t) (package-refresh-contents) (dolist (pkg '(markdown-mode transient package-lint)) (package-install pkg)))"
+export ISLED_CHECK_PACKAGE_DIR="$PWD/.check-packages"
+emacs -Q --batch -l frontends/emacs/test/install-packages.el
 ```
 
-Allowing built-in package upgrades is necessary because Emacs 30 bundles a
-Transient older than the [required version](README.md#requirements).
+The setup requires an explicit package directory; it does not load your init or
+alter your normal packages. It allows built-in upgrades because Emacs 30 bundles
+a Transient older than the [required version](README.md#requirements).
 Build the candidate CLI, then set `ISLED_CHECK_PACKAGE_DIR` to that directory and
 run the isolated entry point. In a POSIX shell:
 
@@ -71,11 +107,12 @@ cargo build --locked
 ISLED_CHECK_PACKAGE_DIR="$PWD/.check-packages" emacs -Q --batch -l frontends/emacs/test/run-check.el
 ```
 
-In PowerShell, after installing the same dependencies:
+In PowerShell:
 
 ```powershell
-cargo build --locked
 $env:ISLED_CHECK_PACKAGE_DIR = Join-Path (Get-Location) '.check-packages'
+emacs -Q --batch -l frontends/emacs/test/install-packages.el
+cargo build --locked
 emacs -Q --batch -l frontends/emacs/test/run-check.el
 ```
 

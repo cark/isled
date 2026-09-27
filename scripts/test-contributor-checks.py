@@ -28,7 +28,7 @@ class ContributorChecks(unittest.TestCase):
     def write(self,name,text):
         path=self.root/name
         path.parent.mkdir(parents=True,exist_ok=True)
-        path.write_text(text)
+        path.write_bytes(text.encode('utf-8'))
 
     def commit(self):
         self.git('add','.')

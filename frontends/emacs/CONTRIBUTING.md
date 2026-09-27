@@ -35,7 +35,10 @@ python3 scripts/private-graphical-emacs.py \
 ```
 
 The [portable contributor setup](../../CONTRIBUTING.md#emacs-checks-without-nix)
-provides explicit package directories and the candidate CLI. Run from the root:
+provides explicit package directories and the candidate CLI. Its
+[`install-packages.el`](test/install-packages.el) entry point explicitly installs
+check dependencies into `ISLED_CHECK_PACKAGE_DIR`; ordinary validation does not
+download packages. Run from the root:
 
 ```console
 emacs -Q --batch -l frontends/emacs/test/run-check.el

@@ -1,0 +1,129 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  native:
+    name: ${{ matrix.os }} / ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            target: x86_64-unknown-linux-musl
+            rustflags: -C target-cpu=x86-64
+          - os: macos-15
+            target: aarch64-apple-darwin
+            rustflags: ''
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            rustflags: -C target-cpu=x86-64
+    defaults:
+      run:
+        shell: bash
+    env:
+      CARGO_TERM_COLOR: always
+      CARGO_BUILD_TARGET: ${{ matrix.target }}
+      RUSTFLAGS: ${{ matrix.rustflags }}
+      RUST_BACKTRACE: '1'
+      MACOSX_DEPLOYMENT_TARGET: '15.0'
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+
+      - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de
+        with:
+          toolchain: '1.97.1'
+          targets: ${{ matrix.target }}
+          components: clippy, rustfmt
+
+      - name: Install musl compiler
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes musl-tools
+          echo 'CC_x86_64_unknown_linux_musl=musl-gcc' >> "$GITHUB_ENV"
+          echo 'CFLAGS_x86_64_unknown_linux_musl=-march=x86-64 -mtune=generic' >> "$GITHUB_ENV"
+
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+        with:
+          key: ${{ matrix.target }}
+
+      - name: Install Emacs on Linux and macOS
+        if: runner.os != 'Windows'
+        uses: purcell/setup-emacs@34c6ded44899fd1bf74d2889558befd1750e61a7
+        with:
+          version: '30.1'
+
+      - name: Install Emacs on Windows
+        if: runner.os == 'Windows'
+        uses: jcs090218/setup-emacs-windows@3ad415b5f6575fe0bb8218cb35c199a93b1fb833
+        with:
+          version: '30.1'
+
+      - name: Record native environment and configure isolated checks
+        run: |
+          python -c 'import platform; print(platform.platform()); print(platform.machine())'
+          rustc -vV
+          cargo --version
+          emacs -Q --batch --eval '(princ (format "%s\n%s\n" (emacs-version) system-configuration))'
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          temporary = Path(os.environ['RUNNER_TEMP'])
+          executable = Path('target') / os.environ['CARGO_BUILD_TARGET'] / 'debug' / ('isled.exe' if os.name == 'nt' else 'isled')
+          with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as output:
+              print('ISLED_CHECK_PACKAGE_DIR=' + (temporary / 'isled-check-packages').as_posix(), file=output)
+              print('ISLED_CHECK_PROGRAM=' + executable.resolve().as_posix(), file=output)
+          PY
+
+      - name: Contributor checks
+        run: |
+          python -B scripts/check-coding-standards.py
+          python -B scripts/check-repository.py
+          python -B scripts/test-contributor-checks.py
+
+      - name: Rust formatting and lint
+        if: runner.os == 'Linux'
+        run: |
+          cargo fmt --check
+          cargo clippy --locked --all-targets -- -D warnings
+
+      - name: Native Rust tests and CLI build
+        run: |
+          cargo test --locked --no-fail-fast
+          cargo build --locked
+
+      - name: Verify self-contained Linux executable
+        if: runner.os == 'Linux'
+        run: |
+          file "$ISLED_CHECK_PROGRAM"
+          readelf --all "$ISLED_CHECK_PROGRAM" > "$RUNNER_TEMP/isled-elf.txt"
+          if grep -E 'INTERP|\(NEEDED\)' "$RUNNER_TEMP/isled-elf.txt"; then
+            echo 'The musl executable unexpectedly needs a dynamic loader or shared library.' >&2
+            exit 1
+          fi
+
+      - name: Install Emacs check dependencies
+        run: emacs -Q --batch -l frontends/emacs/test/install-packages.el
+
+      - name: Emacs static checks and CLI integration tests
+        run: emacs -Q --batch -l frontends/emacs/test/run-check.el
