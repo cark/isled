@@ -131,6 +131,7 @@ class ContributorChecks(unittest.TestCase):
         self.write('frontends/emacs/CONTRIBUTING.md','# Contributing\n')
         self.write('frontends/emacs/images/hierarchy.gif','GIF89a hierarchy fixture\n')
         self.write('frontends/emacs/images/filtering.gif','GIF89a filtering fixture\n')
+        self.write('frontends/emacs/images/editing.gif','GIF89a editing fixture\n')
         self.write('frontends/emacs/test/private.el','test only\n')
         self.write('LICENSE','MIT fixture\n')
         shutil.copy2(SCRIPTS/'package-emacs.py',self.root/'scripts/package-emacs.py')
@@ -141,7 +142,8 @@ class ContributorChecks(unittest.TestCase):
                 'isled-1.2.3/isled.el','isled-1.2.3/isled-pkg.el',
                 'isled-1.2.3/README.md','isled-1.2.3/user-guide.md',
                 'isled-1.2.3/CONTRIBUTING.md','isled-1.2.3/LICENSE',
-                'isled-1.2.3/images/hierarchy.gif','isled-1.2.3/images/filtering.gif'})
+                'isled-1.2.3/images/hierarchy.gif','isled-1.2.3/images/filtering.gif',
+                'isled-1.2.3/images/editing.gif'})
             self.assertEqual(archive.extractfile('isled-1.2.3/LICENSE').read(),b'MIT fixture\n')
             self.assertIn(b'((emacs "30.1"))',
                           archive.extractfile('isled-1.2.3/isled-pkg.el').read())

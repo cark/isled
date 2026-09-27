@@ -1,38 +1,62 @@
 # Isled — a personal issue ledger
 
-Isled keeps a project's issues in local Markdown files. Use it to record concerns,
-collect evidence, track dependencies, and preserve the reasoning behind decisions.
-A command-line interface manages the ledger; an optional Emacs frontend lets you
-browse, add, edit, close, and follow issues without leaving your editor.
+Keep project concerns, evidence and decisions beyond the current conversation.
+Isled stores issues as local Markdown files, with a CLI to manage them and an
+[Emacs frontend](frontends/emacs/README.md) to explore and edit them.
 
-Each issue has a stable ID and its own file under `.issues/`. Markdown is the
-source of truth; SQLite supplies a disposable query cache. The ledger is local
-and ignored by Git, so cloning a project's source does not copy its issues.
+Coding agents are the first audience. People can use the same ledger from the
+terminal or work visually in Emacs: follow a dependency, read the reasoning,
+and pick up where the last session stopped.
+
+[Get started](#installation) · [Agent skill](#use-it-with-an-agent) ·
+[Emacs tour](frontends/emacs/README.md) · [User guide](user-docs/README.md)
+
+## What it keeps for you
+
+- **Context:** what needs attention and why it matters.
+- **Dependencies:** what is ready and what is waiting on other work.
+- **Evidence and outcomes:** what was checked and how the concern was resolved.
+
+Each issue has a stable ID and a file under `.issues/`. Markdown is the source
+of truth; SQLite is a disposable query cache. The ledger stays local and is
+ignored by Git, so cloning the source does not copy private project notes.
+
+## Use it with an agent
+
+The included [Isled skill](skills/isled/SKILL.md) teaches an agent to find the
+ledger, inspect issues, follow dependencies and record progress through the CLI.
+It also covers when to ask before changing or closing an issue.
+
+Make `skills/isled/` available through your agent's skill mechanism, or link
+its `SKILL.md` from your project instructions. The skill is for using Isled;
+[contributor guidance](CONTRIBUTING.md) covers working on Isled itself.
+
+## Emacs frontend
+
+Browse a dependency hierarchy, filter as you type, and create or edit issues
+in a structured draft. The view refreshes when files change, including changes
+made by an agent through the CLI.
+
+[See the demos and install the package](frontends/emacs/README.md).
+The frontend offers to download its matching CLI on first use.
 
 ## Installation
 
-**Emacs users:** follow the [package installation guide](frontends/emacs/README.md#installation).
-The frontend offers to download its matching CLI on first use.
+**In Emacs:** use the [package installation guide](frontends/emacs/README.md#installation).
+No Rust compiler or manual CLI setup is needed.
 
-**Standalone CLI:** download the archive for your platform from the
-[release page](https://github.com/cark/isled/releases/tag/v0.32.0), verify it
-against the supplied SHA-256 checksums, and extract it. Put `isled` (`isled.exe`
-on Windows) in a directory on `PATH`, then run `isled --version` and `isled --help`.
-The archives include the MIT license. No separate SQLite or C runtime installation
-is needed.
+**For the terminal or an agent:** get the archive for your platform from the
+[release page](https://github.com/cark/isled/releases/tag/v0.32.0). Verify it
+against the supplied SHA-256 checksums, extract it, and put `isled` (`isled.exe`
+on Windows) on `PATH`. Run `isled --version` to check the installation.
 
-To build from source, install the [build requirements](#requirements) and run:
-
-```console
-cargo install --path . --locked
-```
-
-Ensure Cargo's installation directory (normally `~/.cargo/bin`) is on `PATH`.
-Run `isled --help` to see the available commands.
+**From source:** install the [build requirements](#requirements), then run
+`cargo install --path . --locked` in a checkout. Cargo's binary directory,
+normally `~/.cargo/bin`, must be on `PATH`.
 
 ## Quick start
 
-In a new project directory:
+From your project directory:
 
 ```console
 isled init
@@ -41,66 +65,51 @@ isled list --with-path
 isled show 0001
 ```
 
-`init` creates `.issues/` and adds it to `.gitignore`. `add` creates an issue and
-prints its ID; the first issue in a fresh ledger is `0001`. Commands discover the
-nearest ledger in the current directory or its ancestors. Use `--root PATH` to
-select a project explicitly.
+`init` creates `.issues/` and adds it to `.gitignore`. `add` prints the new ID;
+the first issue in a fresh ledger is `0001`. Commands find the nearest ledger
+in the current directory or its parents. Use `--root PATH` to choose one explicitly.
 
-See the [user guide](user-docs/README.md) for filtering, dependencies, evidence,
-and closure, or use `isled help COMMAND` for exact command syntax and examples.
-
-## Emacs frontend
-
-Follow the [frontend setup guide](frontends/emacs/README.md#getting-started) to
-install the package or load it from a checkout. Open a project's issue view with
-`M-x isled`; `C-x p i` chooses a project when that binding is available.
-Use `M-x isled-open-directory` to choose another local directory.
-Issue rows show dependency gutters; `f` filters and `d` reverses direction.
-The guide covers [dependency selection and filtering](frontends/emacs/README.md#dependency-graph-view),
-filtering, navigation, appearance, and key customization.
+Continue with the [user guide](user-docs/README.md), or run
+`isled help COMMAND` for exact syntax and examples.
 
 ## Requirements
 
-- **CLI:** no Bash, Perl, or separate SQLite runtime is required. Cached queries
-  need a writable `.issues/.cache/` directory.
-- **Build:** Rust 1.97 or newer, Cargo, and a C compiler for bundled SQLite.
-  [Cargo.toml](Cargo.toml) declares the Rust minimum.
-- **Emacs frontend:** Emacs 30.1 or newer, `markdown-mode` 2.6 or newer, and
-  Transient 0.8.0 or newer, as declared in the
-  [package metadata](frontends/emacs/isled.el). Managed CLI setup requires
-  built-in TLS and zlib support in Emacs. Package installation resolves the Lisp
-  dependencies; source loading requires you to install them yourself.
+| What you use | What you need |
+| --- | --- |
+| Prebuilt CLI | No separate SQLite or C runtime. Cached queries need a writable `.issues/.cache/`. |
+| Emacs frontend | Emacs 30.1+ with built-in TLS and zlib; `markdown-mode` 2.6+ and Transient 0.8.0+. The package manager installs Lisp dependencies. |
+| Source build | Rust 1.97+, Cargo and a C compiler for bundled SQLite. |
 
-Prebuilt CLI releases target x86-64 Linux 5.4+, x86-64 Windows 10+, and Apple
-Silicon macOS 15+. The oldest Linux and Windows versions are compatibility
-targets, not direct test environments: native staging uses Ubuntu 24.04,
-Windows Server 2025 and macOS 15. The [release checks](scripts/releasing.md#native-staging)
-cover native installation, upgrade and recovery. macOS managed installation
-works with Gatekeeper enabled, without publisher signing or notarization. Browser
-quarantine behavior for standalone macOS downloads and desktop Windows SmartScreen
-remain untested. Other platforms can use a source build.
+Prebuilt releases target **x86-64 Linux 5.4+**, **x86-64 Windows 10+** and
+**Apple Silicon macOS 15+**. Other platforms can use a source build.
+
+Native CI checks installation and recovery on Ubuntu 24.04, Windows Server 2025
+and macOS 15. Linux 5.4 and Windows 10 are compatibility targets, not direct
+test environments. See the [release checks](scripts/releasing.md#native-staging).
+
+The Emacs-managed macOS installation works with Gatekeeper enabled, without
+publisher signing or notarization. Standalone downloads with browser quarantine
+on macOS, and desktop Windows SmartScreen, remain untested.
 
 ## Development environment
 
-The optional pinned Nix environment provides the build and development tools.
-Enter it once with direnv or the filtered wrapper, then run checks inside it:
+Start with [Contributing](CONTRIBUTING.md) for builds and checks. The optional
+[pinned Nix environment](scripts/README.md#source-boundary) is available through
+`scripts/dev.sh` or direnv.
 
-```console
-scripts/dev.sh
-cargo test --locked
-```
+## AI use
 
-For one command, use `scripts/dev.sh -c cargo test --locked`.
-[Contributing](CONTRIBUTING.md) covers Git-only builds, checks and portable Emacs validation;
-[script documentation](scripts/README.md) covers build helpers and optional tooling.
+Isled is developed with substantial help from AI coding agents, including its
+code, tests and documentation.
 
-## Support
+<a id="support"></a>
 
-Report bugs and request improvements through [GitHub issues](https://github.com/cark/isled/issues).
-Include your OS, Emacs version and `isled --version`, plus a small reproduction
-using disposable data. Do not include private issue ledgers.
+## Support and license
 
-## License
+Report bugs and suggest improvements through [GitHub issues](https://github.com/cark/isled/issues).
+Include your OS, relevant Emacs/CLI versions and a small reproduction with
+sample data. Keep private ledgers out of reports.
 
-Isled is licensed under the [MIT License](LICENSE).
-Copyright (c) 2026 Sacha De Vos.
+<a id="license"></a>
+
+[MIT License](LICENSE). Copyright (c) 2026 Sacha De Vos.

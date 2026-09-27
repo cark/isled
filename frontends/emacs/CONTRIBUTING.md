@@ -511,7 +511,8 @@ The README GIFs show the actual frontend with a fictional Trail Notes backlog.
 the CLI in the runner's private HOME: an offline release sequence, a sync sequence
 with two prerequisites, an independent fix and a completed task. Keep the example
 focused on ordinary work sequences with few joins. It uses normal frontend
-commands and exports the displayed Emacs frames as PNGs. The capture uses the built-in Modus
+commands to browse and filter, then create an eleventh issue, edit it and verify
+the saved text. It exports the displayed Emacs frames as PNGs. The capture uses the built-in Modus
 Vivendi Tinted theme, hides the mode line, and shows key hints in the echo area.
 Keep the default line spacing so vertical gutter strokes meet between rows.
 It loads no user init and must never
@@ -528,16 +529,18 @@ python3 scripts/private-graphical-emacs.py \
   --script frontends/emacs/demo/record.el \
   --load-path frontends/emacs \
   --env "ISLED_DEMO_PROGRAM=$PWD/target/debug/isled" \
-  --screen 1080x680x24 --timeout 60 \
+  --screen 1080x680x24 --timeout 100 \
   --artifacts /tmp/isled-readme-demo --keep-success
 
 magick -delay 25 /tmp/isled-readme-demo/frames/hierarchy/*.png \
   -layers Optimize -loop 0 frontends/emacs/images/hierarchy.gif
 magick -delay 25 /tmp/isled-readme-demo/frames/filtering/*.png \
   -layers Optimize -loop 0 frontends/emacs/images/filtering.gif
+magick -delay 25 /tmp/isled-readme-demo/frames/editing/*.png \
+  -layers Optimize -loop 0 frontends/emacs/images/editing.gif
 ```
 
 Check the runner's success and cleanup result, then inspect the opening, expanded,
-filtered and final frames for legibility and unintended UI. Both clips loop at
+filtered, draft and saved frames for legibility and unintended UI. The clips loop at
 four frames per second. Keep the fixture fictional and the output bounded; only
 the selected GIFs belong in the source tree, not raw frames or runner logs.

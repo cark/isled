@@ -40,7 +40,7 @@ def build_archive(root, destination=None):
     sources = {path.name: path for path in sorted(frontend.glob("isled*.el"))
                if path.name != "isled-pkg.el"}
     for doc in ("README.md", "user-guide.md", "CONTRIBUTING.md",
-                "images/hierarchy.gif", "images/filtering.gif"):
+                "images/hierarchy.gif", "images/filtering.gif", "images/editing.gif"):
         sources[doc] = frontend / doc
     sources["LICENSE"] = root / "LICENSE"
     try:

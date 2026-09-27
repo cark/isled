@@ -2,9 +2,12 @@
 
 <a id="emacs-frontend"></a>
 
-Browse your project's issues, follow their dependencies, and add or edit records
-without leaving Emacs. Issues stay in ordinary Markdown files in the project's
-`.issues/` directory.
+See what is ready, understand what is blocked, and keep the next step in reach.
+Isled brings your project's issues into Emacs, with a dependency view and an
+editor for creating and updating them.
+
+Your issues stay in ordinary Markdown files under `.issues/`. You and your
+coding agents can work on the same ledger; the view follows changes on disk.
 
 [Install](#installation) · [Open a ledger](#getting-started) ·
 [Browse](#navigation-and-folding) · [Filter](#issue-filtering) ·
@@ -19,6 +22,11 @@ a dependency, and return to where you were.
 issue, with results updating as you type.
 
 ![Filtering the sample project's issues by tag and text](images/filtering.gif)
+
+**Write it down while it is fresh.** Create an issue, add a useful detail, and
+save it back to the ledger.
+
+![Creating a download-size issue, editing its statement and reading the saved result](images/editing.gif)
 
 The demos use a fictional project, Trail Notes. The interface shown is the actual
 Emacs package.
@@ -49,8 +57,7 @@ MELPA archives, and allow upgrades to bundled packages:
 ```
 
 Run `M-x package-refresh-contents`, then `M-x package-install-file` and select
-the downloaded tar. Package installation resolves dependencies and registers
-the commands and project shortcut.
+the downloaded tar.
 
 Emacs 30's bundled Transient is too old for Isled. Restart Emacs if an older
 Transient was already loaded when you upgraded it.
@@ -72,13 +79,14 @@ For a source build or development checkout, follow the
 
 ## Getting started
 
-Visit a file or directory in your project and run **`M-x isled`**. You can also
-press **`C-x p i`** to choose a known project, or run **`M-x isled-open-directory`**
-to choose any local directory.
+Open the ledger that fits your work:
 
-If there is no ledger, Isled offers to create one, open an existing parent ledger,
-or cancel. It creates files only when you choose **Create ledger here**.
-A new view shows open issues in a dependency hierarchy.
+- **`M-x isled`** uses the project you are visiting.
+- **`C-x p i`** chooses a known project.
+- **`M-x isled-open-directory`** opens any local directory.
+
+If the directory has no ledger, you can create one or use a parent ledger.
+A new view shows open issues, arranged by dependency.
 
 The `C-x p i` shortcut is installed only if that key is free;
 `M-x isled-open-project` is always available.
@@ -108,10 +116,12 @@ available through `M-x`.
 
 <a id="dependency-graph-view"></a>
 
-The hierarchy places prerequisites before the work they unblock. Press `d` to
-reverse that direction, or `v` to switch to a flat list. Issue-ID colors distinguish
-ready, waiting and closed issues. Filtering can hide dependencies, so a visible
-root is not necessarily ready. See [reading the graph](user-guide.md#dependency-graph-view).
+The hierarchy puts prerequisites before the work they unblock. Use **`d`** to
+reverse it or **`v`** for a flat list. ID colors distinguish ready, waiting and
+closed issues.
+
+Filters can hide dependencies: an issue at the top may still be waiting.
+See [reading the graph](user-guide.md#dependency-graph-view).
 
 <a id="issue-search"></a>
 <a id="opening-issue-files"></a>
@@ -149,8 +159,8 @@ already loaded in the buffer; use `f` to search complete issues across the ledge
 
 ## Add, edit and close issues
 
-Press **`a`** to add an issue or **`e`** to edit the issue at point. A draft opens
-with fields for its title, kind, tags, statement, evidence, outcome and dependencies.
+Press **`a`** to add an issue or **`e`** to edit one. Give the draft a title and
+describe the concern. Add tags, dependencies and evidence as the work takes shape.
 
 | In the editor | Action |
 | --- | --- |
@@ -161,13 +171,13 @@ with fields for its title, kind, tags, statement, evidence, outcome and dependen
 | `TAB` | Complete a value or indent multiline text. |
 | `C-c ?` | Show editor help. |
 
-Press **`c`** in the issue view to prepare closure. Fill in concrete Evidence and
-Outcome, then save to close the issue. Closure is terminal. Ordinary editing never
-closes an issue, and canceling the closing draft leaves it open.
+When the work is resolved, press **`c`** in the view. Record the evidence and
+outcome, then save to close the issue. Closure is permanent; ordinary saves keep
+an open issue open.
 
-Errors appear beside fields. If the file changed while you were editing, Isled
-keeps your draft and offers comparison and recovery choices. See the
-[editing guide](user-guide.md#add-edit-and-close-issues) for conflicts and completion.
+Errors appear beside the fields that need attention. If someone else changed
+the issue, your draft is kept so you can compare versions. The
+[editing guide](user-guide.md#add-edit-and-close-issues) covers recovery and completion.
 
 ## Customization
 
@@ -191,10 +201,21 @@ reference. `?` in a view and `C-c ?` in a draft keep help close at hand.
 <a id="automatic-refresh"></a>
 <a id="known-warnings"></a>
 
-Isled refreshes when issue files change. Press `g` to refresh manually or retry
-a failed refresh. Your filter is retained. A **Known warnings** indicator means
-an issue needs attention; press `!` to visit the findings. The
-[warning guide](user-guide.md#known-warnings) explains their scope and recovery.
+The view refreshes when issue files change and keeps your filter. Press **`g`**
+to refresh manually. If **Known warnings** appears, press **`!`** to see what
+needs attention. See the [warning guide](user-guide.md#known-warnings) for details.
+
+## Working with an agent
+
+Give your coding agent the [Isled skill](../../skills/isled/SKILL.md) to manage
+the same ledger through the CLI. Use Emacs to read its findings, adjust a draft
+or follow the next dependency.
+
+## AI use
+
+Isled is developed with substantial help from AI coding agents, including its
+code, tests and documentation. The GIFs above are recordings of the real frontend
+using fictional issues.
 
 ## Contributing
 
