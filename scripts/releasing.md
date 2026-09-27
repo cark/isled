@@ -72,6 +72,9 @@ Windows additionally creates an ephemeral standard account and checks junction
 creation, upgrade, rollback and interrupted-switch recovery with no administrator
 rights, symbolic-link privilege or Developer Mode. This is a hosted native check,
 not evidence of Windows 10 or desktop SmartScreen behavior.
+The harness temporarily disables Developer Mode on the disposable Windows runner
+when its image enables it, and restores that setting afterwards. The standard-user
+child asserts the restricted conditions before running the installer.
 
 The owned loopback server substitutes only the request destination. These native
 checks exercise normal selection, verification, extraction and execution. Public

@@ -73,6 +73,11 @@ if ($AsStandardUser) {
 $user = 'isled-' + [guid]::NewGuid().ToString('N').Substring(0, 10)
 $work = Join-Path $env:PUBLIC $user
 $created = $false
+$developmentKey = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock'
+$developmentName = 'AllowDevelopmentWithoutDevLicense'
+$developmentSettings = Get-ItemProperty $developmentKey -ErrorAction SilentlyContinue
+$developmentProperty = if ($developmentSettings) { $developmentSettings.PSObject.Properties[$developmentName] }
+$developmentChanged = $false
 try {
     New-Item -ItemType Directory -Path $work | Out-Null
     foreach ($entry in @(@($CandidateDirectory, 'base'), @($UpgradeDirectory, 'upgrade'))) {
@@ -92,14 +97,26 @@ try {
     $acl.AddAccessRule($rule)
     Set-Acl $work $acl
     $credential = [Management.Automation.PSCredential]::new("$env:COMPUTERNAME\$user", $password)
+    # Hosted Windows images enable Developer Mode. Tighten the disposable VM's
+    # setting for this check; the child still requires it to be disabled.
+    if ($developmentProperty -and $developmentProperty.Value -eq 1) {
+        Set-ItemProperty -Path $developmentKey -Name $developmentName -Value 0
+        $developmentChanged = $true
+    }
     $process = Start-Process -FilePath "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" `
         -Credential $credential -LoadUserProfile -Wait -PassThru `
         -ArgumentList "-NoProfile -NonInteractive -ExecutionPolicy Bypass -File `"$script`" -AsStandardUser -OutputDirectory `"$work`""
     New-Item -ItemType Directory -Path $OutputDirectory -Force | Out-Null
     Copy-Item "$work\*.json", "$work\*.txt" $OutputDirectory -ErrorAction SilentlyContinue
-    if ($process.ExitCode -ne 0) { throw "Standard-user installation failed; inspect $OutputDirectory" }
+    if ($process.ExitCode -ne 0) {
+        if (Test-Path "$OutputDirectory\failure.txt") { Get-Content "$OutputDirectory\failure.txt" }
+        throw "Standard-user installation failed; inspect $OutputDirectory"
+    }
     Get-Content "$OutputDirectory\receipt.json"
 } finally {
+    if ($developmentChanged) {
+        Set-ItemProperty -Path $developmentKey -Name $developmentName -Value $developmentProperty.Value
+    }
     if ($created) { Remove-LocalUser -Name $user }
     if (Test-Path $work) { Remove-Item $work -Recurse -Force }
 }
