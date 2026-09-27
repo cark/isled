@@ -79,12 +79,15 @@
                     ((symbol-function 'url-retrieve)
                      (lambda (url callback &rest arguments)
                        (when offline (error "Cached or explicit executable attempted a download"))
-                       (unless (string-prefix-p "https://github.com/cark/isled/releases/download/" url)
-                         (error "Unexpected production asset URL: %s" url))
-                       (push url requests)
-                       (let ((origin (getenv "ISLED_INSTALL_TEST_ORIGIN")))
+                       (let* ((origin (getenv "ISLED_INSTALL_TEST_ORIGIN"))
+                              (staged (and origin (not (string-empty-p origin))))
+                              (asset (string-prefix-p "https://github.com/cark/isled/releases/download/" url)))
+                         (when (and staged (not asset)) (error "Unexpected staged asset URL"))
+                         ;; Count asset requests, not the redirects validated by
+                         ;; the production downloader before it calls us.
+                         (when asset (push url requests))
                          (apply retriever
-                                (if (and origin (not (string-empty-p origin)))
+                                (if staged
                                     (concat origin "/" mode "/" (file-name-nondirectory url))
                                   url)
                                 callback arguments)))))
