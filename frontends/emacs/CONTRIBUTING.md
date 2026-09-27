@@ -460,6 +460,12 @@ watch is restored when possible. The `kqueue` backend cannot observe existing
 child-file content changes and uses polling. Built-in non-file Auto Revert alone
 does not cover the ledger's required child-file and shared-view refresh semantics.
 
+The native auto-refresh integration test changes a disposable ledger directly:
+in-place edit, atomic replacement, creation, rename and deletion. It waits for the
+normal notification/idle-timer or Auto Revert path to update an open view, without
+requesting refresh itself. Each CI runner logs its actual backend and whether it
+used notifications or polling; closing the view must release its watch.
+
 
 
 ## Recording README demos

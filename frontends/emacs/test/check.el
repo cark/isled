@@ -148,6 +148,8 @@ PHASE is nil for all checks, static for compilation/lint, or tests for ERT."
                     nil t)
               (load (expand-file-name "isled-auto-refresh-test.el" test-directory)
                     nil t)
+              (load (expand-file-name "isled-auto-refresh-integration-test.el" test-directory)
+                    nil t)
               (load (expand-file-name "isled-test.el" test-directory)
                     nil t)
               (load (expand-file-name "isled-recovery-test.el" test-directory)
