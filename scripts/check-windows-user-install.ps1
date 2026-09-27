@@ -7,6 +7,16 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 
+function Get-BundleFileHash([string]$Path) {
+    # Keep hashing independent of module discovery in the clean user session.
+    $hash = [Security.Cryptography.SHA256]::Create()
+    try {
+        $stream = [IO.File]::OpenRead($Path)
+        try { return [BitConverter]::ToString($hash.ComputeHash($stream)) }
+        finally { $stream.Dispose() }
+    } finally { $hash.Dispose() }
+}
+
 if ($AsStandardUser) {
     try {
         $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
@@ -45,9 +55,9 @@ if ($AsStandardUser) {
             }
             foreach ($name in @('isled.exe', 'LICENSE', 'bundle.json', 'skill\SKILL.md',
                                 'skill\references\mutations.md', 'skill\references\recovery.md')) {
-                $source = Get-FileHash (Join-Path (Split-Path $program) $name)
-                $installed = Get-FileHash (Join-Path "$root\current" $name)
-                if ($source.Hash -ne $installed.Hash) { throw "Selected bundle differs: $name" }
+                $source = Get-BundleFileHash (Join-Path (Split-Path $program) $name)
+                $installed = Get-BundleFileHash (Join-Path "$root\current" $name)
+                if ($source -ne $installed) { throw "Selected bundle differs: $name" }
             }
         }
         if ($versions[0] -eq $versions[1] -or $versions[0] -ne $versions[2]) {
