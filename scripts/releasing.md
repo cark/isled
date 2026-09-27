@@ -26,7 +26,7 @@ commit and rejects untracked source. No tag is needed yet.
 ## Native staging
 
 The [Release staging workflow](../.github/workflows/release.yml) runs manually or
-when the preparation branch `release/artifacts` is pushed. It does not run on a
+when the preparation branch `release-artifacts` is pushed. It does not run on a
 schedule, create a release, push a tag or advance a distribution branch.
 
 The three jobs build on the same native runners as source CI, using Rust 1.97.1

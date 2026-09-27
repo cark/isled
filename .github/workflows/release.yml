@@ -3,7 +3,7 @@ name: Release staging
 on:
   workflow_dispatch:
   push:
-    branches: ['release/artifacts']
+    branches: ['release-artifacts']
 
 permissions:
   contents: read
