@@ -52,7 +52,9 @@ cancellation function; verification times out without affecting ledger commands.
               (progn
                 (setq process
                       (make-process
-                       :name "isled-version" :buffer output :stderr output
+                       ;; A single pipe also captures stderr without a second
+                       ;; process sentinel inserting status messages into it.
+                       :name "isled-version" :buffer output
                        :command (list program "--version") :connection-type 'pipe
                        :coding 'utf-8-unix :noquery t
                        :sentinel

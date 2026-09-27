@@ -160,7 +160,7 @@
            (checksums (isled-install--read (expand-file-name "isled-0.32.0-SHA256SUMS" directory)))
            (manifest (isled-install--read (expand-file-name "isled-0.32.0-manifest.json" directory))))
       (should (isled-release-p
-               (isled-release-read manifest (replace-regexp-in-string "\n" "\r\n" checksums)
+               (isled-release-read manifest (replace-regexp-in-string "\r?\n" "\r\n" checksums)
                                    "0.32.0" "x86_64-unknown-linux-musl")))
       (dolist (bad (list "" "nonsense\n" (concat checksums checksums)))
         (should-error (isled-release-read manifest bad "0.32.0" "x86_64-unknown-linux-musl")))

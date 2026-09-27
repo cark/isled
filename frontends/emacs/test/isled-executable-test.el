@@ -43,14 +43,19 @@
   (let ((program (expand-file-name invocation-name invocation-directory))
         (launcher (symbol-function 'make-process)))
     (dolist (case '(("isled 0.32.0-dev" nil nil) ("isled 0.32.0-dev" t t)
-                    ("isled 0.32.1-dev" t nil) ("not isled 0.32.0" nil nil)))
+                    ("isled 0.32.1-dev" t nil) ("not isled 0.32.0" nil nil)
+                    ("isled 0.32.0" nil nil "unexpected stderr")
+                    ("" nil t "isled 0.32.0")))
       (let ((isled-executable--verified (make-hash-table :test #'equal)) result)
         (cl-letf (((symbol-function 'make-process)
                    (lambda (&rest arguments)
                      (apply launcher
                             (plist-put arguments :command
                                        (list program "-Q" "--batch" "--eval"
-                                             (prin1-to-string `(princ ,(car case)))))))))
+                                             (prin1-to-string
+                                              `(progn (princ ,(car case))
+                                                      (princ ,(or (nth 3 case) "")
+                                                             'external-debugging-output)))))))))
           (isled-executable-verify program "0.32.0" (nth 1 case)
                                    (lambda (path error) (setq result (list path error)))))
         (isled-download-test--wait (lambda () result))
