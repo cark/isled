@@ -140,12 +140,16 @@ output directory; `--managers` and `--selectors` allow focused reruns.
 
 ## Submission handoff
 
+The initial packaged release uses the direct Git routes above. Once the pinned
+CLI assets and distribution refs are public and verified, users can install
+through their package manager without waiting for MELPA listing.
+
 The [MELPA submission draft](recipes/melpa-submission.md) is prepared locally.
 Before sending it, confirm the public release assets and `release` branch are
 available and that the maintainer has reviewed the package and submission.
 MELPA's [PR template](https://github.com/melpa/melpa/blob/master/.github/PULL_REQUEST_TEMPLATE.md)
 also requires at least one month of public repository history. Keep that
-publication condition separate from local recipe acceptance.
+submission condition separate from local recipe acceptance and the first release.
 
 Runtime files retain their MIT SPDX headers, author credit and `Assisted-by`
 attribution. Attribution identifies current Codex assistance; it is not a complete

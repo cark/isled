@@ -184,6 +184,7 @@ come from one source revision with fresh native receipts, package and checksums.
 Then perform clean-install, upgrade and rollback checks through the normal setup
 path against staged downloads. Freeze the final tag identity only after that
 acceptance. Enable immutable releases and publish as a separate maintainer action;
-verify public downloads and the live installer before advancing `release` and
-submitting the MELPA recipe. Corrections after immutable publication need a new
-version.
+verify public downloads and the live installer before advancing `release` for
+direct Git installation. MELPA submission follows when its requirements are met;
+archive listing does not delay the first release. Corrections after immutable
+publication need a new version.

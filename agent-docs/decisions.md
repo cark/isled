@@ -423,7 +423,13 @@ waits for its matching executable instead of using an incompatible older one.
 This managed upgrade policy does not replace or bypass an explicit executable
 override. Package loading and compilation still perform no downloads.
 
-Use regular MELPA as the planned package channel, with its recipe tracking a
+Use direct Git installation through Elpaca, straight.el and package-vc for the
+initial packaged release. Publish and verify the pinned CLI assets before
+advertising those routes. MELPA submission and acceptance follow when its
+requirements are met; they do not delay the first release. This gives users
+normal package-manager installation while archive review is pending.
+
+Use regular MELPA as the planned archive channel, with its recipe tracking a
 `release` branch. Advance that branch to a tested release revision only after
 the matching CLI artifacts and verification metadata are publicly available.
 Development continues on `main`; it does not require publishing a binary for
@@ -502,8 +508,10 @@ locally staged versioned builds before any public release exists.
 
 Publication owns the final external steps: enable release immutability, publish
 the complete validated draft, verify anonymous downloads and the live installer
-path, then advance the distribution branch and submit the package recipe.
+path, then advance the distribution branch for direct Git installation.
 Activate ongoing frontend checks against the pinned published CLI at that point.
+Submit the MELPA recipe later, once its public-history and maintainer-review
+requirements are met, and verify archive installation after acceptance.
 The staged checks establish prepublication acceptance; the live checks establish
 that the public endpoints deliver those same artifacts. Preserve this distinction
 in the release evidence, and use a new version if a published artifact needs a fix.
