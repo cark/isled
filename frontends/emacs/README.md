@@ -25,67 +25,50 @@ Emacs package.
 
 ## Installation
 
-You need **Emacs 30.1+**, the **Isled command-line tool**, **markdown-mode 2.6+**,
-and **Transient 0.8.0+**. The first packaged release is not published yet, so
-install the CLI and Emacs package from the same checkout using the steps below.
-The [managed installer](user-guide.md#cli-setup-and-upgrades) is ready for staged
-testing; public downloads become available with that release.
-Managed setup uses Emacs's built-in TLS and zlib support, without a compiler or
-separate verification tools. See [CLI setup and recovery](user-guide.md#cli-setup-and-upgrades)
-for consent, upgrades and explicitly configured executables, and the
-[release targets](../../README.md#requirements) for platform limits.
+You need **Emacs 30.1+** with built-in TLS and zlib support. Your package
+manager installs **markdown-mode 2.6+** and **Transient 0.8.0+**. On first use,
+Isled offers to download the matching CLI; no Rust compiler, PATH setup or
+separate verification tools are needed.
 
-### 1. Install the command-line tool
+### With your package manager
 
-From the Isled checkout root, with the [build requirements](../../README.md#requirements)
-installed:
-
-```console
-cargo install --path . --locked
-```
-
-Point Emacs at this source build and explicitly allow its development identity:
-
-```emacs-lisp
-(setq isled-program (expand-file-name "~/.cargo/bin/isled")
-      isled-use-development-cli t)
-```
-
-On Windows, use the path to `isled.exe`. The executable must match this checkout's
-CLI version. An explicitly configured executable is never replaced by a download.
+Use the [Elpaca, straight.el or built-in package-vc recipes](packaging.md).
+They support the `release` branch, a fixed tag or commit, and development on
+`main`. Isled is not yet listed on MELPA.
 
 <a id="package-archive"></a>
 
-### 2. Install the Emacs package
+### From the release archive
 
-Build the package archive from the checkout root using Python 3.9+:
-
-```console
-python3 scripts/package-emacs.py
-```
-
-Make the dependencies available through your configured Emacs package archives.
-For a `package.el` setup, you can enable MELPA and refresh the package list:
+Download **`isled-0.32.0.tar`** from the [release page](https://github.com/cark/isled/releases/tag/v0.32.0).
+Make the dependencies available through your configured GNU/NonGNU ELPA or
+MELPA archives, and allow upgrades to bundled packages:
 
 ```emacs-lisp
-(require 'package)
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (setq package-install-upgrade-built-in t)
-(package-refresh-contents)
 ```
 
-Then run `M-x package-install-file` and select the generated
-`frontends/emacs/dist/isled-VERSION.tar`. Package installation resolves the declared
-dependencies and registers the commands and project shortcut automatically.
+Run `M-x package-refresh-contents`, then `M-x package-install-file` and select
+the downloaded tar. Package installation resolves dependencies and registers
+the commands and project shortcut.
 
-Emacs 30's bundled Transient is too old for Isled. Allowing built-in package
-upgrades enables the required version; restart Emacs if an older Transient was
-already loaded when you upgraded it.
+Emacs 30's bundled Transient is too old for Isled. Restart Emacs if an older
+Transient was already loaded when you upgraded it.
+
+### First use
+
+Visit your project and run **`M-x isled`**. Accept the CLI download when asked.
+You can also run `M-x isled-setup-cli` to prepare it separately.
+
+Managed downloads support x86-64 Linux and Windows, and Apple Silicon macOS;
+see [platform requirements](../../README.md#requirements) for minimum versions
+and test limits. [CLI setup and recovery](user-guide.md#cli-setup-and-upgrades)
+covers cancellation, upgrades, offline reuse and separately installed executables.
 
 <a id="local-configuration"></a>
 
-Prefer to load the package directly from a checkout? Use the
-[source-loading instructions](user-guide.md#local-configuration).
+For a source build or development checkout, follow the
+[contributor setup](CONTRIBUTING.md#source-development-setup).
 
 ## Getting started
 

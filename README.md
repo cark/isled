@@ -11,7 +11,17 @@ and ignored by Git, so cloning a project's source does not copy its issues.
 
 ## Installation
 
-From a source checkout, with the [build requirements](#requirements) installed:
+**Emacs users:** follow the [package installation guide](frontends/emacs/README.md#installation).
+The frontend offers to download its matching CLI on first use.
+
+**Standalone CLI:** download the archive for your platform from the
+[release page](https://github.com/cark/isled/releases/tag/v0.32.0), verify it
+against the supplied SHA-256 checksums, and extract it. Put `isled` (`isled.exe`
+on Windows) in a directory on `PATH`, then run `isled --version` and `isled --help`.
+The archives include the MIT license. No separate SQLite or C runtime installation
+is needed.
+
+To build from source, install the [build requirements](#requirements) and run:
 
 ```console
 cargo install --path . --locked
@@ -57,19 +67,18 @@ filtering, navigation, appearance, and key customization.
   [Cargo.toml](Cargo.toml) declares the Rust minimum.
 - **Emacs frontend:** Emacs 30.1 or newer, `markdown-mode` 2.6 or newer, and
   Transient 0.8.0 or newer, as declared in the
-  [package metadata](frontends/emacs/isled.el). For the current source workflow,
-  explicitly configure the matching CLI as described in
-  [frontend installation](frontends/emacs/README.md#installation). Managed setup
-  requires built-in TLS and zlib support in Emacs; public binaries are not yet
-  published. When loading source directly, install these
-  dependencies yourself; package archive installation uses the declared dependencies.
+  [package metadata](frontends/emacs/isled.el). Managed CLI setup requires
+  built-in TLS and zlib support in Emacs. Package installation resolves the Lisp
+  dependencies; source loading requires you to install them yourself.
 
 Prebuilt CLI releases target x86-64 Linux 5.4+, x86-64 Windows 10+, and Apple
 Silicon macOS 15+. The oldest Linux and Windows versions are compatibility
 targets, not direct test environments: native staging uses Ubuntu 24.04,
 Windows Server 2025 and macOS 15. The [release checks](scripts/releasing.md#native-staging)
-cover prepared artifacts; public downloads become available when the first
-release is published. Other platforms can use a source build.
+cover native installation, upgrade and recovery. macOS managed installation
+works with Gatekeeper enabled, without publisher signing or notarization. Browser
+quarantine behavior for standalone macOS downloads and desktop Windows SmartScreen
+remain untested. Other platforms can use a source build.
 
 ## Development environment
 
@@ -84,6 +93,12 @@ cargo test --locked
 For one command, use `scripts/dev.sh -c cargo test --locked`.
 [Contributing](CONTRIBUTING.md) covers Git-only builds, checks and portable Emacs validation;
 [script documentation](scripts/README.md) covers build helpers and optional tooling.
+
+## Support
+
+Report bugs and request improvements through [GitHub issues](https://github.com/cark/isled/issues).
+Include your OS, Emacs version and `isled --version`, plus a small reproduction
+using disposable data. Do not include private issue ledgers.
 
 ## License
 

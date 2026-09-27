@@ -11,6 +11,28 @@ For installation and daily use, start with the [README](README.md). The
 - [Loading and rendering](#bounded-loading)
 - [Recording README demos](#recording-readme-demos)
 
+## Source development setup
+
+Build the CLI from the same checkout as the frontend:
+
+```console
+cargo build --locked
+```
+
+Install the [frontend dependencies](README.md#installation), then point Emacs
+at this checkout's executable and opt into its development version identity:
+
+```emacs-lisp
+(setq isled-program (expand-file-name "~/src/isled/target/debug/isled")
+      isled-use-development-cli t)
+```
+
+On Windows, use the path to `isled.exe`. Load the frontend with the
+[source configuration example](user-guide.md#local-configuration), or build and
+install the [package archive](#package-archive). The explicit executable is
+checked against the frontend's CLI pin and is never replaced by a download.
+`cargo install --path . --locked` is another option; configure its installed path.
+
 ## Validation
 
 The [resettable relation recovery demo](test/fixtures/relation-warnings/README.md)

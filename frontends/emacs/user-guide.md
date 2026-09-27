@@ -626,9 +626,9 @@ through `isled-markdown-link-face`.
 
 ## CLI setup and upgrades
 
-Automatic setup uses the exact CLI release required by your Emacs package. The
-first packaged release is not published yet; use the [source installation
-steps](README.md#installation) until its downloads are available.
+Automatic setup uses the exact published CLI release required by your Emacs
+package. See [installation](README.md#installation) for package-manager recipes
+and the downloadable Emacs archive.
 
 With `isled-program` set to nil, the first command that needs the CLI asks to
 download it from the project's GitHub release. Emacs checks the download before

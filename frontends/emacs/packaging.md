@@ -1,10 +1,13 @@
 # Package manager recipes
 
-These recipes prepare the first packaged release. Isled is not yet on MELPA,
-and the public `release` branch and release tags will be created during
-publication. For current source use, select `main` and build the CLI from the
-same checkout using the [installation guide](README.md#installation).
-Automatic CLI setup is implemented; public downloads await the first release.
+These recipes install Isled directly from GitHub. The `release` branch follows
+frontend versions whose compatible CLI is already published; `v0.32.0` selects
+the first packaged release. On first use, the frontend offers to download its
+matching CLI. Isled is not yet on MELPA.
+
+You can also follow `main`: an unreleased frontend can keep the same published
+CLI pin. To test an unpublished CLI change, use the
+[source development setup](CONTRIBUTING.md#source-development-setup).
 
 All managers install the same Lisp libraries and declared dependencies. The
 frontend's `isled-required-cli-version` selects its compatible CLI; a package

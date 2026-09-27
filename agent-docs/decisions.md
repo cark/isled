@@ -302,7 +302,9 @@ ledger becoming useful to another contributor; distributed concurrent allocation
 conflict resolution and synchronization require a concrete multi-user use case.
 The current local ignored-ledger default is unchanged.
 
-### Public installation direction (planned)
+<a id="public-installation-direction-planned"></a>
+
+### Public installation direction
 
 The target is a normal Emacs package installation with package-managed setup of a
 compatible, precompiled Rust executable. On first use, Isled offers the download
@@ -518,6 +520,6 @@ in the release evidence, and use a new version if a published artifact needs a f
 
 Nix stays optional. Respect explicitly configured executables and retain manual
 binaries and source builds as alternatives. The shared installer is implemented;
-current installation instructions continue to describe the working source-based
-route until the first release's public downloads are available. Explicit source
+user instructions lead with public packages and managed first-use setup.
+Source-development configuration lives in the contributor guide. Explicit source
 builds opt into the matching `-dev` identity through `isled-use-development-cli`.

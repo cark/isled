@@ -2,8 +2,8 @@
 
 This prepares artifacts for the [accepted distribution contract](../agent-docs/decisions.md#public-installation-direction-planned).
 The [package-manager recipes](../frontends/emacs/packaging.md), managed installer
-and their isolated checks are prepared alongside these artifacts. Current
-users still follow the [source installation guide](../README.md#installation).
+and their isolated checks are prepared alongside these artifacts. Users follow the [installation guide](../README.md#installation) for public
+packages, standalone binaries and source alternatives.
 The [installer check](../frontends/emacs/packaging.md#shared-installer-boundary)
 uses these staged binaries to exercise package-managed setup before publication.
 
