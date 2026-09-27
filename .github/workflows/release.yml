@@ -33,7 +33,6 @@ jobs:
     env:
       CARGO_TERM_COLOR: always
       RUST_BACKTRACE: '1'
-      ISLED_CHECK_PACKAGE_DIR: .check-packages
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -54,16 +53,7 @@ jobs:
         with:
           key: release-${{ matrix.target }}
           cache-on-failure: true
-      - name: Install Emacs on Linux and macOS
-        if: runner.os != 'Windows'
-        uses: purcell/setup-emacs@34c6ded44899fd1bf74d2889558befd1750e61a7
-        with:
-          version: '30.1'
-      - name: Install Emacs on Windows
-        if: runner.os == 'Windows'
-        uses: jcs090218/setup-emacs-windows@3ad415b5f6575fe0bb8218cb35c199a93b1fb833
-        with:
-          version: '30.1'
+      - uses: ./.github/actions/setup-emacs
       - name: Install isolated Emacs check dependencies
         run: emacs -Q --batch -l frontends/emacs/test/install-packages.el
       - name: Check staging tools
@@ -71,10 +61,20 @@ jobs:
       - name: Build, inspect, extract and test native release
         # Rust's target directory is restored from cache; candidate output must be fresh.
         run: python -B scripts/stage-release.py build --target '${{ matrix.target }}' --output "$RUNNER_TEMP/isled-release-part"
+      - name: Build a real version-only upgrade fixture
+        run: |
+          python -B scripts/release_upgrade.py --output "$RUNNER_TEMP/isled-upgrade-source"
+          python -B "$RUNNER_TEMP/isled-upgrade-source/scripts/stage-release.py" build --target '${{ matrix.target }}' --output "$RUNNER_TEMP/isled-upgrade-part"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: part-${{ matrix.target }}
           path: ${{ runner.temp }}/isled-release-part/
+          if-no-files-found: error
+          retention-days: 14
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: upgrade-part-${{ matrix.target }}
+          path: ${{ runner.temp }}/isled-upgrade-part/
           if-no-files-found: error
           retention-days: 14
 
@@ -83,8 +83,6 @@ jobs:
     needs: native
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    env:
-      ISLED_CHECK_PACKAGE_DIR: .check-packages
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -98,9 +96,15 @@ jobs:
           path: target/release-parts
       - name: Assemble exact native parts and Emacs package
         run: python -B scripts/stage-release.py assemble --parts target/release-parts --output target/release-candidate
-      - uses: purcell/setup-emacs@34c6ded44899fd1bf74d2889558befd1750e61a7
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          version: '30.1'
+          pattern: upgrade-part-*
+          path: target/upgrade-parts
+      - name: Assemble the matching upgrade fixture
+        run: |
+          python -B scripts/release_upgrade.py --output "$RUNNER_TEMP/isled-upgrade-source"
+          python -B "$RUNNER_TEMP/isled-upgrade-source/scripts/stage-release.py" assemble --parts "$GITHUB_WORKSPACE/target/upgrade-parts" --output "$GITHUB_WORKSPACE/target/upgrade-candidate"
+      - uses: ./.github/actions/setup-emacs
       - name: Install isolated dependencies and constructed package
         run: |
           emacs -Q --batch -l frontends/emacs/test/install-packages.el
@@ -109,5 +113,58 @@ jobs:
         with:
           name: release-candidate
           path: target/release-candidate/
+          if-no-files-found: error
+          retention-days: 14
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: upgrade-candidate
+          path: target/upgrade-candidate/
+          if-no-files-found: error
+          retention-days: 14
+
+  install:
+    name: Install and upgrade on ${{ matrix.os }}
+    needs: assemble
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15, windows-latest]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - uses: ./.github/actions/setup-emacs
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: release-candidate
+          path: target/release-candidate
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: upgrade-candidate
+          path: target/upgrade-candidate
+      - name: Install isolated Lisp dependencies
+        run: emacs -Q --batch -l frontends/emacs/test/install-packages.el
+      - name: Managed installation, recovery, upgrade and rollback
+        # The runner removes CLI/build tools from the editor's PATH.
+        run: |
+          python -B scripts/check-cli-installer.py \
+            --package "$(find target/release-candidate -name 'isled-*.tar')" \
+            --artifacts target/release-candidate --upgrade target/upgrade-candidate \
+            --dependencies "$ISLED_CHECK_PACKAGE_DIR" --output "$RUNNER_TEMP/isled-install-check"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: install-${{ matrix.os }}
+          path: |
+            ${{ runner.temp }}/isled-install-check/*.log
+            ${{ runner.temp }}/isled-install-check/receipt.json
           if-no-files-found: error
           retention-days: 14

@@ -495,7 +495,9 @@ verification and explicit draft upload. `release_metadata.py` owns shared
 identity, asset names and checksum records; `release_archive.py` owns CLI
 archive writing and verified extraction; `release_platform.py` owns native
 build flags and linkage/distribution inspection. `test-release-staging.py`
-protects artifact integrity and exact candidate identity. The standalone
+protects artifact integrity and exact candidate identity. `release_upgrade.py`
+creates reproducible version-only Git fixtures for real upgrade builds; its
+outputs are acceptance material, never release versions. The standalone
 `frontends/emacs/test/package-install.el` checks the constructed package in a
 temporary installation. [Release staging](../scripts/releasing.md) owns usage.
 
@@ -509,6 +511,11 @@ selection, installer lifecycle constraints and submission preparation.
 `check-cli-installer.py` serves verified staged assets on loopback and runs
 `test/cli-install-staged.el` in fresh editors. The check installs the candidate
 package, downloads/verifies/runs the native CLI, then replaces the package and
-checks offline cache reuse. Its test-only URL substitution does not change
+checks offline cache reuse, failure recovery, real pin upgrades and rollback.
+The previous executable stays running during upgrade. Its test-only URL substitution does not change
 production origins. `test/cli-fixtures.py` builds disposable regression fixtures
 with the existing release writer; it is not part of the installed package.
+
+`.github/actions/setup-emacs/action.yml` owns the shared native CI editor setup.
+It selects full editors with built-in TLS and zlib, using the existing Nixpkgs
+pin on Linux/macOS and the Windows Emacs setup action.

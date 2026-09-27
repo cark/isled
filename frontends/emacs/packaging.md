@@ -122,12 +122,20 @@ python3 scripts/check-cli-installer.py \
   --dependencies /path/to/check-packages --output /path/to/new-installer-check
 ```
 
-This verifies the complete staged set, serves it on loopback, and starts two
-fresh batch editors. The first installs the package and provisions the native
-CLI; the second replaces the package directory and reuses the CLI offline.
+This verifies the complete staged set and serves it on loopback. Each scenario
+starts a fresh batch editor with an empty tool PATH and replaces its package
+directory. Checks cover first use, declined/canceled setup, missing assets,
+offline cache reuse, explicit executables and unsupported platforms.
+Add `--upgrade /path/to/upgrade-candidate` for two real versioned builds: corrupt
+and interrupted upgrade downloads, retry, upgrade with the old CLI still running,
+frontend rollback and an explicit version mismatch. The
+[native staging workflow](../../scripts/releasing.md#native-staging) builds this
+second candidate strictly for acceptance, with no version change to the release.
 Only the test's request destination changes. Production HTTPS/redirect policy,
 hash checks, extraction, identity checks and activation remain enabled. This
-local fixture does not establish public-endpoint or native platform acceptance.
+fixture establishes acceptance only on the native host where it runs; public
+endpoint checks remain part of publication. Logs and the JSON receipt record
+each case, the source and package identities, editor version and platform.
 
 ## Reproduce the packaging checks
 

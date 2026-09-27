@@ -24,6 +24,10 @@ in this directory. Python 3.9+ supports the core check/archive entry points.
 Versioned native archives, manifest/checksums and draft preparation use
 [`stage-release.py`](releasing.md). `test-release-staging.py` checks artifact
 integrity and candidate identity without executing fixture binaries.
+`release_upgrade.py` creates the disposable version-only source used for native
+upgrade acceptance. `check-cli-installer.py` exercises prepared packages and
+real CLI artifacts without exposing a compiler on the editor's PATH; see
+[installer acceptance](../frontends/emacs/packaging.md#shared-installer-boundary).
 
 ## Optional environment and maintainer tools
 

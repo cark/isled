@@ -30,6 +30,10 @@ and **Transient 0.8.0+**. The first packaged release is not published yet, so
 install the CLI and Emacs package from the same checkout using the steps below.
 The [managed installer](user-guide.md#cli-setup-and-upgrades) is ready for staged
 testing; public downloads become available with that release.
+Managed setup uses Emacs's built-in TLS and zlib support, without a compiler or
+separate verification tools. See [CLI setup and recovery](user-guide.md#cli-setup-and-upgrades)
+for consent, upgrades and explicitly configured executables, and the
+[release targets](../../README.md#requirements) for platform limits.
 
 ### 1. Install the command-line tool
 

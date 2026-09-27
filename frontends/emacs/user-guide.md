@@ -635,6 +635,10 @@ download it from the project's GitHub release. Emacs checks the download before
 running it. Setup needs Emacs's built-in TLS and zlib support, with no compiler,
 administrator access, PATH changes or separate verification tools.
 
+Some minimal Emacs builds omit TLS or decompression support. Isled explains this
+before asking to download anything. Use an Emacs build with those facilities,
+or configure a separately installed CLI with `isled-program`.
+
 Downloads run in the background and report progress. Use `M-x isled-cancel-setup`
 to cancel. After a failure, retry the original command, press `g` in the view,
 or run `M-x isled-setup-cli` to prepare the CLI separately.

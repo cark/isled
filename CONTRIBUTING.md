@@ -53,7 +53,10 @@ work and is not established merely by running these checks on Linux.
 ## GitHub CI
 
 The [CI workflow](.github/workflows/ci.yml) runs on pushes, pull requests and
-manual dispatch. Its three native jobs use Rust 1.97.1 and Emacs 30.1:
+manual dispatch. Its three native jobs use Rust 1.97.1, Emacs 30.2 from the
+existing Nixpkgs pin on Linux/macOS, and Emacs 30.1 on Windows. The
+[shared editor setup](.github/actions/setup-emacs/action.yml) checks built-in
+TLS and zlib support before installation tests:
 
 | Runner | CLI target |
 | --- | --- |

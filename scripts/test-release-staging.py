@@ -16,6 +16,7 @@ import zipfile
 
 from release_archive import pack_cli, unpack_cli
 from release_metadata import TARGETS, asset, read_json, release_version, source_revision, write_json
+from release_upgrade import prepare
 
 SCRIPTS = Path(__file__).resolve().parent
 spec = importlib.util.spec_from_file_location("stage_release", SCRIPTS / "stage-release.py")
@@ -159,6 +160,19 @@ class ReleaseStaging(unittest.TestCase):
         self.write("untracked-source", "must snapshot\n")
         with self.assertRaisesRegex(ValueError, "Untracked"):
             source_revision(self.root, self.revision)
+
+    def test_upgrade_fixture_is_reproducible_and_preserves_source(self):
+        first = prepare(self.root, self.base / 'upgrade-a', self.revision)
+        second = prepare(self.root, self.base / 'upgrade-b', self.revision)
+        self.assertEqual(release_version(first), '1.2.4')
+        self.assertEqual(release_version(self.root), '1.2.3')
+        first_revision = source_revision(first, 'HEAD')
+        self.assertEqual(first_revision, source_revision(second, 'HEAD'))
+        self.assertNotEqual(first_revision, self.revision)
+        changed = subprocess.check_output(['git', '-C', str(first), 'diff', '--name-only',
+                                           self.revision, first_revision], text=True).splitlines()
+        self.assertEqual(set(changed), {'Cargo.toml', 'Cargo.lock', 'flake.nix', 'frontends/emacs/isled.el'})
+        self.assertEqual(source_revision(self.root, 'HEAD'), self.revision)
 
     def test_draft_refuses_existing_release_and_corrupt_input_before_upload(self):
         for target in TARGETS:

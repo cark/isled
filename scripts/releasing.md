@@ -30,7 +30,7 @@ when the preparation branch `release/artifacts` is pushed. It does not run on a
 schedule, create a release, push a tag or advance a distribution branch.
 
 The three jobs build on the same native runners as source CI, using Rust 1.97.1
-and Emacs 30.1. Each job:
+and the [pinned full editors](../CONTRIBUTING.md#github-ci). Each job:
 
 1. Checks version consistency and runs the Rust suite in release mode.
 2. Builds the versioned executable and inspects native linkage and requirements.
@@ -40,10 +40,29 @@ and Emacs 30.1. Each job:
    the complete Emacs static/ERT entry point against the extracted executable.
 5. Writes a build receipt only after those checks pass.
 
-The final job accepts all three receipts from that exact revision, builds the
+The assembly job accepts all three receipts from that exact revision, builds the
 Emacs package, writes the manifest/checksums, and checks package installation in
 a fresh Emacs process. The downloadable Actions artifact is `release-candidate`;
 intermediate native parts are also retained for 14 days.
+
+Each builder also creates a disposable version-only upgrade source using
+`release_upgrade.py`. It increments the patch version in Cargo, the lockfile,
+Nix and the frontend pin, then commits those changes with a deterministic
+identity. The main checkout stays unchanged. The second set is named
+`upgrade-candidate`; it is test material and must never be published as a release.
+
+After assembly, three fresh native jobs install the actual packages and CLIs.
+They test consent, cancellation, missing/interrupted/corrupt downloads, retries,
+offline cache reuse after package replacement, explicit executables, a real pin
+upgrade while the old executable is running, and frontend rollback. Each editor
+starts with an empty tool PATH and private state. On macOS, the check requires
+Gatekeeper assessment to remain enabled; it changes no security or quarantine
+settings. The `install-OS` artifacts retain case logs and an identity receipt.
+The workflow passes only when all three installation jobs pass.
+
+The owned loopback server substitutes only the request destination. These native
+checks exercise normal selection, verification, extraction and execution. Public
+GitHub delivery and published asset availability still need the live checks below.
 
 For a local native build, use the [contributor tool and dependency setup](../CONTRIBUTING.md).
 Linux needs `musl-gcc` and `readelf`; macOS needs its Xcode command-line tools;

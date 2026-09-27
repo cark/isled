@@ -9,6 +9,18 @@
 
 (require 'package)
 
+(defun isled-check-install--retry (operation)
+  "Try network OPERATION up to three times, reporting each transient failure."
+  (let ((attempt 0) complete)
+    (while (not complete)
+      (setq attempt (1+ attempt))
+      (condition-case failure
+          (progn (funcall operation) (setq complete t))
+        (error
+         (message "Dependency setup attempt %d/3 failed: %s" attempt (error-message-string failure))
+         (if (= attempt 3) (signal (car failure) (cdr failure))
+           (sleep-for 2)))))))
+
 ;; Preserve the original download error instead of package.el's
 ;; generic "Failed to download archive" message in unattended checks.
 (setq debug-on-error t)
@@ -27,13 +39,13 @@
 
 (package-initialize)
 (condition-case failure
-    (package-refresh-contents)
+    (isled-check-install--retry #'package-refresh-contents)
   (error
    (when-let ((details (get-buffer "*Error*")))
      (princ (with-current-buffer details (buffer-string))))
    (signal (car failure) (cdr failure))))
 (dolist (name '(markdown-mode transient package-lint))
-  (package-install name))
+  (isled-check-install--retry (lambda () (package-install name))))
 
 ;; Archive contents can advance independently; retain the resolved versions in
 ;; each run's log, including transitive dependencies.

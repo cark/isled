@@ -64,6 +64,13 @@ filtering, navigation, appearance, and key customization.
   published. When loading source directly, install these
   dependencies yourself; package archive installation uses the declared dependencies.
 
+Prebuilt CLI releases target x86-64 Linux 5.4+, x86-64 Windows 10+, and Apple
+Silicon macOS 15+. The oldest Linux and Windows versions are compatibility
+targets, not direct test environments: native staging uses Ubuntu 24.04,
+Windows Server 2025 and macOS 15. The [release checks](scripts/releasing.md#native-staging)
+cover prepared artifacts; public downloads become available when the first
+release is published. Other platforms can use a source build.
+
 ## Development environment
 
 The optional pinned Nix environment provides the build and development tools.
