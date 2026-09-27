@@ -1,7 +1,8 @@
 ;;; editor-feedback-graphical.el --- Draft display and actual watch checks -*- lexical-binding: t; -*-
 (require 'isled)
 (require 'isled-editor)
-(setq isled-program (getenv "ISLED_EDITOR_PROGRAM"))
+(setq isled-use-development-cli t
+      isled-program (getenv "ISLED_EDITOR_PROGRAM"))
 (defvar isled-feedback-test-root (make-temp-file "isled-feedback-" t))
 (defvar isled-feedback-test-view nil)
 (defvar isled-feedback-test-draft nil)

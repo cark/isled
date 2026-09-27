@@ -24,6 +24,8 @@
   "Exact CLI release compatible with this frontend.
 Independent of the version assigned by an Emacs package archive.")
 
+(autoload 'isled-setup-cli "isled-cli" nil t)
+(autoload 'isled-cancel-setup "isled-cli" nil t)
 (autoload 'isled "isled-entry" nil t)
 (autoload 'isled-open-project "isled-entry" nil t)
 (autoload 'isled-open-directory "isled-entry" nil t)

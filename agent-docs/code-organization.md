@@ -391,6 +391,16 @@ request parser validates text and kind criteria before project discovery.
 
 ## Frontend boundary
 
+`isled-cli.el` resolves the pinned executable, preserves explicit overrides and
+shares consent/setup across pending commands. `isled-executable.el` owns bounded
+asynchronous identity checks and unchanged-file verification reuse.
+`isled-install.el` stages and atomically activates version-specific directories;
+it never replaces an earlier executable. `isled-download.el` owns HTTPS transport,
+redirect restrictions, progress and cancellation. `isled-release.el` validates
+release metadata into a typed target descriptor; `isled-archive.el` verifies and
+reads the expected regular members without extracting paths or invoking tools.
+Both synchronous snapshots and asynchronous commands pass through this boundary.
+
 Rust's `frontend/graph.rs` filters the status-selected graph from cached
 metadata, counts direct connections omitted by additional criteria, hashes topology
 and counts independently of headings, and returns compact row/lane
@@ -495,3 +505,10 @@ package assertions; `test/package-recipe-managers.el` invokes each manager using
 the canonical recipes in `frontends/emacs/recipes/`. The
 [packaging guide](../frontends/emacs/packaging.md) owns recipe usage, source
 selection, installer lifecycle constraints and submission preparation.
+
+`check-cli-installer.py` serves verified staged assets on loopback and runs
+`test/cli-install-staged.el` in fresh editors. The check installs the candidate
+package, downloads/verifies/runs the native CLI, then replaces the package and
+checks offline cache reuse. Its test-only URL substitution does not change
+production origins. `test/cli-fixtures.py` builds disposable regression fixtures
+with the existing release writer; it is not part of the installed package.

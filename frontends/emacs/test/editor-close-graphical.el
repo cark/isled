@@ -1,7 +1,8 @@
 ;;; editor-close-graphical.el --- Real graphical close/save/return check -*- lexical-binding: t; -*-
 (require 'isled)
 (require 'isled-editor)
-(setq isled-program (getenv "ISLED_EDITOR_PROGRAM"))
+(setq isled-use-development-cli t
+      isled-program (getenv "ISLED_EDITOR_PROGRAM"))
 (defvar isled-close-test-root (make-temp-file "isled-close-test-" t))
 (defvar isled-close-test-view nil)
 (defvar isled-close-test-editor nil)

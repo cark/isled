@@ -57,8 +57,11 @@ filtering, navigation, appearance, and key customization.
   [Cargo.toml](Cargo.toml) declares the Rust minimum.
 - **Emacs frontend:** Emacs 30.1 or newer, `markdown-mode` 2.6 or newer, and
   Transient 0.8.0 or newer, as declared in the
-  [package metadata](frontends/emacs/isled.el). The frontend finds the CLI
-  through `PATH` or `isled-program`. When loading source directly, install these
+  [package metadata](frontends/emacs/isled.el). For the current source workflow,
+  explicitly configure the matching CLI as described in
+  [frontend installation](frontends/emacs/README.md#installation). Managed setup
+  requires built-in TLS and zlib support in Emacs; public binaries are not yet
+  published. When loading source directly, install these
   dependencies yourself; package archive installation uses the declared dependencies.
 
 ## Development environment

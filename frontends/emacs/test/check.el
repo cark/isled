@@ -38,6 +38,12 @@ PHASE is nil for all checks, static for compilation/lint, or tests for ERT."
          (source-files
           (mapcar (lambda (name) (expand-file-name name source-directory))
                   '("isled.el"
+                    "isled-release.el"
+                    "isled-archive.el"
+                    "isled-download.el"
+                    "isled-executable.el"
+                    "isled-install.el"
+                    "isled-cli.el"
                     "isled-snapshot.el"
                     "isled-graph-model.el"
                     "isled-graph-drawing.el"
@@ -134,6 +140,9 @@ PHASE is nil for all checks, static for compilation/lint, or tests for ERT."
                 (load file nil t))
               (dolist (test (ert-select-tests "^isled-" t))
                 (ert-delete-test (ert-test-name test)))
+              (load (expand-file-name "isled-download-test.el" test-directory) nil t)
+              (load (expand-file-name "isled-executable-test.el" test-directory) nil t)
+              (load (expand-file-name "isled-install-test.el" test-directory) nil t)
               (load (expand-file-name "isled-snapshot-test.el"
                                       test-directory)
                     nil t)
@@ -187,6 +196,7 @@ PHASE is nil for all checks, static for compilation/lint, or tests for ERT."
               (load (expand-file-name "isled-viewport-test.el" test-directory) nil t)
               (let* ((isled-process-function #'isled-test-process)
                      (isled-test-program program)
+                     (isled-use-development-cli t)
                      (stats (ert-run-tests-batch "^isled-"))
                      (unexpected (ert-stats-completed-unexpected stats)))
                 (unless (zerop unexpected)

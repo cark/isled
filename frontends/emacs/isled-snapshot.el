@@ -19,10 +19,7 @@
 (require 'json)
 (require 'subr-x)
 
-(defgroup isled nil
-  "Browse local isled ledgers."
-  :group 'tools
-  :prefix "isled-")
+(require 'isled-cli)
 
 (define-error 'isled-snapshot-error
               "Invalid isled snapshot")
@@ -77,11 +74,6 @@
   issues
   unavailable
   targets)
-
-(defcustom isled-program "isled"
-  "Executable used to obtain project issue snapshots."
-  :type 'file
-  :group 'isled)
 
 (defvar isled-snapshot-runner-function
   #'isled-snapshot--run-process
@@ -138,7 +130,8 @@ runner.")
 
 (defun isled-snapshot--run-process (directory &optional arguments)
   "Run ARGUMENTS, defaulting to snapshot, from DIRECTORY and capture results."
-  (let ((stdout-buffer (generate-new-buffer " *isled-stdout*"))
+  (let ((isled-program (isled-cli-resolve))
+        (stdout-buffer (generate-new-buffer " *isled-stdout*"))
         (stderr-file (make-temp-file "isled-stderr-"))
         status stdout stderr)
     (unwind-protect

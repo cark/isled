@@ -26,7 +26,10 @@ Emacs package.
 ## Installation
 
 You need **Emacs 30.1+**, the **Isled command-line tool**, **markdown-mode 2.6+**,
-and **Transient 0.8.0+**. Install the CLI and Emacs package from the same checkout.
+and **Transient 0.8.0+**. The first packaged release is not published yet, so
+install the CLI and Emacs package from the same checkout using the steps below.
+The [managed installer](user-guide.md#cli-setup-and-upgrades) is ready for staged
+testing; public downloads become available with that release.
 
 ### 1. Install the command-line tool
 
@@ -37,15 +40,15 @@ installed:
 cargo install --path . --locked
 ```
 
-Emacs must be able to find `isled`. Evaluate `(executable-find "isled")` with
-`M-:` to check. If it returns `nil`, make Cargo's binary directory available to
-Emacs, or set an explicit executable path:
+Point Emacs at this source build and explicitly allow its development identity:
 
 ```emacs-lisp
-(setq isled-program (expand-file-name "~/.cargo/bin/isled"))
+(setq isled-program (expand-file-name "~/.cargo/bin/isled")
+      isled-use-development-cli t)
 ```
 
-On Windows, use the path to `isled.exe`.
+On Windows, use the path to `isled.exe`. The executable must match this checkout's
+CLI version. An explicitly configured executable is never replaced by a download.
 
 <a id="package-archive"></a>
 

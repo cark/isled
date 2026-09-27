@@ -4,7 +4,7 @@ These recipes prepare the first packaged release. Isled is not yet on MELPA,
 and the public `release` branch and release tags will be created during
 publication. For current source use, select `main` and build the CLI from the
 same checkout using the [installation guide](README.md#installation).
-Automatic CLI setup is still being implemented.
+Automatic CLI setup is implemented; public downloads await the first release.
 
 All managers install the same Lisp libraries and declared dependencies. The
 frontend's `isled-required-cli-version` selects its compatible CLI; a package
@@ -95,12 +95,39 @@ Package managers own fetching Lisp, dependencies, autoloads and compilation.
 They need no Isled-specific download or install hooks. Loading and compiling
 the package must not fetch or run its CLI.
 
-The planned installer runs on the first Isled command that needs the CLI,
+The installer runs on the first Isled command that needs the CLI,
 using the frontend's explicit pin. It stores binaries outside package
 directories and preserves them when a manager rebuilds or replaces the Lisp
-package. It must work without inspecting Git state, package-manager metadata
+package. It works without inspecting Git state, package-manager metadata
 or archive version numbers. The [release contract](../../agent-docs/decisions.md#public-installation-direction-planned)
 owns consent, integrity, upgrade and recovery behavior.
+
+The downloader allows HTTPS only, with redirects limited to GitHub's release
+delivery hosts. Metadata is limited to 256 KiB and archive/executable sizes to
+128 MiB: generous headroom for the current few-megabyte binaries, with finite
+limits for unexpected responses. Each asset gets two minutes to download;
+executable identity checks get ten seconds. Both waits are cancellable. Hashing
+and decompression use Emacs facilities; extraction accepts only the two regular
+members written by release staging and retains the license beside the executable.
+
+The [user guide](user-guide.md#cli-setup-and-upgrades) explains setup commands,
+consent, cache recovery and explicit release/development executables.
+
+To test an installed package against real staged binaries before publication:
+
+```console
+python3 scripts/package-emacs.py --output /path/to/isled-candidate.tar
+python3 scripts/check-cli-installer.py \
+  --package /path/to/isled-candidate.tar --artifacts /path/to/release-candidate \
+  --dependencies /path/to/check-packages --output /path/to/new-installer-check
+```
+
+This verifies the complete staged set, serves it on loopback, and starts two
+fresh batch editors. The first installs the package and provisions the native
+CLI; the second replaces the package directory and reuses the CLI offline.
+Only the test's request destination changes. Production HTTPS/redirect policy,
+hash checks, extraction, identity checks and activation remain enabled. This
+local fixture does not establish public-endpoint or native platform acceptance.
 
 ## Reproduce the packaging checks
 
@@ -135,7 +162,7 @@ all runtime libraries and bytecode, dependency versions, load-time side effects,
 and the CLI pin's mapping to real verified artifacts. They also install an
 unreleased frontend with a different Lisp version and the same CLI pin.
 This is a focused package-manager check on one host, not an OS-by-manager matrix
-or acceptance of the future CLI installer. Logs and JSON receipts remain in the
+or acceptance of CLI provisioning. Logs and JSON receipts remain in the
 output directory; `--managers` and `--selectors` allow focused reruns.
 
 ## Submission handoff

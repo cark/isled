@@ -11,6 +11,7 @@ covers everyday use, then the options for making Isled feel at home in your setu
 - [Refresh](#automatic-refresh) and [warnings](#known-warnings)
 - [Appearance](#theme-and-identity-styling) and [key bindings](#key-binding)
 - [Loading from a checkout](#local-configuration)
+- [CLI setup and upgrades](#cli-setup-and-upgrades)
 
 ## Opening projects and directories
 
@@ -622,6 +623,38 @@ Markdown uses `markdown-mode` faces directly. Customize `markdown-header-face`,
 `markdown-inline-code-face`, `markdown-list-face`, `markdown-blockquote-face`
 and other `markdown-*` faces as usual. Links inherit `markdown-link-face`
 through `isled-markdown-link-face`.
+
+## CLI setup and upgrades
+
+Automatic setup uses the exact CLI release required by your Emacs package. The
+first packaged release is not published yet; use the [source installation
+steps](README.md#installation) until its downloads are available.
+
+With `isled-program` set to nil, the first command that needs the CLI asks to
+download it from the project's GitHub release. Emacs checks the download before
+running it. Setup needs Emacs's built-in TLS and zlib support, with no compiler,
+administrator access, PATH changes or separate verification tools.
+
+Downloads run in the background and report progress. Use `M-x isled-cancel-setup`
+to cancel. After a failure, retry the original command, press `g` in the view,
+or run `M-x isled-setup-cli` to prepare the CLI separately.
+
+Your initial consent also covers later matching CLI updates. A frontend update
+that keeps the same CLI version reuses the cached executable, including offline.
+An update needing another version downloads it on first use. Earlier versions
+stay available for frontend rollback; failed setup leaves them untouched.
+
+Executables and consent live under `isled/cli/` in your Emacs directory, outside
+installed packages. Customize `isled-cli-directory` to choose another local
+location. Deleting its `download-consent` file makes the next required download
+ask again. If a cached version fails its integrity check, remove only that
+version's directory and retry; Isled never runs the damaged file.
+
+To use a manually installed or Nix-managed release, set `isled-program` to its
+path, or to a command name on PATH. It must report the required CLI version.
+Isled reports a mismatch and leaves your executable alone. For a same-checkout
+source build, also set `isled-use-development-cli` to t; this accepts that version's
+explicit `-dev` identity. Unsupported platforms can use this source-build route.
 
 ## Local configuration
 

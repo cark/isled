@@ -315,6 +315,7 @@ def bootstrap_text() -> str:
 (setq server-socket-dir (getenv "ISLED_PREVIEW_SOCKET_DIR")
       server-name (getenv "ISLED_PREVIEW_ID")
       isled-program (getenv "ISLED_PREVIEW_PROGRAM")
+      isled-use-development-cli t
       frame-title-format (getenv "ISLED_PREVIEW_TITLE"))
 (modify-frame-parameters nil `((name . ,(getenv "ISLED_PREVIEW_TITLE"))
                                (title . ,(getenv "ISLED_PREVIEW_TITLE"))))

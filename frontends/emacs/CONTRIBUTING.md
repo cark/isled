@@ -161,6 +161,13 @@ is not source and is ignored.
 
 ## Code map
 
+- `isled-cli.el` owns consent and shared CLI readiness; `isled-executable.el`
+  checks identity asynchronously and caches evidence only for unchanged files.
+- `isled-install.el` owns private staging, versioned storage and activation.
+  `isled-download.el` owns cancellable HTTPS delivery with restricted redirects;
+  `isled-release.el` validates pinned metadata and `isled-archive.el` reads only
+  the expected regular archive members using built-in decompression.
+
 - [`isled-entry.el`](isled-entry.el) owns current-context, project and directory
   selection plus explicit destination choices; [`isled-context.el`](isled-context.el)
   owns selected-location identity and recent-view lookup.
@@ -423,12 +430,13 @@ interactive use, rebuild or remove old bytecode before reloading so it cannot
 shadow newer source. Routine validation compiles only into temporary directories
 and does not install those files into the source tree or a running editor.
 
-`isled-program` defaults to the `isled` executable found through `PATH`.
-During isolated
-development it can instead name the repository-built binary:
+`isled-program` defaults to nil for managed release setup. During isolated
+development, explicitly select the repository-built binary and allow its `-dev`
+identity; its numeric version must still match the frontend pin:
 
 ```emacs-lisp
-(setq isled-program
+(setq isled-use-development-cli t
+      isled-program
       (expand-file-name "target/debug/isled" my-isled-checkout))
 ```
 

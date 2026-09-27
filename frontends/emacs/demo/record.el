@@ -7,7 +7,8 @@
              (display-graphic-p) (not (daemonp)))
   (error "Use the private graphical runner with ISLED_DEMO_PROGRAM"))
 
-(setq load-prefer-newer t
+(setq isled-use-development-cli t
+      load-prefer-newer t
       inhibit-startup-screen t
       ring-bell-function #'ignore
       isled-auto-revert nil

@@ -517,6 +517,7 @@ that the public endpoints deliver those same artifacts. Preserve this distinctio
 in the release evidence, and use a new version if a published artifact needs a fix.
 
 Nix stays optional. Respect explicitly configured executables and retain manual
-binaries and source builds as alternatives. The installer is not implemented;
+binaries and source builds as alternatives. The shared installer is implemented;
 current installation instructions continue to describe the working source-based
-route until the packaged route is available.
+route until the first release's public downloads are available. Explicit source
+builds opt into the matching `-dev` identity through `isled-use-development-cli`.

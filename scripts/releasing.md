@@ -1,9 +1,11 @@
 # Preparing a release
 
 This prepares artifacts for the [accepted distribution contract](../agent-docs/decisions.md#public-installation-direction-planned).
-The managed installer is subsequent work. [Package-manager recipes](../frontends/emacs/packaging.md)
-and their isolated construction checks are prepared separately. Current
+The [package-manager recipes](../frontends/emacs/packaging.md), managed installer
+and their isolated checks are prepared alongside these artifacts. Current
 users still follow the [source installation guide](../README.md#installation).
+The [installer check](../frontends/emacs/packaging.md#shared-installer-boundary)
+uses these staged binaries to exercise package-managed setup before publication.
 
 ## Build identity
 
@@ -117,7 +119,7 @@ https://github.com/cark/isled/releases/download/vVERSION/isled-VERSION-manifest.
 Asset URLs use the same release-specific prefix and their declared basenames.
 There is no `latest` lookup. Download over HTTPS, validate identity and target,
 then verify the archive before extraction and executable before execution,
-including `--version`. Reject missing, malformed or mismatched hashes. The future
+including `--version`. Reject missing, malformed or mismatched hashes. The
 Emacs installer uses built-in hashing, with no external checksum/signature tool.
 Checksums from the same GitHub release establish integrity within that trust
 boundary; they are not an independent publisher signature.

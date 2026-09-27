@@ -25,6 +25,21 @@
 
 (defun isled-process-command (directory arguments input callback)
   "Run ARGUMENTS in DIRECTORY with INPUT, delivering its result to CALLBACK."
+  (let ((origin (current-buffer)))
+    (isled-cli-ensure
+     (lambda (program failure)
+       (if failure
+           (funcall callback (isled-command-result-create :status 1 :stdout "" :stderr failure))
+         (if (not (buffer-live-p origin))
+             (funcall callback (isled-command-result-create :status 1 :stdout "" :stderr "Isled command buffer was closed"))
+           (with-current-buffer origin
+             (condition-case problem
+                 (isled-process--launch program directory arguments input callback)
+               (error (funcall callback (isled-command-result-create
+                                        :status 1 :stdout "" :stderr (error-message-string problem))))))))))))
+
+(defun isled-process--launch (program directory arguments input callback)
+  "Run verified PROGRAM with ARGUMENTS and INPUT in DIRECTORY for CALLBACK."
   (let ((stdout (generate-new-buffer " *isled-output*"))
         (stderr (generate-new-buffer " *isled-errors*"))
         (default-directory (file-name-as-directory (expand-file-name directory)))
@@ -34,7 +49,7 @@
           (setq process
                 (make-process
                  :name "isled-request" :buffer stdout :stderr stderr
-                 :command (cons isled-program arguments)
+                 :command (cons program arguments)
                  :connection-type 'pipe :coding 'utf-8-unix :noquery t
                  :sentinel
                  (lambda (child _event)
