@@ -532,3 +532,106 @@ binaries and source builds as alternatives. The shared installer is implemented;
 user instructions lead with public packages and managed first-use setup.
 Source-development configuration lives in the contributor guide. Explicit source
 builds opt into the matching `-dev` identity through `isled-use-development-cli`.
+
+### Shared CLI and skill installation (accepted, not implemented)
+
+Distribute the complete [agent skill](../skills/isled/SKILL.md), including its
+reference files, beside the executable in each CLI release archive. Keep both
+from the same release together. The current v0.32.0 archives contain only the
+executable and license; this design requires a new release and coordinated
+archive, verification and installer changes. Published assets stay immutable.
+
+Standalone and Emacs-managed installations will share a default per-user storage
+directory outside Emacs's own directories, using the platform's application-data
+location:
+
+| Platform | Default installation root | Directory convention |
+| --- | --- | --- |
+| Linux | `$XDG_DATA_HOME/isled`, normally `~/.local/share/isled` | [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir/0.8/) |
+| macOS | `~/Library/Application Support/isled` | [Application Support](https://developer.apple.com/documentation/foundation/url/applicationsupportdirectory) |
+| Windows | `%LOCALAPPDATA%\isled` | [Local AppData known folder](https://learn.microsoft.com/en-us/windows/win32/shell/knownfolderid) |
+
+Use the [`dirs` crate's `data_local_dir()`](https://docs.rs/dirs/latest/dirs/fn.data_local_dir.html)
+and append `isled` to its result. Delegate platform selection, environment handling
+and OS directory lookup to the crate. The table describes its expected locations,
+not a separate lookup implementation to maintain. If it cannot find a directory,
+report the failure and explain the explicit `--directory` option. Explicit
+destinations take precedence. The CLI owns this resolution for both entry points
+so Emacs and standalone installs agree for the same environment.
+
+Retain each release in a versioned directory, with a single `current` directory
+link selecting the active bundle:
+
+```text
+isled/
+  versions/
+    VERSION/
+      isled                  # isled.exe on Windows
+      LICENSE
+      skill/
+        SKILL.md
+        references/
+  current -> versions/VERSION/
+```
+
+Users add `current/` to PATH and configure their agent to use `current/skill/`.
+Both CLI installation output and Emacs installation completion must show the
+full absolute executable path through `current/isled` (`current/isled.exe` on
+Windows) and the full absolute skill directory path through `current/skill/`.
+Also identify its `SKILL.md` entry point and the `current/` directory to add to
+PATH. Preserve `current` in these displayed paths; do not resolve the link to a
+versioned location. Explain that these are the stable paths to use in shell and
+agent configuration, and make them easy to copy and retrieve again in both
+interfaces. Emacs must not rely solely on a transient minibuffer message.
+
+Users can select fixed versioned paths when they want to pin their setup.
+This avoids maintaining exported copies in arbitrary agent directories. Updating
+files cannot refresh instructions already loaded in an agent conversation;
+document when the agent needs to reload the skill or start a new session.
+
+The CLI will own local bundle installation through `isled install`, with an
+optional `--directory` destination. Standalone users download and extract a
+release, then run its executable's installer; upgrading repeats that flow using
+the new release. The extracted bundle also remains directly usable. Initial
+scope does not include an automatic downloader/updater in the CLI. Installation
+needs no administrator privileges and does not edit shell or agent configuration.
+
+Emacs will download and verify its exact compatible release, then call the same
+CLI installer. Preserve first-use download consent, offline reuse and explicit
+executable overrides. Emacs continues executing the exact versioned path so
+another installation changing `current` cannot change its selected CLI.
+
+For existing Emacs installations using the old default storage location, put
+new releases in the shared directory and leave the old cache available for
+rollback. Do not move or delete that cache automatically. Honor explicitly
+configured storage locations and keep externally managed executables intact.
+
+Prepare and verify the complete bundle before switching the single `current`
+link. Keep prior versions for rollback and preserve the previous active bundle
+on failed installation. `current` denotes the deliberately activated release,
+including a rollback; it does not select the highest version found on disk or
+an arbitrary latest GitHub release. The one directory link avoids independently
+switching the executable and skill, but does not pin separate reads across an
+upgrade or refresh a running agent's context.
+
+Use a directory symlink on Linux/macOS. Windows must support ordinary users
+without elevation or Developer Mode; a directory junction is the candidate
+mechanism, with creation, switching and failure recovery to be validated natively.
+Do not claim atomic replacement or cross-platform acceptance before those checks.
+
+The managed `current` layout applies to release bundles and Emacs-managed
+installation. Source installations through Cargo remain manually managed;
+users take the matching skill from their source checkout. Nix will package the
+complete skill alongside the executable and retain responsibility for updates.
+The new installer does not manage or replace Cargo or Nix installations. Document
+where each route supplies the skill without making source users adopt the managed
+release layout.
+
+Implement the archive transition in a new release, coordinating its packaging,
+verification and matching frontend pin. Native acceptance must cover both managed
+entry points, complete skill contents, interrupted installation, upgrades,
+rollback and an older CLI still running while `current` changes. Verify that both
+installation interfaces report the usable executable and skill paths through
+`current`, including after an upgrade and with a custom installation directory.
+Update live help, user guides and release instructions when these behaviors
+become available.

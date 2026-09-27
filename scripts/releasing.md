@@ -119,6 +119,11 @@ and `isled-VERSION-TARGET/LICENSE`. Archives have normalized timestamps and mode
 identical inputs produce identical archives. This does not promise bit-for-bit
 reproducibility of Rust builds across toolchains or systems.
 
+The accepted [shared CLI and skill installation design](../agent-docs/decisions.md#shared-cli-and-skill-installation-accepted-not-implemented)
+will extend a future release with the complete skill beside the executable.
+It is not implemented in this artifact contract; update packaging, verification
+and both installation routes together before publishing that release.
+
 The Emacs tar contains an `isled-VERSION/` directory. Its generated `isled-pkg.el`
 comes from the headers in `isled.el`; source, guides, demo GIFs and the root license
 are included. Tests, bytecode and contributor-local state are excluded.
