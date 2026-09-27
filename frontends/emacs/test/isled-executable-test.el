@@ -18,7 +18,9 @@
                              (lambda (path error) (setq result (list path error))))
     (isled-download-test--wait (lambda () result))
     (should (car result)) (should-not (cadr result))
-    (should (isled-executable-verified-p isled-test-program isled-required-cli-version t))
+    (cl-letf (((symbol-function 'make-process) (lambda (&rest _) (error "Unchanged CLI ran again"))))
+      (isled-executable-verify isled-test-program isled-required-cli-version t
+                               (lambda (path error) (should path) (should-not error))))
     (setq result nil)
     (isled-executable-verify isled-test-program "999.0.0" nil
                              (lambda (path error) (setq result (list path error))))

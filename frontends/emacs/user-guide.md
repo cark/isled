@@ -648,11 +648,23 @@ that keeps the same CLI version reuses the cached executable, including offline.
 An update needing another version downloads it on first use. Earlier versions
 stay available for frontend rollback; failed setup leaves them untouched.
 
-Executables and consent live under `isled/cli/` in your Emacs directory, outside
-installed packages. Customize `isled-cli-directory` to choose another local
-location. Deleting its `download-consent` file makes the next required download
-ask again. If a cached version fails its integrity check, remove only that
-version's directory and retry; Isled never runs the damaged file.
+The CLI and its matching skill live in the platform's shared user-data directory,
+outside installed Emacs packages. The CLI chooses the location. Customize
+`isled-cli-directory` to use another local directory; the default is nil.
+See [storage locations and rollback](../../user-docs/installation.md#where-it-lives)
+for the full layout. Existing caches from older frontends stay untouched.
+
+Setup displays the full executable, skill directory and `SKILL.md` paths through
+`current`. Run **`M-x isled-show-installation`** to retrieve this copyable buffer
+later. Use its `current` paths in shell and agent configuration. Emacs runs its
+exact versioned executable, so a standalone upgrade cannot redirect the frontend.
+Run `M-x isled-setup-cli` to select the frontend's version again.
+
+Consent stays in `isled/cli/download-consent` under your Emacs directory, or in
+the explicitly configured installation directory. Deleting that file makes the
+next required download ask again. If a stored version fails its integrity check,
+inspect it and move only that version aside before retrying. Isled never runs the
+damaged file.
 
 To use a manually installed or Nix-managed release, set `isled-program` to its
 path, or to a command name on PATH. It must report the required CLI version.

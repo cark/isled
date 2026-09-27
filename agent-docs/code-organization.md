@@ -14,6 +14,11 @@ src/
 ├── commands/        # focused handlers and shared seams; see Command handlers below
 ├── cli.rs           # parsing and invocation-error adaptation
 ├── cli/             # args.rs grammar; help.rs stable help and inventory
+├── installation.rs  # shared bundle installation, platform root and path reports
+├── installation/
+│   ├── bundle.rs    # fixed payload identity and complete file verification
+│   ├── current.rs   # symlink/junction selection and interrupted-switch recovery
+│   └── tests.rs     # immutable versions, rollback and failure preservation
 ├── issue.rs         # parsed Issue aggregate and public value-type exports
 ├── issue/           # identity, name, status, created_date, tag, and relation values
 ├── record.rs        # strict structured Markdown codec and canonical renderer
@@ -514,10 +519,22 @@ package, downloads/verifies/runs the native CLI, then replaces the package and
 checks offline cache reuse, failure recovery, real pin upgrades and rollback.
 The previous executable stays running during upgrade. Its test-only URL substitution does not change
 production origins; `--live` uses those public origins unchanged.
+`release_installation.py` exercises the extracted standalone installer with an
+empty PATH, including complete skill selection, upgrade and rollback.
+`check-windows-user-install.ps1` checks junction installation and recovery under
+an ephemeral standard user without Developer Mode or symbolic-link privileges.
 `check-published-cli.py` owns anonymous complete-release retrieval and runs the
 shared installer acceptance followed by the frontend suite against its managed
 CLI. `test/cli-fixtures.py` builds disposable regression fixtures
 with the existing release writer; it is not part of the installed package.
+
+Emacs download orchestration remains in `isled-install.el`. Complete archive and
+cached-bundle verification live in `isled-archive.el` and `isled-bundle.el`;
+`isled-installation.el` calls the verified Rust installer, remembers its default
+root and shows stable paths. Rust alone owns directory defaults and activation.
+The frontend retains an exact versioned program, never executes through `current`,
+and activates a cached bundle at most once per editor session unless setup is
+explicitly requested. Unchanged file attributes reuse hash/version evidence.
 
 `.github/actions/setup-emacs/action.yml` owns the shared native CI editor setup.
 It selects full editors with built-in TLS and zlib, using the existing Nixpkgs

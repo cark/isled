@@ -66,6 +66,8 @@ pub(super) fn build_command() -> clap::Command {
     Cli::command()
         .long_about(TOP_HELP)
         .after_help(TOP_AFTER)
+        .mut_subcommand("install", |value| value.after_help("Run the executable from a complete extracted release archive. Verify and copy the executable, license and complete skill into versions/VERSION, then select that bundle through current. Existing versions are retained for rollback. Rerun an older bundle's installer to select it again. No download, PATH change, agent configuration edit or ledger access occurs. Cargo and Nix installations remain separately managed. --directory overrides the platform user-data directory. Both install and installation print full paths through current; --json emits installation schema 1."))
+        .mut_subcommand("installation", |value| value.after_help("Inspect the selected managed bundle without creating storage or accessing a ledger. Prints the stable current executable, skill directory, SKILL.md and PATH directory. --json emits schema 1: root, version, program (exact versioned executable), executable, skill, skill_file and path_directory. version/program are null when no bundle is selected. --directory uses a custom installation root."))
         .mut_subcommand("init", |value| value.after_help(INIT_HELP))
         .mut_subcommand("add", |value| value.after_help(ADD_HELP))
         .mut_subcommand("cache", |value| {

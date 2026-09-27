@@ -8,6 +8,7 @@ pub mod filesystem;
 pub mod frontend;
 /// Experimental dependency layout candidate; not a supported frontend protocol.
 pub mod graph_layout;
+pub mod installation;
 pub mod issue;
 pub mod ledger;
 pub mod mutation;

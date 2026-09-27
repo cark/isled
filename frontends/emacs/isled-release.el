@@ -17,7 +17,7 @@
 
 (cl-defstruct (isled-release (:constructor isled-release--create))
   "Validated metadata for one pinned platform executable."
-  version target archive archive-size archive-hash member size hash)
+  version target archive archive-size archive-hash member size hash bundle-size bundle-hash)
 
 (defun isled-release-current-target ()
   "Return the supported native target, or explain the source-build alternative."
@@ -75,25 +75,28 @@
          (binary (alist-get (intern target) (alist-get 'binaries wire)))
          (archive (alist-get 'archive binary))
          (executable (alist-get 'executable binary))
+         (bundle (alist-get 'bundle binary))
          (prefix (format "isled-%s-%s" version target))
          (name (concat prefix (if (equal target "x86_64-pc-windows-msvc") ".zip" ".tar.gz")))
          (member (concat prefix "/" (isled-release-executable target))))
-    (unless (and (eql (alist-get 'schema_version wire) 1)
+    (unless (and (eql (alist-get 'schema_version wire) 2)
                  (equal (alist-get 'repository wire) "cark/isled")
                  (equal (alist-get 'version wire) version)
                  (equal (alist-get 'tag wire) (concat "v" version))
                  (equal (alist-get 'name archive) name)
                  (equal (alist-get 'member executable) member)
+                 (equal (alist-get 'member bundle) (concat prefix "/bundle.json"))
                  (equal (alist-get 'sha256 archive) (isled-release-checksum checksums name)))
       (error "Isled release metadata does not match %s for %s" version target))
-    (dolist (item (list archive executable))
+    (dolist (item (list archive executable bundle))
       (unless (and (integerp (alist-get 'size item)) (< 0 (alist-get 'size item) (* 128 1024 1024))
                    (stringp (alist-get 'sha256 item))
                    (string-match-p "\\`[0-9a-f]\\{64\\}\\'" (alist-get 'sha256 item)))
         (error "Invalid Isled release size or hash")))
     (isled-release--create :version version :target target :archive name
                           :archive-size (alist-get 'size archive) :archive-hash (alist-get 'sha256 archive)
-                          :member member :size (alist-get 'size executable) :hash (alist-get 'sha256 executable))))
+                          :member member :size (alist-get 'size executable) :hash (alist-get 'sha256 executable)
+                          :bundle-size (alist-get 'size bundle) :bundle-hash (alist-get 'sha256 bundle))))
 
 (provide 'isled-release)
 ;;; isled-release.el ends here

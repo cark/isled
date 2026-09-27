@@ -13,11 +13,12 @@ REPOSITORY = Path(__file__).resolve().parent.parent
 def main():
     with tempfile.TemporaryDirectory(prefix="isled-dev-env-") as temporary:
         fixture = Path(temporary)
-        for name in (".envrc", "flake.nix", "flake.lock", "Cargo.toml", "Cargo.lock",
+        for name in (".envrc", "flake.nix", "flake.lock", "Cargo.toml", "Cargo.lock", "LICENSE",
                      "scripts/nix-source.sh", "scripts/dev.sh"):
             target = fixture / name
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(REPOSITORY / name, target)
+        shutil.copytree(REPOSITORY / 'skills/isled', fixture / 'skills/isled')
         for name in ("src", "tests", "target", ".issues", ".jj"):
             (fixture / name).mkdir()
         (fixture / "src/lib.rs").write_text("// package input\n")
@@ -68,7 +69,7 @@ def main():
         original = activate().stdout
         cached = profiles()
         assert cached, "direnv did not create a shell cache"
-        for name in ("src/lib.rs", "src/new.rs", "tests/input.rs", "Cargo.toml", "Cargo.lock"):
+        for name in ("src/lib.rs", "src/new.rs", "tests/input.rs", "Cargo.toml", "Cargo.lock", "LICENSE", "skills/isled/SKILL.md"):
             with (fixture / name).open("a") as output:
                 output.write("\n# changed\n" if name.startswith("Cargo") else "// changed\n")
             assert source("--shell") == shell, name

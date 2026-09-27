@@ -1,6 +1,8 @@
 # User documentation
 
 See [complete issue drafts](editor.md) for the versioned load/validate/save interface.
+See [installation and updates](installation.md) for shared executable/skill storage,
+stable paths and installation JSON.
 
 ## Command surface and storage
 

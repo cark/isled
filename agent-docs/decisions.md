@@ -385,9 +385,9 @@ Tagged releases use one shared version for the Rust executable and Emacs
 package, starting at 0.32.0. This advances the current frontend version rather
 than restarting its version sequence. Release tags use `vMAJOR.MINOR.PATCH`,
 beginning with `v0.32.0`. Keep Cargo, the tagged Emacs package and Nix package
-metadata aligned during release preparation. Metadata now declares 0.32.0.
-Ordinary Cargo builds report `0.32.0-dev`; explicit `release-binary` builds and
-the versioned Nix package report `0.32.0`. This marker separates contributor
+metadata aligned during release preparation. The current candidate is 0.33.0.
+Ordinary Cargo builds report `VERSION-dev`; explicit `release-binary` builds and
+the versioned Nix package report `VERSION`. This marker separates contributor
 builds from release packaging; it does not prove a binary has been published.
 The [release staging guide](../scripts/releasing.md) owns artifact names,
 verification metadata and preparation commands.
@@ -533,15 +533,16 @@ user instructions lead with public packages and managed first-use setup.
 Source-development configuration lives in the contributor guide. Explicit source
 builds opt into the matching `-dev` identity through `isled-use-development-cli`.
 
-### Shared CLI and skill installation (accepted, not implemented)
+### Shared CLI and skill installation
 
 Distribute the complete [agent skill](../skills/isled/SKILL.md), including its
 reference files, beside the executable in each CLI release archive. Keep both
-from the same release together. The current v0.32.0 archives contain only the
-executable and license; this design requires a new release and coordinated
-archive, verification and installer changes. Published assets stay immutable.
+from the same release together. The v0.32.0 archives contain only the executable and license and remain
+immutable. The 0.33.0 candidate implements this layout; native release acceptance
+and publication remain separate. See the [installation guide](../user-docs/installation.md)
+for commands and storage paths.
 
-Standalone and Emacs-managed installations will share a default per-user storage
+Standalone and Emacs-managed installations share a default per-user storage
 directory outside Emacs's own directories, using the platform's application-data
 location:
 
@@ -568,6 +569,7 @@ isled/
     VERSION/
       isled                  # isled.exe on Windows
       LICENSE
+      bundle.json            # complete payload hashes and identity
       skill/
         SKILL.md
         references/
@@ -589,14 +591,14 @@ This avoids maintaining exported copies in arbitrary agent directories. Updating
 files cannot refresh instructions already loaded in an agent conversation;
 document when the agent needs to reload the skill or start a new session.
 
-The CLI will own local bundle installation through `isled install`, with an
+The CLI owns local bundle installation through `isled install`, with an
 optional `--directory` destination. Standalone users download and extract a
 release, then run its executable's installer; upgrading repeats that flow using
 the new release. The extracted bundle also remains directly usable. Initial
 scope does not include an automatic downloader/updater in the CLI. Installation
 needs no administrator privileges and does not edit shell or agent configuration.
 
-Emacs will download and verify its exact compatible release, then call the same
+Emacs downloads and verifies its exact compatible release, then calls the same
 CLI installer. Preserve first-use download consent, offline reuse and explicit
 executable overrides. Emacs continues executing the exact versioned path so
 another installation changing `current` cannot change its selected CLI.
@@ -621,7 +623,7 @@ Do not claim atomic replacement or cross-platform acceptance before those checks
 
 The managed `current` layout applies to release bundles and Emacs-managed
 installation. Source installations through Cargo remain manually managed;
-users take the matching skill from their source checkout. Nix will package the
+users take the matching skill from their source checkout. Nix packages the
 complete skill alongside the executable and retain responsibility for updates.
 The new installer does not manage or replace Cargo or Nix installations. Document
 where each route supplies the skill without making source users adopt the managed

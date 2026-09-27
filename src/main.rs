@@ -66,6 +66,19 @@ fn run(cli: Cli) -> Result<Vec<u8>, AppError> {
     };
 
     match cli.command {
+        Command::Install(_) | Command::Installation(_) if !cli.root.is_empty() => {
+            Err(AppError::Invocation(
+                "Use --directory for installation; --root selects an issue ledger".into(),
+            ))
+        }
+        Command::Install(arguments) => isled::installation::install(arguments.directory.as_deref())
+            .and_then(|result| result.output(arguments.json))
+            .map_err(AppError::Io),
+        Command::Installation(arguments) => {
+            isled::installation::inspect(arguments.directory.as_deref())
+                .and_then(|result| result.output(arguments.json))
+                .map_err(AppError::Io)
+        }
         Command::Init => commands::init::run(cli.root),
         Command::Add(arguments) => commands::add::run(arguments, root),
         Command::Cache(arguments) => commands::cache_refresh::run(arguments, root),

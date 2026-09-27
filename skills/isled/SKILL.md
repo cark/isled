@@ -22,6 +22,13 @@ isled help [COMMAND [SUBCOMMAND]]
 `isled --version` reports the executable version without ledger discovery.
 Ordinary contributor builds append `-dev`.
 
+For release installations, `isled installation` reports the matching executable
+and complete skill through stable `current` paths; `--directory` selects custom
+storage. Emacs users can retrieve them with `M-x isled-show-installation`.
+Keep skill references alongside `SKILL.md`. After a version switch, reload the
+skill before relying on previously loaded instructions. Cargo uses the skill
+from its source checkout; Nix supplies `share/isled/skill/` in its package output.
+
 For authorized issue creation, use `add`; `create` is not an alias.
 Read `isled help add` for options and single-line or multiline examples.
 

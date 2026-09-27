@@ -99,7 +99,7 @@ They need no Isled-specific download or install hooks. Loading and compiling
 the package must not fetch or run its CLI.
 
 The installer runs on the first Isled command that needs the CLI,
-using the frontend's explicit pin. It stores binaries outside package
+using the frontend's explicit pin. It stores complete executable/skill bundles outside package
 directories and preserves them when a manager rebuilds or replaces the Lisp
 package. It works without inspecting Git state, package-manager metadata
 or archive version numbers. The [release contract](../../agent-docs/decisions.md#public-installation-direction-planned)
@@ -110,8 +110,11 @@ delivery hosts. Metadata is limited to 256 KiB and archive/executable sizes to
 128 MiB: generous headroom for the current few-megabyte binaries, with finite
 limits for unexpected responses. Each asset gets two minutes to download;
 executable identity checks get ten seconds. Both waits are cancellable. Hashing
-and decompression use Emacs facilities; extraction accepts only the two regular
-members written by release staging and retains the license beside the executable.
+and decompression use Emacs facilities; extraction accepts only the six regular
+members in the [release bundle](../../scripts/releasing.md#artifact-contract).
+The verified CLI then owns platform-directory resolution, immutable version
+storage and `current` activation, with a cancellable one-minute timeout.
+Emacs displays the returned stable paths and executes its exact versioned CLI.
 
 The [user guide](user-guide.md#cli-setup-and-upgrades) explains setup commands,
 consent, cache recovery and explicit release/development executables.

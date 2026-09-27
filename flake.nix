@@ -49,16 +49,22 @@
           fileset = pkgs.lib.fileset.unions [
             ./Cargo.lock
             ./Cargo.toml
+            ./LICENSE
             ./src
             ./tests
+            ./skills/isled
           ];
         };
         isled = pkgs.rustPlatform.buildRustPackage {
           pname = "isled";
-          version = "0.32.0";
+          version = "0.33.0";
           buildFeatures = [ "release-binary" ];
           src = packageSource;
           cargoLock.lockFile = ./Cargo.lock;
+          postInstall = ''
+            mkdir -p "$out/share/isled"
+            cp -R skills/isled "$out/share/isled/skill"
+          '';
         };
         frontendEmacs = pkgs.emacs.pkgs.withPackages (emacsPackages: [
           emacsPackages.markdown-mode

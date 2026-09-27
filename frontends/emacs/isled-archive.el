@@ -7,19 +7,19 @@
 ;; Keywords: tools
 
 ;;; Commentary:
-;; Read only the two regular members produced by release staging; never extract paths.
+;; Read only the six regular members produced by release staging; never extract paths.
 
 ;;; Code:
 
 (require 'cl-lib)
-(require 'isled-release)
+(require 'isled-bundle)
 
 (declare-function zlib-decompress-region "decompress.c" (start end &optional allow-partial))
 (declare-function zlib-available-p "decompress.c" ())
 
 (cl-defstruct (isled-archive (:constructor isled-archive--create))
-  "Verified executable and accompanying license from a release archive."
-  executable license)
+  "Verified executable and complete file contents from a release archive."
+  files)
 
 (defun isled-archive--inflate (bytes)
   "Decompress gzip BYTES using Emacs, without an external program."
@@ -40,9 +40,9 @@
     value))
 
 (defun isled-archive--tar (bytes)
-  "Return the two regular member names and contents of USTAR BYTES."
+  "Return the six regular member names and contents of USTAR BYTES."
   (let ((position 0) entries)
-    (dotimes (_ 2)
+    (dotimes (_ 6)
       (let* ((header (substring bytes position (+ position 512)))
              (name (car (split-string (substring header 0 100) "\0")))
              (size-text (string-trim (substring header 124 136) "[ \0]+" "[ \0]+"))
@@ -101,18 +101,18 @@ Return its name, content, next directory offset and local member end."
       (list name content (+ offset 46 length) local end))))
 
 (defun isled-archive--zip (bytes)
-  "Return exactly two regular members from the staging format in ZIP BYTES."
+  "Return exactly six regular members from the staging format in ZIP BYTES."
   (let* ((end (- (length bytes) 22))
          (offset (isled-archive--number bytes (+ end 16) 4))
          (directory offset) (local 0) entries)
     (unless (and (equal (substring bytes end (+ end 4)) "PK\5\6")
                  (zerop (isled-archive--number bytes (+ end 4) 4))
-                 (= (isled-archive--number bytes (+ end 8) 2) 2)
-                 (= (isled-archive--number bytes (+ end 10) 2) 2)
+                 (= (isled-archive--number bytes (+ end 8) 2) 6)
+                 (= (isled-archive--number bytes (+ end 10) 2) 6)
                  (zerop (isled-archive--number bytes (+ end 20) 2))
                  (= (+ offset (isled-archive--number bytes (+ end 12) 4)) end))
       (error "Unexpected Isled ZIP directory"))
-    (dotimes (_ 2)
+    (dotimes (_ 6)
       (pcase-let ((`(,name ,content ,next ,start ,finish) (isled-archive--zip-member bytes offset)))
         (unless (= start local) (error "Overlapping or hidden Isled ZIP members"))
         (push (cons name content) entries)
@@ -121,24 +121,35 @@ Return its name, content, next directory offset and local member end."
     entries))
 
 (defun isled-archive-read (bytes release)
-  "Verify archive BYTES against RELEASE, returning the executable and license."
+  "Verify archive BYTES against RELEASE, returning the complete bundle."
   (isled-release-verify bytes (isled-release-archive-hash release) (isled-release-archive-size release))
   (let* ((entries (condition-case nil
                      (if (string-suffix-p ".zip" (isled-release-archive release))
                       (isled-archive--zip bytes)
                     (when (> (isled-archive--number bytes (- (length bytes) 4) 4)
-                             (+ (isled-release-size release) (* 128 1024)))
+                             (+ (isled-release-size release) (* 5 1024 1024)))
                       (error "Isled tar exceeds the expected unpacked size"))
                     (isled-archive--tar (isled-archive--inflate bytes)))
                    (args-out-of-range (error "Truncated Isled archive"))
                    (wrong-type-argument (error "Malformed Isled archive"))))
          (member (isled-release-member release))
-         (license (concat (file-name-directory member) "LICENSE")))
-    (unless (equal (sort (mapcar #'car entries) #'string<) (sort (list member license) #'string<))
+         (prefix (file-name-directory member))
+         (license (concat prefix "LICENSE"))
+         (manifest (concat prefix "bundle.json"))
+         (names (append (list member license manifest)
+                        (mapcar (lambda (name) (concat prefix name)) isled-bundle-skill-files))))
+    (unless (equal (sort (mapcar #'car entries) #'string<) (sort names #'string<))
       (error "Unexpected names or duplicate members in Isled archive"))
+    (isled-release-verify (cdr (assoc manifest entries))
+                          (isled-release-bundle-hash release) (isled-release-bundle-size release))
+    (dolist (item (isled-bundle-read (cdr (assoc manifest entries))
+                                   (isled-release-version release) (isled-release-target release)))
+      (isled-release-verify (cdr (assoc (concat prefix (alist-get 'name item)) entries))
+                            (alist-get 'sha256 item) (alist-get 'size item)))
     (let ((content (cdr (assoc member entries))))
       (isled-release-verify content (isled-release-hash release) (isled-release-size release))
-      (isled-archive--create :executable content :license (cdr (assoc license entries))))))
+      (isled-archive--create
+       :files (mapcar (lambda (entry) (cons (substring (car entry) (length prefix)) (cdr entry))) entries)))))
 
 (provide 'isled-archive)
 ;;; isled-archive.el ends here

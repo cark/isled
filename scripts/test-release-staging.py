@@ -41,6 +41,8 @@ class ReleaseStaging(unittest.TestCase):
         for name in ("README.md", "user-guide.md", "CONTRIBUTING.md", "images/hierarchy.gif", "images/filtering.gif", "images/editing.gif"):
             self.write("frontends/emacs/" + name, "fixture\n")
         self.write("LICENSE", "fixture license\n")
+        for name in ("SKILL.md", "references/mutations.md", "references/recovery.md"):
+            self.write("skills/isled/" + name, "fixture skill\n")
         self.write("scripts/package-emacs.py", (SCRIPTS / "package-emacs.py").read_text())
         self.git("init", "--quiet")
         self.git("add", ".")
@@ -64,7 +66,7 @@ class ReleaseStaging(unittest.TestCase):
         return subprocess.check_output(["git", "-C", str(self.root), *args], text=True, stderr=subprocess.STDOUT)
 
     def part(self, target):
-        files = pack_cli(self.parts, "1.2.3", target, self.program, self.root / "LICENSE")
+        files = pack_cli(self.parts, "1.2.3", target, self.program, self.root / "LICENSE", self.root / "skills/isled")
         write_json(self.parts / f"isled-1.2.3-{target}.build.json",
                    {"schema_version": 1, "version": "1.2.3", "revision": self.revision,
                     "target": target, "files": files, "checks": ["fixture only"]})
@@ -85,7 +87,20 @@ class ReleaseStaging(unittest.TestCase):
                 self.assertEqual(archive.read_bytes(), original)
                 program = unpack_cli(self.parts, files, "1.2.3", target, self.base / target)
                 self.assertEqual(program.read_bytes(), self.program.read_bytes())
+                self.assertEqual((program.parent / 'skill/references/mutations.md').read_text(), 'fixture skill\n')
                 self.assertEqual(archive.suffix == ".zip", target.endswith("windows-msvc"))
+
+    def test_skill_changes_cannot_be_silently_omitted_from_bundles(self):
+        target = next(iter(TARGETS))
+        self.write('skills/isled/references/new-guidance.md', 'must be bundled\n')
+        with self.assertRaisesRegex(ValueError, 'Skill contents changed'):
+            self.part(target)
+        self.assertFalse(list(self.parts.iterdir()))
+        (self.root / 'skills/isled/references/new-guidance.md').unlink()
+        (self.root / 'skills/isled/references/mutations.md').unlink()
+        with self.assertRaisesRegex(ValueError, 'Skill contents changed'):
+            self.part(target)
+        self.assertFalse(list(self.parts.iterdir()))
 
     def test_corruption_fails_before_writing_an_executable(self):
         for target in TARGETS:

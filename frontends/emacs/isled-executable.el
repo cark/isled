@@ -25,10 +25,6 @@
           (file-attribute-size attributes) (file-attribute-modification-time attributes)
           (file-attribute-status-change-time attributes))))
 
-(defun isled-executable-verified-p (program version development)
-  "Return non-nil if unchanged PROGRAM was verified for VERSION and DEVELOPMENT."
-  (gethash (isled-executable--signature program version development) isled-executable--verified))
-
 (defun isled-executable-verify (program version development callback)
   "Check PROGRAM reports VERSION, allowing its -dev build only with DEVELOPMENT.
 Call CALLBACK with PROGRAM and nil, or nil and an error message.  Return a

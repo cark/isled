@@ -27,9 +27,14 @@ The included [Isled skill](skills/isled/SKILL.md) teaches an agent to find the
 ledger, inspect issues, follow dependencies and record progress through the CLI.
 It also covers when to ask before changing or closing an issue.
 
-Make `skills/isled/` available through your agent's skill mechanism, or link
-its `SKILL.md` from your project instructions. The skill is for using Isled;
-[contributor guidance](CONTRIBUTING.md) covers working on Isled itself.
+The installer supplies the matching skill with the CLI. Run `isled installation`,
+or `M-x isled-show-installation` in Emacs, to get its full `current/skill/` path.
+Use that directory in your agent's skill setup, or link its `SKILL.md` from your
+project instructions. Keep the reference files with it.
+
+These paths follow upgrades and rollbacks. An agent that has already loaded the
+skill may need to reload it or start a new conversation. The skill covers using
+Isled; [contributor guidance](CONTRIBUTING.md) covers working on Isled itself.
 
 ## Emacs frontend
 
@@ -42,17 +47,34 @@ The frontend offers to download its matching CLI on first use.
 
 ## Installation
 
+This checkout prepares **0.33.0**, including shared CLI and skill installation.
+Until it is published, use the instructions shipped with
+[0.32.0](https://github.com/cark/isled/tree/v0.32.0#installation).
+
 **In Emacs:** use the [package installation guide](frontends/emacs/README.md#installation).
 No Rust compiler or manual CLI setup is needed.
 
 **For the terminal or an agent:** get the archive for your platform from the
-[release page](https://github.com/cark/isled/releases/tag/v0.32.0). Verify it
-against the supplied SHA-256 checksums, extract it, and put `isled` (`isled.exe`
-on Windows) on `PATH`. Run `isled --version` to check the installation.
+[release page](https://github.com/cark/isled/releases). Verify it against the
+supplied SHA-256 checksums and extract the whole archive. From its directory, run:
+
+```console
+./isled install
+```
+
+On Windows, use `.\isled.exe install`. The installer shows the full executable
+and skill paths through `current`, plus the directory to add to PATH. No
+administrator access is needed. Run `isled installation` to find these paths again.
+
+To upgrade, download the new archive and run its installer. Previous versions
+stay available for rollback. See [installation and updates](user-docs/installation.md)
+for storage locations, custom directories and pinned paths.
 
 **From source:** install the [build requirements](#requirements), then run
 `cargo install --path . --locked` in a checkout. Cargo's binary directory,
-normally `~/.cargo/bin`, must be on `PATH`.
+normally `~/.cargo/bin`, must be on `PATH`. Use `skills/isled/` from that checkout
+for the matching skill. Nix supplies it at `share/isled/skill/` in the package
+output and manages its own updates.
 
 ## Quick start
 
@@ -84,8 +106,9 @@ Prebuilt releases target **x86-64 Linux 5.4+**, **x86-64 Windows 10+** and
 **Apple Silicon macOS 15+**. Other platforms can use a source build.
 
 Native CI checks installation and recovery on Ubuntu 24.04, Windows Server 2025
-and macOS 15. Linux 5.4 and Windows 10 are compatibility targets, not direct
-test environments. See the [release checks](scripts/releasing.md#native-staging).
+and macOS 15. The new shared installer still needs native release acceptance.
+Linux 5.4 and Windows 10 are compatibility targets, not direct test environments.
+See the [release checks](scripts/releasing.md#native-staging).
 
 The Emacs-managed macOS installation works with Gatekeeper enabled, without
 publisher signing or notarization. Standalone downloads with browser quarantine

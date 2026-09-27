@@ -159,6 +159,13 @@ jobs:
             --package "$(find target/release-candidate -name 'isled-*.tar')" \
             --artifacts target/release-candidate --upgrade target/upgrade-candidate \
             --dependencies "$ISLED_CHECK_PACKAGE_DIR" --output "$RUNNER_TEMP/isled-install-check"
+      - name: Windows standard-user junction installation
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          ./scripts/check-windows-user-install.ps1 -CandidateDirectory target/release-candidate `
+            -UpgradeDirectory target/upgrade-candidate `
+            -OutputDirectory "$env:RUNNER_TEMP/isled-standard-user-check"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
@@ -166,5 +173,8 @@ jobs:
           path: |
             ${{ runner.temp }}/isled-install-check/*.log
             ${{ runner.temp }}/isled-install-check/receipt.json
+            ${{ runner.temp }}/isled-install-check/standalone.json
+            ${{ runner.temp }}/isled-standard-user-check/*.json
+            ${{ runner.temp }}/isled-standard-user-check/*.txt
           if-no-files-found: error
           retention-days: 14

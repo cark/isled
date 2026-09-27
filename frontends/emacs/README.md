@@ -33,6 +33,10 @@ Emacs package.
 
 ## Installation
 
+This checkout prepares **0.33.0** and its shared CLI/skill installer. Until that
+release is published, use the
+[0.32.0 installation guide](https://github.com/cark/isled/blob/v0.32.0/frontends/emacs/README.md#installation).
+
 You need **Emacs 30.1+** with built-in TLS and zlib support. Your package
 manager installs **markdown-mode 2.6+** and **Transient 0.8.0+**. On first use,
 Isled offers to download the matching CLI; no Rust compiler, PATH setup or
@@ -48,7 +52,8 @@ They support the `release` branch, a fixed tag or commit, and development on
 
 ### From the release archive
 
-Download **`isled-0.32.0.tar`** from the [release page](https://github.com/cark/isled/releases/tag/v0.32.0).
+Download **`isled-0.33.0.tar`** from the [release page](https://github.com/cark/isled/releases)
+once 0.33.0 is published.
 Make the dependencies available through your configured GNU/NonGNU ELPA or
 MELPA archives, and allow upgrades to bundled packages:
 
@@ -66,6 +71,11 @@ Transient was already loaded when you upgraded it.
 
 Visit your project and run **`M-x isled`**. Accept the CLI download when asked.
 You can also run `M-x isled-setup-cli` to prepare it separately.
+
+Setup opens a buffer with the full executable and agent skill paths through
+`current`. Copy these into your shell or agent setup; they follow future upgrades.
+Use **`M-x isled-show-installation`** to find them again. Emacs itself keeps using
+its exact compatible CLI version.
 
 Managed downloads support x86-64 Linux and Windows, and Apple Silicon macOS;
 see [platform requirements](../../README.md#requirements) for minimum versions
@@ -210,6 +220,11 @@ needs attention. See the [warning guide](user-guide.md#known-warnings) for detai
 Give your coding agent the [Isled skill](../../skills/isled/SKILL.md) to manage
 the same ledger through the CLI. Use Emacs to read its findings, adjust a draft
 or follow the next dependency.
+
+The matching skill is installed alongside the CLI. Run
+**`M-x isled-show-installation`** and use the displayed `current/skill/` directory
+in your agent setup. Keep its reference files with it. After an upgrade, an agent
+that already loaded the skill may need to reload it or start a new conversation.
 
 ## AI use
 

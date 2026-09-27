@@ -29,6 +29,9 @@ The [Release staging workflow](../.github/workflows/release.yml) runs manually o
 when the preparation branch `release-artifacts` is pushed. It does not run on a
 schedule, create a release, push a tag or advance a distribution branch.
 That branch also starts the full three-platform [CI workflow](../.github/workflows/ci.yml).
+On that preparation branch, CI omits the public-download check: the new pin is
+not public yet, and the staging workflow tests its actual candidate assets.
+Run the public-download check after publication before promoting distribution refs.
 Ordinary branch and tag pushes start neither workflow. Pull requests receive
 one Linux CI job; manual CI runs provide all three platforms whenever needed.
 
@@ -37,9 +40,9 @@ and the [pinned full editors](../CONTRIBUTING.md#github-ci). Each job:
 
 1. Checks version consistency and runs the Rust suite in release mode.
 2. Builds the versioned executable and inspects native linkage and requirements.
-3. Writes an archive, verifies its SHA-256, extracts only the expected executable,
-   and verifies its SHA-256 before executing it.
-4. Tests version reporting and CLI operations in a temporary ledger, then runs
+3. Writes an archive, verifies its SHA-256, extracts the complete fixed bundle,
+   and verifies every file before executing the CLI.
+4. Tests standalone installation, stable paths and CLI operations in temporary storage, then runs
    the complete Emacs static/ERT entry point against the extracted executable.
 5. Writes a build receipt only after those checks pass.
 
@@ -62,6 +65,13 @@ starts with an empty tool PATH and private state. On macOS, the check requires
 Gatekeeper assessment to remain enabled; it changes no security or quarantine
 settings. The `install-OS` artifacts retain case logs and an identity receipt.
 The workflow passes only when all three installation jobs pass.
+
+The same jobs test standalone installation and rollback with an empty PATH,
+and verify that changing `current` cannot redirect an already prepared frontend.
+Windows additionally creates an ephemeral standard account and checks junction
+creation, upgrade, rollback and interrupted-switch recovery with no administrator
+rights, symbolic-link privilege or Developer Mode. This is a hosted native check,
+not evidence of Windows 10 or desktop SmartScreen behavior.
 
 The owned loopback server substitutes only the request destination. These native
 checks exercise normal selection, verification, extraction and execution. Public
@@ -91,7 +101,7 @@ Collect the three part directories, then assemble them from the same checkout:
 python3 -B scripts/stage-release.py assemble --revision COMMIT \
   --parts target/release-parts --output target/release-candidate
 python3 -B scripts/stage-release.py verify target/release-candidate
-ISLED_PACKAGE_ARCHIVE="$PWD/target/release-candidate/isled-0.32.0.tar" \
+ISLED_PACKAGE_ARCHIVE="$PWD/target/release-candidate/isled-0.33.0.tar" \
   emacs -Q --batch -l frontends/emacs/test/package-install.el
 ```
 
@@ -102,37 +112,46 @@ inspect the complete set on any platform.
 
 ## Artifact contract
 
-For version `0.32.0`, the set contains:
+For version `0.33.0`, the set contains:
 
 | File | Contents |
 | --- | --- |
-| `isled-0.32.0-x86_64-unknown-linux-musl.tar.gz` | Linux executable and license |
-| `isled-0.32.0-aarch64-apple-darwin.tar.gz` | macOS executable and license |
-| `isled-0.32.0-x86_64-pc-windows-msvc.zip` | Windows executable and license |
-| `isled-0.32.0.tar` | Installable Emacs source package |
-| `isled-0.32.0-TARGET.build.json` (one per target) | Source identity, build settings, platform inspection and completed checks |
-| `isled-0.32.0-manifest.json` | Release identity and exact artifact descriptors |
-| `isled-0.32.0-SHA256SUMS` | SHA-256 of all the preceding files, including the manifest |
+| `isled-0.33.0-x86_64-unknown-linux-musl.tar.gz` | Linux executable, license and complete skill bundle |
+| `isled-0.33.0-aarch64-apple-darwin.tar.gz` | macOS executable, license and complete skill bundle |
+| `isled-0.33.0-x86_64-pc-windows-msvc.zip` | Windows executable, license and complete skill bundle |
+| `isled-0.33.0.tar` | Installable Emacs source package |
+| `isled-0.33.0-TARGET.build.json` (one per target) | Source identity, build settings, platform inspection and completed checks |
+| `isled-0.33.0-manifest.json` | Release identity and exact artifact descriptors |
+| `isled-0.33.0-SHA256SUMS` | SHA-256 of all the preceding files, including the manifest |
 
-CLI archives contain exactly `isled-VERSION-TARGET/isled` (`isled.exe` on Windows)
-and `isled-VERSION-TARGET/LICENSE`. Archives have normalized timestamps and modes;
-identical inputs produce identical archives. This does not promise bit-for-bit
-reproducibility of Rust builds across toolchains or systems.
+Each CLI archive contains six regular files under `isled-VERSION-TARGET/`:
+`isled` (`isled.exe` on Windows), `LICENSE`, `bundle.json`, `skill/SKILL.md`,
+`skill/references/mutations.md` and `skill/references/recovery.md`.
+Archives have normalized timestamps and modes; identical inputs produce identical
+archives. This does not promise reproducible Rust builds across toolchains.
 
-The accepted [shared CLI and skill installation design](../agent-docs/decisions.md#shared-cli-and-skill-installation-accepted-not-implemented)
-will extend a future release with the complete skill beside the executable.
-It is not implemented in this artifact contract; update packaging, verification
-and both installation routes together before publishing that release.
+`bundle.json` schema 1 records `version`, `target` and a `files` array containing
+exactly the other five files. Each entry has its relative `name`, byte `size` and
+lowercase hexadecimal `sha256`. All members are verified before installation.
+The manifest itself is verified against its descriptor in release manifest schema 2.
+
+This format starts with 0.33.0 and implements the
+[shared installation design](../agent-docs/decisions.md#shared-cli-and-skill-installation).
+Published 0.32.0 archives remain immutable; older frontends retain their original
+installer and storage. Prepare and publish the new CLI assets before promoting
+an Emacs pin that requires this bundle format. Remove candidate notices from both
+READMEs when preparing the final publication candidate.
 
 The Emacs tar contains an `isled-VERSION/` directory. Its generated `isled-pkg.el`
 comes from the headers in `isled.el`; source, guides, demo GIFs and the root license
 are included. Tests, bytecode and contributor-local state are excluded.
 
-Manifest schema 1 has `version`, `tag`, full source `revision`, `repository`,
+Release manifest schema 2 has `version`, `tag`, full source `revision`, `repository`,
 `emacs`, and `binaries` keyed by exact Rust target. Each binary entry contains:
 
 - `archive`: basename `name`, byte `size` and lowercase hexadecimal `sha256`.
 - `executable`: exact archive `member`, byte `size` and `sha256`.
+- `bundle`: exact `bundle.json` archive `member`, byte `size` and `sha256`.
 - `minimum_os`: intended compatibility floor, not a native-test claim.
 - `build_report`: the corresponding receipt's name, size and SHA-256.
 
@@ -145,7 +164,7 @@ https://github.com/cark/isled/releases/download/vVERSION/isled-VERSION-manifest.
 
 Asset URLs use the same release-specific prefix and their declared basenames.
 There is no `latest` lookup. Download over HTTPS, validate identity and target,
-then verify the archive before extraction and executable before execution,
+then verify the archive and complete bundle before executing the CLI,
 including `--version`. Reject missing, malformed or mismatched hashes. The
 Emacs installer uses built-in hashing, with no external checksum/signature tool.
 Checksums from the same GitHub release establish integrity within that trust

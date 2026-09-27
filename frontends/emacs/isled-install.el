@@ -1,4 +1,4 @@
-;;; isled-install.el --- Stage and activate a CLI release -*- lexical-binding: t; -*-
+;;; isled-install.el --- Download verified bundles for the shared installer -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2026 Sacha De Vos
 ;; SPDX-License-Identifier: MIT
@@ -7,23 +7,22 @@
 ;; Keywords: tools
 
 ;;; Commentary:
-;; Keep each verified executable in its own directory.  Failed or cancelled setup
-;; removes only its private staging directory, never an earlier executable.
+;; Emacs owns private download staging.  The verified Rust executable owns
+;; versioned storage, complete skill installation and the current directory link.
 
 ;;; Code:
 (require 'isled-download)
 (require 'isled-archive)
 (require 'isled-executable)
+(require 'isled-installation)
 
-(defun isled-install-directory (root version target)
-  "Return the versioned directory under ROOT for VERSION and TARGET."
-  (expand-file-name (format "%s-%s" version target) root))
+(defun isled-install-directory (root version)
+  "Return the versioned directory under ROOT for VERSION."
+  (expand-file-name (concat "versions/" version) root))
 
 (defun isled-install--read (file)
   "Read regular local FILE literally, rejecting symbolic links."
-  (when (or (file-symlink-p file) (not (file-regular-p file)))
-    (error "Missing or unsafe Isled cache file: %s" file))
-  (with-temp-buffer (set-buffer-multibyte nil) (insert-file-contents-literally file) (buffer-string)))
+  (isled-bundle-read-file file))
 
 (defun isled-install--write (file bytes)
   "Write BYTES into a new local FILE without visiting it."
@@ -32,28 +31,21 @@
 
 (defun isled-install-cached (root version target)
   "Return the verified cached executable for ROOT, VERSION and TARGET, or nil."
-  (let* ((directory (isled-install-directory root version target))
-         (program (expand-file-name (isled-release-executable target) directory)))
-    (when (or (file-exists-p directory) (file-symlink-p directory))
-      (condition-case failure
-          (progn
-            (when (file-symlink-p directory) (error "Unsafe cache directory"))
-            (unless (isled-executable-verified-p program version nil)
-              (let ((release (isled-release-read
-                              (isled-install--read (expand-file-name "manifest.json" directory))
-                              (isled-install--read (expand-file-name "SHA256SUMS" directory)) version target)))
-                (isled-release-verify (isled-install--read program)
-                                      (isled-release-hash release) (isled-release-size release)))))
-        (error (error "Invalid cached Isled (%s); remove only %s and retry"
-                      (error-message-string failure) directory)))
-      program)))
+  (when root
+    (let* ((directory (isled-install-directory root version))
+           (program (expand-file-name (isled-release-executable target) directory)))
+      (when (or (file-exists-p directory) (file-symlink-p directory))
+        (condition-case failure
+            (isled-bundle-verify-directory directory version target)
+          (error (error "Invalid cached Isled (%s); inspect %s before retrying"
+                        (error-message-string failure) directory)))
+        program))))
 
 (defun isled-install (root version target callback)
-  "Stage VERSION for TARGET under ROOT, then deliver its path to CALLBACK.
-CALLBACK receives PROGRAM and nil, or nil and an error message.  Return a
-cancellation function.  Existing version directories are never replaced."
-  (let ((destination (isled-install-directory root version target))
-        stage cancel finished checksums manifest release)
+  "Download VERSION for TARGET and install its complete bundle under ROOT.
+ROOT may be nil to let the CLI choose the platform default.  Deliver the exact
+installed executable to CALLBACK.  Return a cancellation function."
+  (let ((generation 0) stage cancel finished checksums release)
     (cl-labels
         ((finish (program failure)
            (unless finished
@@ -69,39 +61,45 @@ cancellation function.  Existing version directories are never replaced."
            (unless finished
              (condition-case failure (funcall action)
                ((error quit) (finish nil (error-message-string failure))))))
+         (launch (operation)
+           (let ((token (cl-incf generation)) (stop (funcall operation)))
+             (when (= token generation) (setq cancel stop))))
          (fetch (name limit next)
-           (setq cancel
-                 (isled-download version name limit
-                                 (lambda (bytes failure)
-                                   (if failure (finish nil failure)
-                                     (guard (lambda () (funcall next bytes))))))))
-         (activate (program failure)
+           (launch (lambda ()
+                     (isled-download version name limit
+                                     (lambda (bytes failure)
+                                       (if failure (finish nil failure)
+                                         (guard (lambda () (funcall next bytes)))))))))
+         (installed (paths failure)
            (if failure (finish nil failure)
              (guard
               (lambda ()
-                ;; A second Emacs may have completed the same release first.
-                (if (file-exists-p destination)
-                    (let ((existing (isled-install-cached root version target)))
-                      (setq cancel (isled-executable-verify existing version nil #'finish)))
-                  (rename-file stage destination nil)
-                  (setq stage nil)
-                  (finish (expand-file-name (file-name-nondirectory program) destination) nil))))))
+                (let ((directory (alist-get 'root paths)))
+                  (unless root (isled-installation-remember directory))
+                  (let ((program (isled-install-cached directory version target)))
+                    (unless program (error "Shared installer did not install its bundle"))
+                    (isled-installation-display paths program)
+                    (finish program nil)))))))
+         (activate (program failure)
+           (if failure (finish nil failure)
+             (guard (lambda ()
+                      (launch (lambda () (isled-installation-run program root "install" #'installed version)))))))
          (unpack (bytes)
            (let* ((content (isled-archive-read bytes release))
                   (program (expand-file-name (isled-release-executable target) stage)))
-             (isled-install--write program (isled-archive-executable content))
-             (isled-install--write (expand-file-name "LICENSE" stage) (isled-archive-license content))
+             (dolist (entry (isled-archive-files content))
+               (let ((file (expand-file-name (car entry) stage)))
+                 (make-directory (file-name-directory file) t)
+                 (isled-install--write file (cdr entry))))
              (set-file-modes program #o700)
-             (isled-install--write (expand-file-name "manifest.json" stage) manifest)
-             (isled-install--write (expand-file-name "SHA256SUMS" stage) checksums)
-             (message "Verifying Isled %s executable" version)
-             (setq cancel (isled-executable-verify program version nil #'activate))))
+             (message "Verifying Isled %s executable and skill" version)
+             (launch (lambda () (isled-executable-verify program version nil #'activate)))))
          (metadata (bytes)
-           (setq manifest bytes release (isled-release-read manifest checksums version target))
+           (setq release (isled-release-read bytes checksums version target))
            (fetch (isled-release-archive release) (isled-release-archive-size release) #'unpack)))
       (guard
        (lambda ()
-         (setq stage (make-temp-file (expand-file-name ".install-" root) t))
+         (setq stage (make-temp-file "isled-download-" t))
          (fetch (format "isled-%s-SHA256SUMS" version) (* 256 1024)
                 (lambda (bytes)
                   (setq checksums bytes)

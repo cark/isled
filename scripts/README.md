@@ -82,8 +82,9 @@ The [contributor guide](../CONTRIBUTING.md) supplies a route without Nix. Never 
 Nix: no bare `nix develop`, `nix develop .`, `nix flake check`, `path:$PWD` or `.#default`.
 For a package check use `nix flake check "path:$(scripts/nix-source.sh)"`.
 
-The Rust package source currently contains only `Cargo.toml`, `Cargo.lock`,
-`src/`, and `tests/`. Keep that list aligned with real build and test inputs.
+The Rust package source contains `Cargo.toml`, `Cargo.lock`, `LICENSE`,
+`src/`, `tests/` and `skills/isled/`. Other skills stay outside the source boundary.
+Keep that list aligned with real build, test and packaging inputs.
 `scripts/nix-source.sh` owns two initial snapshot scopes within the same flake.
 Its default includes package inputs plus `flake.nix` and `flake.lock`; use
 `path:$(scripts/nix-source.sh)` for package builds and flake checks.

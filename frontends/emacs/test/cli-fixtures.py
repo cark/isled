@@ -20,9 +20,10 @@ for version in ('0.32.0', '0.32.1'):
     directory.mkdir()
     executable = root / 'fixture-program'
     executable.write_bytes(('isled ' + version + '\n').encode())
-    binaries = {target: pack_cli(directory, version, target, executable, license_file) for target in TARGETS}
+    skill = Path(__file__).resolve().parents[3] / 'skills/isled'
+    binaries = {target: pack_cli(directory, version, target, executable, license_file, skill) for target in TARGETS}
     manifest = directory / f'isled-{version}-manifest.json'
-    write_json(manifest, {'schema_version': 1, 'repository': 'cark/isled', 'version': version,
+    write_json(manifest, {'schema_version': 2, 'repository': 'cark/isled', 'version': version,
                           'tag': 'v' + version, 'binaries': binaries})
     files = sorted(directory.iterdir())
     (directory / f'isled-{version}-SHA256SUMS').write_text(

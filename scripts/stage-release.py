@@ -3,6 +3,7 @@
 
 import argparse
 import json
+import os
 from pathlib import Path
 import re
 import shutil
@@ -15,6 +16,7 @@ from release_metadata import (REPOSITORY, TARGETS, archive_name, asset, capture,
                               checksums_name, manifest_name, read_json, release_version,
                               source_revision, verify_asset, write_json)
 from release_platform import build_environment, inspect_binary
+from release_installation import check_installation
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -31,6 +33,8 @@ def smoke_cli(program, version):
             raise ValueError("Extracted executable has the wrong release identity")
         if list(root.iterdir()):
             raise ValueError("Version reporting changed the filesystem")
+        check_installation(program, root / "shared storage é", version,
+                           dict(os.environ, PATH=str(root / "empty-path")))
         run(program, "init", cwd=root)
         run(program, "add", "Prepare installation", "Exercise the packaged executable.", "--kind", "maintenance", cwd=root)
         run(program, "add", "Ship installation", "Depends on the preparation.", "--kind", "maintenance", cwd=root)
@@ -54,7 +58,7 @@ def build(args):
     run("cargo", "build", "--locked", "--release", "--features", "release-binary", "--bin", "isled", env=env)
     program = ROOT / "target" / target / "release" / TARGETS[target]["executable"]
     report["platform"] = inspect_binary(program, target)
-    report["files"] = pack_cli(args.output, version, target, program, ROOT / "LICENSE")
+    report["files"] = pack_cli(args.output, version, target, program, ROOT / "LICENSE", ROOT / "skills/isled")
     with tempfile.TemporaryDirectory(prefix="isled extracted ") as temporary:
         program = unpack_cli(args.output, report["files"], version, target, Path(temporary))
         smoke_cli(program, version)
@@ -64,7 +68,7 @@ def build(args):
     # A receipt is written only after all native checks pass.
     if source_revision(ROOT, revision) != revision:
         raise ValueError("Source changed during staging")
-    report["checks"] = ["release Rust suite", "archive and executable SHA-256", "extracted CLI smoke", "Emacs static and ERT against extracted CLI"]
+    report["checks"] = ["release Rust suite", "complete bundle SHA-256", "standalone installation and current paths", "extracted CLI smoke", "Emacs static and ERT against extracted CLI"]
     write_json(args.output / f"isled-{version}-{target}.build.json", report)
     print(f"Native part ready: {args.output}")
 
@@ -94,7 +98,7 @@ def assemble(args):
         binaries[target] = {**report["files"], "minimum_os": TARGETS[target]["minimum_os"], "build_report": asset(args.output / path.name)}
     package = args.output / f"isled-{version}.tar"
     run(sys.executable, "-B", "scripts/package-emacs.py", "--output", package)
-    manifest = {"schema_version": 1, "version": version, "tag": f"v{version}", "revision": revision,
+    manifest = {"schema_version": 2, "version": version, "tag": f"v{version}", "revision": revision,
                 "repository": REPOSITORY, "binaries": binaries, "emacs": asset(package)}
     write_json(args.output / manifest_name(version), manifest)
     files = sorted(path for path in args.output.iterdir() if path.is_file())
@@ -112,7 +116,7 @@ def verify(directory):
     version = manifest["version"]
     if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version) or not re.fullmatch(r"[0-9a-f]{40}", manifest["revision"]):
         raise ValueError("Invalid release version or source revision")
-    if manifest["schema_version"] != 1 or manifest["tag"] != "v" + version or manifest["repository"] != REPOSITORY:
+    if manifest["schema_version"] != 2 or manifest["tag"] != "v" + version or manifest["repository"] != REPOSITORY:
         raise ValueError("Invalid release manifest identity")
     if manifests[0].name != manifest_name(version) or set(manifest["binaries"]) != set(TARGETS):
         raise ValueError("Incomplete or misnamed release manifest")
@@ -124,7 +128,7 @@ def verify(directory):
         report_path = verify_asset(directory, binary["build_report"])
         expected.append(report_path)
         report = read_json(report_path)
-        if (report["revision"], report["version"], report["target"], report["files"]) != (manifest["revision"], version, target, {"archive": binary["archive"], "executable": binary["executable"]}):
+        if (report["revision"], report["version"], report["target"], report["files"]) != (manifest["revision"], version, target, {key: binary[key] for key in ("archive", "executable", "bundle")}):
             raise ValueError("Build report does not match the manifest")
         with tempfile.TemporaryDirectory(prefix="isled verify ") as temporary:
             unpack_cli(directory, binary, version, target, Path(temporary))

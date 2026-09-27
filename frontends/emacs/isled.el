@@ -5,7 +5,7 @@
 
 ;; Author: Sacha De Vos
 ;; Assisted-by: Codex:GPT-6
-;; Version: 0.32.0
+;; Version: 0.33.0
 ;; Package-Requires: ((emacs "30.1") (markdown-mode "2.6") (transient "0.8.0"))
 ;; Keywords: tools
 ;; URL: https://github.com/cark/isled
@@ -20,11 +20,12 @@
 (require 'project)
 (require 'isled-file-routing)
 
-(defconst isled-required-cli-version "0.32.0"
+(defconst isled-required-cli-version "0.33.0"
   "Exact CLI release compatible with this frontend.
 Independent of the version assigned by an Emacs package archive.")
 
 (autoload 'isled-setup-cli "isled-cli" nil t)
+(autoload 'isled-show-installation "isled-cli" nil t)
 (autoload 'isled-cancel-setup "isled-cli" nil t)
 (autoload 'isled "isled-entry" nil t)
 (autoload 'isled-open-project "isled-entry" nil t)

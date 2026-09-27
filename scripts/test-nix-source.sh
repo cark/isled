@@ -6,8 +6,10 @@ script_directory=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 fixture=$(mktemp -d)
 trap 'rm -rf -- "$fixture"' EXIT
 mkdir -p "$fixture"/{scripts,src,tests,target,.jj,.issues,.direnv,.dogfood}
+mkdir -p "$fixture"/skills/{isled/references,unrelated}
+printf 'excluded skill\n' >"$fixture/skills/unrelated/SKILL.md"
 cp "$script_directory/nix-source.sh" "$fixture/scripts/"
-for file in flake.nix flake.lock Cargo.toml Cargo.lock src/main.rs tests/basic.rs; do
+for file in flake.nix flake.lock Cargo.toml Cargo.lock LICENSE src/main.rs tests/basic.rs skills/isled/SKILL.md skills/isled/references/mutations.md; do
     printf 'fixture\n' >"$fixture/$file"
 done
 source_before=$("$fixture/scripts/nix-source.sh")
@@ -15,12 +17,13 @@ shell_before=$("$fixture/scripts/nix-source.sh" --shell)
 for file in flake.nix flake.lock; do
     cmp "$fixture/$file" "$shell_before/$file"
 done
-for file in Cargo.toml Cargo.lock src tests; do
+for file in Cargo.toml Cargo.lock LICENSE src tests skills; do
     [[ ! -e $shell_before/$file ]]
 done
-for file in flake.nix flake.lock Cargo.toml Cargo.lock src/main.rs tests/basic.rs; do
+for file in flake.nix flake.lock Cargo.toml Cargo.lock LICENSE src/main.rs tests/basic.rs skills/isled/SKILL.md skills/isled/references/mutations.md; do
     cmp "$fixture/$file" "$source_before/$file"
 done
+[[ ! -e $source_before/skills/unrelated ]]
 for directory in target .jj .issues .direnv .dogfood; do
     printf 'local state\n' >"$fixture/$directory/ignored"
     [[ ! -e $source_before/$directory ]]
@@ -30,7 +33,7 @@ printf 'documentation\n' >"$fixture/README.md"
 printf 'new Rust input\n' >"$fixture/src/new.rs"
 source_after=$("$fixture/scripts/nix-source.sh")
 [[ $("$fixture/scripts/nix-source.sh" --shell) == "$shell_before" ]]
-for file in Cargo.toml Cargo.lock tests/basic.rs; do
+for file in Cargo.toml Cargo.lock LICENSE tests/basic.rs skills/isled/SKILL.md; do
     printf 'changed package input\n' >>"$fixture/$file"
     [[ $("$fixture/scripts/nix-source.sh" --shell) == "$shell_before" ]]
 done

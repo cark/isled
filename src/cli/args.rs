@@ -21,6 +21,10 @@ pub struct Cli {
 
 #[derive(Debug, Subcommand)]
 pub enum Command {
+    /// Install this complete release bundle and select its executable and skill.
+    Install(InstallationArgs),
+    /// Show the stable executable and skill paths without changing installation.
+    Installation(InstallationArgs),
     /// Initialize an ignored .issues directory.
     Init,
     /// Allocate and add a Markdown issue.
@@ -67,6 +71,16 @@ pub enum Command {
     Close(CloseArgs),
     /// Audit the whole ledger without repairing it.
     Check(CheckArgs),
+}
+
+#[derive(Debug, Args)]
+pub struct InstallationArgs {
+    /// Use this installation directory instead of the platform user-data location.
+    #[arg(long, value_name = "DIRECTORY")]
+    pub directory: Option<PathBuf>,
+    /// Emit installation schema 1 JSON, including stable and versioned paths.
+    #[arg(long)]
+    pub json: bool,
 }
 
 #[derive(Debug, Args)]

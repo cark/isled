@@ -16,7 +16,7 @@ exec nix eval --impure --raw --expr '
     root = builtins.getEnv "ISLED_NIX_ROOT";
     shellOnly = builtins.getEnv "ISLED_NIX_SCOPE" == "shell";
     files = [ "flake.nix" "flake.lock" ]
-      ++ (if shellOnly then [] else [ "Cargo.toml" "Cargo.lock" ]);
+      ++ (if shellOnly then [] else [ "Cargo.toml" "Cargo.lock" "LICENSE" ]);
     trees = if shellOnly then [] else [ "src" "tests" ];
   in builtins.path {
     path = builtins.toPath root;
@@ -25,6 +25,7 @@ exec nix eval --impure --raw --expr '
       let
         relative = builtins.substring (builtins.stringLength root + 1) (-1) (toString path);
         top = builtins.head (builtins.split "/" relative);
-      in builtins.elem top trees || builtins.elem relative files;
+      in builtins.elem top trees || builtins.elem relative files
+        || (!shellOnly && (relative == "skills" || builtins.match "skills/isled(/.*)?" relative != null));
   }
 '

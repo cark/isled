@@ -15,6 +15,7 @@ import time
 from urllib.parse import urlparse
 
 from release_metadata import TARGETS, sha256, write_json
+from release_installation import check_standalone
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -32,6 +33,12 @@ def main():
     upgrade = verify(args.upgrade) if args.upgrade else None
     if upgrade and upgrade['version'] == manifest['version']:
         raise ValueError('Upgrade must have a different CLI version')
+    check_installer(args, manifest, upgrade)
+
+
+def check_installer(args, manifest, upgrade):
+    """Run native cases after the caller has verified its input assets."""
+    root = Path(__file__).resolve().parent.parent
     target = next(name for name, spec in TARGETS.items()
                   if (platform.system(), platform.machine().lower()) == (spec['system'], spec['machine']))
     editor = shutil.which(args.emacs)
@@ -45,6 +52,8 @@ def main():
     args.output.mkdir(parents=True, exist_ok=False)
     empty_path = args.output.resolve() / 'empty-path'
     empty_path.mkdir()
+    standalone = check_standalone(args.artifacts, manifest, args.upgrade, upgrade, target, args.output)
+    write_json(args.output / 'standalone.json', standalone)
     assets = {path.name: path for directory in (args.artifacts, args.upgrade) if directory
               for path in directory.iterdir()}
 
@@ -110,6 +119,7 @@ def main():
                    'macos_assessment': security,
                    'package_sha256': sha256(args.package), 'output': str(args.output),
                    'checks': modes, 'compiler_and_cli_path': 'empty'}
+        receipt['standalone'] = standalone
         receipt['delivery'] = 'public HTTPS' if args.live else 'staged loopback'
         receipt['program'] = (args.output / 'program').read_text(encoding='utf-8').strip()
         write_json(args.output / 'receipt.json', receipt)
