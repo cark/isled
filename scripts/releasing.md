@@ -1,7 +1,8 @@
 # Preparing a release
 
 This prepares artifacts for the [accepted distribution contract](../agent-docs/decisions.md#public-installation-direction-planned).
-The managed installer and package-manager recipes are subsequent work. Current
+The managed installer is subsequent work. [Package-manager recipes](../frontends/emacs/packaging.md)
+and their isolated construction checks are prepared separately. Current
 users still follow the [source installation guide](../README.md#installation).
 
 ## Build identity

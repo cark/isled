@@ -4,6 +4,7 @@
 ;; SPDX-License-Identifier: MIT
 
 ;; Author: Sacha De Vos
+;; Assisted-by: Codex:GPT-6
 ;; Version: 0.32.0
 ;; Package-Requires: ((emacs "30.1") (markdown-mode "2.6") (transient "0.8.0"))
 ;; Keywords: tools

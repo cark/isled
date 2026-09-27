@@ -1,0 +1,4 @@
+scripts/*
+frontends/emacs/test/*
+frontends/emacs/demo/*
+frontends/emacs/recipes/*

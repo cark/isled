@@ -4,6 +4,7 @@
 ;; SPDX-License-Identifier: MIT
 
 ;; Author: Sacha De Vos
+;; Assisted-by: Codex:GPT-6
 ;; Keywords: tools
 
 ;;; Commentary:

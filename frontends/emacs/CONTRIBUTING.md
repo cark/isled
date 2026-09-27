@@ -6,6 +6,7 @@ For installation and daily use, start with the [README](README.md). The
 
 - [Validation and isolation](#validation)
 - [Building a package archive](#package-archive)
+- [Package manager recipes and submission](packaging.md)
 - [Code map](#code-map)
 - [Loading and rendering](#bounded-loading)
 - [Recording README demos](#recording-readme-demos)
@@ -143,6 +144,9 @@ python3 scripts/package-emacs.py
 guides and demo GIFs and generates `isled-pkg.el` from the main library headers.
 There is no separately maintained descriptor or Makefile version.
 This does not create an Emacs package flake output.
+
+The [package recipes guide](packaging.md) owns MELPA construction, direct Git
+installation, isolated recipe checks and the later submission handoff.
 
 Package installation byte-compiles the frontend. Use that compiled package for
 large-ledger work: interpreted source loading remains useful during development

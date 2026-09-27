@@ -488,3 +488,10 @@ build flags and linkage/distribution inspection. `test-release-staging.py`
 protects artifact integrity and exact candidate identity. The standalone
 `frontends/emacs/test/package-install.el` checks the constructed package in a
 temporary installation. [Release staging](../scripts/releasing.md) owns usage.
+
+`check-package-recipes.py` verifies staged artifacts and creates disposable Git
+refs for native package-manager checks. `test/package-recipes.el` owns installed
+package assertions; `test/package-recipe-managers.el` invokes each manager using
+the canonical recipes in `frontends/emacs/recipes/`. The
+[packaging guide](../frontends/emacs/packaging.md) owns recipe usage, source
+selection, installer lifecycle constraints and submission preparation.
