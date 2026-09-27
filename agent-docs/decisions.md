@@ -358,6 +358,14 @@ Apple Silicon runner. The [macOS 14 runner retires on November 2, 2026](https://
 Set the deployment target to 15.0 consistently for Rust and bundled C code.
 Older macOS releases are outside the initial support commitment.
 
+Release distribution will not use publisher signing or Apple notarization.
+The normal ARM64 linker-generated ad-hoc signature needs no signing identity and
+does not identify a publisher. Validate the actual Emacs download, verification
+and execution route with normal macOS security settings. An isolated `spctl`
+rejection does not establish that this route fails. If supporting macOS requires
+publisher signing, notarization or weakening security settings, drop macOS from
+the supported release targets rather than introduce those requirements.
+
 The existing Emacs 30.1+ requirement still applies. Distinguish intended
 compatibility, completed tests and known gaps in release documentation; do not
 turn toolchain support or a proposed test route into a claim of passing tests.
@@ -386,8 +394,8 @@ running it, including before invoking `isled --version`, and reject missing,
 invalid or mismatched checksums. Verification must not require users to install
 extra tools. This trusts GitHub and the project's release process: checksums
 distributed alongside the binaries are integrity checks, not independent
-publisher signatures. Platform signing and notarization remain release
-implementation concerns; checksum verification does not establish their status.
+publisher signatures. Publisher signing and notarization are excluded by the
+distribution policy above; checksum verification does not substitute for them.
 
 Each frontend revision declares one known compatible published CLI release.
 Tagged releases keep the shared release version: frontend 0.32.0 pins CLI 0.32.0.

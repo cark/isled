@@ -132,15 +132,18 @@ headers and imported functions, rejects external VC/SQLite runtime dependencies,
 and checks that header OS/subsystem versions do not exceed Windows 10. Those
 checks are not a complete API compatibility proof. Windows 10 and desktop
 SmartScreen behavior remain untested on the Windows Server runner. The receipt
-records Authenticode status; no publisher certificate is currently configured.
+records Authenticode status; publisher signing is outside the release policy.
 
 macOS sets Rust and C deployment targets to 15.0, rejects non-system dependencies,
 and records `otool`, `codesign` and `spctl` results. ARM64 linker signing is ad hoc;
-it is not Developer ID signing or notarization. A native CLI/Emacs pass does not
-establish browser-quarantined installation behavior. Consult actual receipts
-before deciding the supported download route or acquiring signing credentials.
-[Apple's distribution guidance](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution)
-requires Developer ID signing for notarization; checksums do not replace it.
+it requires no signing identity and is not Developer ID signing or notarization.
+The [release contract](../agent-docs/decisions.md#public-installation-direction-planned)
+excludes publisher signing and notarization. A `spctl` rejection alone does not
+establish an installation failure. Final acceptance must exercise the normal
+Emacs download, verification and execution route without changing macOS security
+settings. If that route requires signing or notarization, drop macOS support.
+Native CLI/Emacs tests do not establish browser-quarantined installation behavior;
+record that separately when documenting standalone downloads.
 
 These checks establish candidate evidence, not a claim of a published, signed,
 or fully accepted end-user installation. Record native results and unresolved
