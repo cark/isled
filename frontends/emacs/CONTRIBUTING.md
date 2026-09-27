@@ -165,7 +165,9 @@ is not source and is ignored.
   autoloads, one-time mode-map defaults, and default project-prefix registration.
 
 - [`isled-snapshot.el`](isled-snapshot.el) owns shared typed
-  data, issue/reference validation, and the supported complete-snapshot codec.
+  data, issue/reference validation, native-path conversion to Emacs file names,
+  and the supported complete-snapshot codec. Windows drive and UNC paths are
+  converted at decoding; Unix path bytes and Rust wire formats stay unchanged.
 - [`isled-frontend.el`](isled-frontend.el) validates bounded
   response data; [`isled-process.el`](isled-process.el) owns
   asynchronous process execution.

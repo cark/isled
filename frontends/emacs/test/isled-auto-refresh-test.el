@@ -38,7 +38,7 @@
               (setq buffer (isled-buffers-open "/tmp/notification-first" "/tmp/notification-first" nil nil))
               (with-current-buffer buffer
                 (should (equal added-watch
-                               '("/tmp/notification-first/.issues"
+                               `(,(expand-file-name "/tmp/notification-first/.issues")
                                  (change attribute-change))))
                 (should (functionp callback))
                 (should (eq (buffer-local-value 'isled--notification-watch

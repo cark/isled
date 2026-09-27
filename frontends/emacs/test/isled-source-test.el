@@ -11,7 +11,7 @@
 (defmacro isled-source-test--with-file (&rest body)
   "Run BODY with a disposable source path and selected issue view."
   (declare (indent 0) (debug t))
-  `(let* ((directory (make-temp-file "isled-source-" t))
+  `(let* ((directory (file-truename (make-temp-file "isled-source-" t)))
           (path (expand-file-name "0042-example.md" directory))
           (source-buffer nil))
      (unwind-protect

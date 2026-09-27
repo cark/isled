@@ -100,9 +100,9 @@
                   :type 'isled-snapshot-error)))
 
 (ert-deftest isled-snapshot-validates-unavailable-recovery-paths ()
-  (let ((wire '(((id . "0001")
+  (let ((wire `(((id . "0001")
                  (path . ((encoding . "utf-8")
-                          (value . "/tmp/example/.issues/0001-broken.md")))
+                          (value . ,(expand-file-name "/tmp/example/.issues/0001-broken.md"))))
                  (error . "Permission denied")))))
     (should (equal (isled-unavailable-error
                     (car (isled-snapshot--unavailable-files wire "/tmp/example")))
@@ -111,6 +111,18 @@
                   :type 'isled-snapshot-error)
     (should-error (isled-snapshot--unavailable-files (append wire wire) "/tmp/example")
                   :type 'isled-snapshot-error)))
+
+(ert-deftest isled-snapshot-converts-windows-file-names ()
+  (let ((system-type 'windows-nt))
+    (dolist (pair '(("\\\\?\\C:\\Users\\Example Name\\café" . "c:/Users/Example Name/café")
+                    ("C:\\ledger\\.issues\\0001-example.md" . "c:/ledger/.issues/0001-example.md")
+                    ("\\\\?\\UNC\\server\\share\\ledger" . "//server/share/ledger")
+                    ("\\\\server\\share\\ledger" . "//server/share/ledger")
+                    ("c:/ledger" . "c:/ledger")))
+      (should (equal (isled-snapshot--file-name (car pair)) (cdr pair)))))
+  (let ((system-type 'gnu/linux))
+    (should (equal (isled-snapshot--file-name "/tmp/literal\\name")
+                   "/tmp/literal\\name"))))
 
 (ert-deftest isled-snapshot-decodes-base64-bytes ()
   (let* ((json

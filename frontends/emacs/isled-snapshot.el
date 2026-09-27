@@ -109,9 +109,9 @@ runner.")
                                       :null-object :json-null
                                       :false-object :json-false))
              (version (isled-snapshot--field wire 'schema_version))
-             (root (isled-snapshot--bytes
-                    (isled-snapshot--field wire 'root)
-                    "root"))
+             (root (isled-snapshot--file-name
+                    (isled-snapshot--bytes
+                     (isled-snapshot--field wire 'root) "root")))
              (wire-issues (isled-snapshot--field wire 'issues)))
         (unless (eql version 3)
           (isled-snapshot--invalid
@@ -181,9 +181,10 @@ runner.")
          (ready (isled-snapshot--boolean
                  (isled-snapshot--field wire 'ready)
                  (format "readiness for issue %s" id)))
-         (path (isled-snapshot--bytes
-                (isled-snapshot--field wire 'path)
-                (format "path for issue %s" id)))
+         (path (isled-snapshot--file-name
+                (isled-snapshot--bytes
+                 (isled-snapshot--field wire 'path)
+                 (format "path for issue %s" id))))
          (title (isled-snapshot--bytes
                  (isled-snapshot--field wire 'title)
                  (format "title for issue %s" id))))
@@ -278,8 +279,9 @@ runner.")
 (defun isled-snapshot--unavailable (wire)
   "Decode an unavailable file from WIRE without inventing issue metadata."
   (let ((id (isled-snapshot--field wire 'id))
-        (path (isled-snapshot--bytes
-               (isled-snapshot--field wire 'path) "unavailable path"))
+        (path (isled-snapshot--file-name
+               (isled-snapshot--bytes
+                (isled-snapshot--field wire 'path) "unavailable path")))
         (error (isled-snapshot--field wire 'error)))
     (unless (and (stringp id) (string-match-p "\\`[0-9]\\{4\\}\\'" id)
                  (not (equal id "0000")) (file-name-absolute-p path)
@@ -378,6 +380,24 @@ runner.")
      :byte-length byte-length
      :character-start character-start
      :character-length character-length)))
+
+(defun isled-snapshot--file-name (path)
+  "Convert decoded native PATH to Emacs file-name spelling without I/O.
+On Windows, Rust canonical paths use a verbatim prefix and backslashes;
+Emacs uses forward slashes and lowercase drive letters.  Unix bytes remain
+unchanged, including literal backslashes."
+  (if (not (eq system-type 'windows-nt))
+      path
+    (let ((name (subst-char-in-string ?\\ ?/ path)))
+      (cond
+       ((string-prefix-p "//?/UNC/" name)
+        (setq name (concat "//" (substring name 8))))
+       ((and (string-prefix-p "//?/" name)
+             (string-match-p "\\`[a-zA-Z]:/" (substring name 4)))
+        (setq name (substring name 4))))
+      (if (string-match-p "\\`[A-Z]:/" name)
+          (concat (downcase (substring name 0 1)) (substring name 1))
+        name))))
 
 (defun isled-snapshot--bytes (wire context)
   "Decode a WIRE byte object described by CONTEXT."

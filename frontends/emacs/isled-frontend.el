@@ -29,8 +29,9 @@
   "Decode bounded response JSON into typed values or signal an error."
   (let* ((wire (json-parse-string json :object-type 'alist :array-type 'list
                                   :null-object :json-null :false-object :json-false))
-         (root (isled-snapshot--bytes
-                (isled-snapshot--field wire 'root) "root"))
+         (root (isled-snapshot--file-name
+                (isled-snapshot--bytes
+                 (isled-snapshot--field wire 'root) "root")))
          (hash (isled-snapshot--field wire 'view_hash))
          (view (isled-snapshot--field wire 'view))
          (changes (isled-snapshot--field wire 'changes)))

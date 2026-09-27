@@ -107,7 +107,9 @@ The callback receives a decoded response or an operational-error response."
                                              (stringp (alist-get 'reason edge))))
                           (alist-get key draft)) (error "Invalid draft relations")))
     (isled-editor-record-create
-     :id (alist-get 'id object) :path path :status (alist-get 'status object)
+     :id (alist-get 'id object)
+     :path (and path (isled-snapshot--file-name path))
+     :status (alist-get 'status object)
      :version (alist-get 'version object) :source (alist-get 'source object)
      :draft draft)))
 
