@@ -9,12 +9,9 @@
 
 (require 'package)
 
-;; Preserve the original download/signature error instead of package.el's
+;; Preserve the original download error instead of package.el's
 ;; generic "Failed to download archive" message in unattended checks.
 (setq debug-on-error t)
-
-(when-let ((program (getenv "ISLED_CHECK_GPG")))
-  (setq epg-gpg-program program))
 
 (let ((directory (getenv "ISLED_CHECK_PACKAGE_DIR")))
   (unless (and directory (not (equal directory "")))
@@ -23,6 +20,8 @@
         package-directory-list nil
         package-install-upgrade-built-in t
         package-native-compile nil
+        ;; These disposable test dependencies use HTTPS without requiring GnuPG.
+        package-check-signature nil
         package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
                            ("nongnu" . "https://elpa.nongnu.org/nongnu/"))))
 
