@@ -1,0 +1,112 @@
+name: Release staging
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['release/artifacts']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  native:
+    name: Stage ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            target: x86_64-unknown-linux-musl
+          - os: macos-15
+            target: aarch64-apple-darwin
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+    defaults:
+      run:
+        shell: bash
+    env:
+      CARGO_TERM_COLOR: always
+      RUST_BACKTRACE: '1'
+      ISLED_CHECK_PACKAGE_DIR: .check-packages
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de
+        with:
+          toolchain: '1.97.1'
+          targets: ${{ matrix.target }}
+      - name: Install musl compiler
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes musl-tools
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+        with:
+          key: release-${{ matrix.target }}
+          cache-on-failure: true
+      - name: Install Emacs on Linux and macOS
+        if: runner.os != 'Windows'
+        uses: purcell/setup-emacs@34c6ded44899fd1bf74d2889558befd1750e61a7
+        with:
+          version: '30.1'
+      - name: Install Emacs on Windows
+        if: runner.os == 'Windows'
+        uses: jcs090218/setup-emacs-windows@3ad415b5f6575fe0bb8218cb35c199a93b1fb833
+        with:
+          version: '30.1'
+      - name: Install isolated Emacs check dependencies
+        run: emacs -Q --batch -l frontends/emacs/test/install-packages.el
+      - name: Check staging tools
+        run: python -B scripts/test-release-staging.py
+      - name: Build, inspect, extract and test native release
+        run: python -B scripts/stage-release.py build --target '${{ matrix.target }}' --output target/release-part
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: part-${{ matrix.target }}
+          path: target/release-part/
+          if-no-files-found: error
+          retention-days: 14
+
+  assemble:
+    name: Assemble verified candidate
+    needs: native
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      ISLED_CHECK_PACKAGE_DIR: .check-packages
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          pattern: part-*
+          path: target/release-parts
+      - name: Assemble exact native parts and Emacs package
+        run: python -B scripts/stage-release.py assemble --parts target/release-parts --output target/release-candidate
+      - uses: purcell/setup-emacs@34c6ded44899fd1bf74d2889558befd1750e61a7
+        with:
+          version: '30.1'
+      - name: Install isolated dependencies and constructed package
+        run: |
+          emacs -Q --batch -l frontends/emacs/test/install-packages.el
+          ISLED_PACKAGE_ARCHIVE="$(find target/release-candidate -name 'isled-*.tar')" emacs -Q --batch -l frontends/emacs/test/package-install.el
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-candidate
+          path: target/release-candidate/
+          if-no-files-found: error
+          retention-days: 14

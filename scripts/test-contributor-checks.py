@@ -121,7 +121,10 @@ class ContributorChecks(unittest.TestCase):
         frontend=self.root/'frontends/emacs'
         frontend.mkdir(parents=True)
         self.write('frontends/emacs/isled-pkg.el','(define-package "isled" "1.2.3" "fixture" nil)\n')
-        self.write('frontends/emacs/isled.el',';;; fixture\n')
+        self.write('frontends/emacs/isled.el',
+                   ';;; isled.el --- Fixture  -*- lexical-binding: t; -*-\n'
+                   ';; Version: 1.2.3\n;; Package-Requires: ((emacs "30.1"))\n'
+                   ';; URL: https://github.com/example/fixture\n;; Keywords: tools\n')
         self.write('frontends/emacs/isled.elc','generated\n')
         self.write('frontends/emacs/README.md','# Fixture\n')
         self.write('frontends/emacs/user-guide.md','# User guide\n')
@@ -140,6 +143,11 @@ class ContributorChecks(unittest.TestCase):
                 'isled-1.2.3/CONTRIBUTING.md','isled-1.2.3/LICENSE',
                 'isled-1.2.3/images/hierarchy.gif','isled-1.2.3/images/filtering.gif'})
             self.assertEqual(archive.extractfile('isled-1.2.3/LICENSE').read(),b'MIT fixture\n')
+            self.assertIn(b'((emacs "30.1"))',
+                          archive.extractfile('isled-1.2.3/isled-pkg.el').read())
+        previous = (frontend/'dist/isled-1.2.3.tar').read_bytes()
+        self.assertEqual(self.run_check('package-emacs.py').returncode, 0)
+        self.assertEqual((frontend/'dist/isled-1.2.3.tar').read_bytes(), previous)
 
 
 if __name__=='__main__':

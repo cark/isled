@@ -8,6 +8,12 @@ use clap::error::{ContextKind, ContextValue, ErrorKind};
 use help::build_command;
 pub use help::{missing_command_topic, render_help};
 
+/// Product version, with an explicit marker for ordinary contributor builds.
+#[cfg(feature = "release-binary")]
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+#[cfg(not(feature = "release-binary"))]
+pub const VERSION: &str = concat!(env!("CARGO_PKG_VERSION"), "-dev");
+
 pub fn parse() -> Result<Cli, clap::Error> {
     let mut matches = match build_command().try_get_matches_from(std::env::args_os()) {
         Ok(matches) => matches,

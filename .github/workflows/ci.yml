@@ -101,6 +101,7 @@ jobs:
           python -B scripts/check-coding-standards.py
           python -B scripts/check-repository.py
           python -B scripts/test-contributor-checks.py
+          python -B scripts/test-release-staging.py
 
       - name: Rust formatting and lint
         if: runner.os == 'Linux'

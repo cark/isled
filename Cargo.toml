@@ -1,11 +1,15 @@
 [package]
 name = "isled"
-version = "0.1.0"
+version = "0.32.0"
 edition = "2024"
 rust-version = "1.97"
 license = "MIT"
 description = "Isled — a personal issue ledger"
 repository = "https://github.com/cark/isled"
+
+[features]
+# Explicit versioned packaging; ordinary contributor builds identify as -dev.
+release-binary = []
 
 [[bin]]
 name = "isled"

@@ -139,8 +139,10 @@ Build a locally installable package archive from the checkout root with Python
 python3 scripts/package-emacs.py
 ```
 
-`make -C frontends/emacs package` calls the same packager and tracks the source,
-guides and demo GIFs as inputs. This does not create an Emacs package flake output.
+`make -C frontends/emacs package` calls the same packager. It includes source,
+guides and demo GIFs and generates `isled-pkg.el` from the main library headers.
+There is no separately maintained descriptor or Makefile version.
+This does not create an Emacs package flake output.
 
 Package installation byte-compiles the frontend. Use that compiled package for
 large-ledger work: interpreted source loading remains useful during development
@@ -149,7 +151,7 @@ settings globally. Compare compiled/source execution and default/configured GC
 when attributing rendering costs.
 
 Then use `M-x package-install-file` on
-the versioned archive in `frontends/emacs/dist/`. Package metadata owns the version;
+the versioned archive in `frontends/emacs/dist/`. The `isled.el` header owns the version;
 the generated `dist/` directory
 is not source and is ignored.
 

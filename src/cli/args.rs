@@ -8,7 +8,7 @@ use std::path::PathBuf;
     about = "Maintain a project-local Markdown issue ledger",
     color = clap::ColorChoice::Never,
     term_width = 100,
-    disable_version_flag = true
+    version = super::VERSION
 )]
 pub struct Cli {
     /// Use PATH as the project root instead of discovering one.

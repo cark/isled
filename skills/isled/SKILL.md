@@ -19,6 +19,9 @@ fields, output, and failures:
 isled help [COMMAND [SUBCOMMAND]]
 ```
 
+`isled --version` reports the executable version without ledger discovery.
+Ordinary contributor builds append `-dev`.
+
 For authorized issue creation, use `add`; `create` is not an alias.
 Read `isled help add` for options and single-line or multiline examples.
 

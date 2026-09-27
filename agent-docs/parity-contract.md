@@ -37,6 +37,11 @@ ordinary invocation/operational failures use stderr and exit 1. The `check`
 command distinguishes operational failures with stderr and exit 2; integrity
 findings use stdout and exit 1, as documented in the user guide.
 
+`--version` and `-V` print `isled VERSION` to stdout and exit 0 without ledger
+discovery or mutation. The version derives from Cargo metadata. Ordinary source
+builds append `-dev`; the explicit `release-binary` feature selects the shared
+release version. Version text identifies a build, not its publication provenance.
+
 Command-specific validation order remains observable: reject invalid input
 before discovery where established, while `show` retains root-before-ID order.
 An intentional change needs an maintainer-visible decision, an update to the owning

@@ -175,6 +175,10 @@ readable UTF-8 and identifies the entry that must be recovered.
 
 ## Help and compatibility
 
+`isled --version` (or `-V`) prints the executable version without looking for a
+ledger. Ordinary contributor builds append `-dev`; versioned packages report the
+shared release version.
+
 Every command and nested operation has detailed repository-built help via
 `isled help COMMAND [SUBCOMMAND]` or direct `-h`/`--help`. Help is
 stable and colorless, works without a project, and documents arguments,

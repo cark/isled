@@ -34,6 +34,7 @@ cargo clippy --locked --all-targets -- -D warnings
 python3 scripts/check-coding-standards.py
 python3 scripts/check-repository.py
 python3 -B scripts/test-contributor-checks.py
+python3 -B scripts/test-release-staging.py
 ```
 
 The size checker covers tracked working files, or files changed in an explicit
@@ -140,6 +141,7 @@ checks and isolation requirements. Never run this runner through a working daemo
 - [Nix environment and source filtering](scripts/README.md#source-boundary).
 - [Maintainer jj validation/promotion](agent-docs/dogfooding.md).
 - [Rust semantic navigation](agent-docs/rust-navigation.md).
+- [Versioned release staging](scripts/releasing.md).
 - [Frontend source archive](frontends/emacs/CONTRIBUTING.md#package-archive).
 
 Public documentation and checks must remain independent of those optional workflows

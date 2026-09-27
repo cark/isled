@@ -8,6 +8,31 @@ fn run(arguments: &[&str]) -> Output {
 }
 
 #[test]
+fn version_never_discovers_or_creates_a_ledger() {
+    let root = tempfile::tempdir().unwrap();
+    for arguments in [
+        vec!["--version"],
+        vec!["-V"],
+        vec!["--root", "missing", "--version"],
+    ] {
+        let output = Command::new(env!("CARGO_BIN_EXE_isled"))
+            .current_dir(root.path())
+            .args(arguments)
+            .output()
+            .unwrap();
+        assert!(output.status.success());
+        assert!(output.stderr.is_empty());
+        let version = if cfg!(feature = "release-binary") {
+            env!("CARGO_PKG_VERSION").to_owned()
+        } else {
+            format!("{}-dev", env!("CARGO_PKG_VERSION"))
+        };
+        assert_eq!(output.stdout, format!("isled {version}\n").as_bytes());
+    }
+    assert_eq!(std::fs::read_dir(root.path()).unwrap().count(), 0);
+}
+
+#[test]
 fn top_level_help_routes_filter_only_queries_to_list() {
     let output = run(&["--help"]);
 

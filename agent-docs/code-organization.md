@@ -141,8 +141,7 @@ frontends/emacs/
 ├── isled-sections.el # rendering and visible navigation targets
 ├── isled-header.el   # pure directory labels and responsive header
 ├── isled-auto-refresh.el # notification watches, timers, polling fallback
-├── isled-pkg.el      # local package archive metadata
-├── Makefile                   # reproducible local package archive
+├── Makefile         # check and package entry points (metadata comes from isled.el)
 ├── README.md                  # illustrated introduction, installation, everyday use
 ├── user-guide.md              # full interaction and customization reference
 ├── CONTRIBUTING.md            # validation, package building, code map, recording
@@ -480,3 +479,12 @@ those behaviors in ordinary disposable Git repositories.
 invokes the existing static/ERT runner. `package-emacs.py` builds the source
 archive with the root license. Neither requires jj or Nix. The optional
 release/preview helpers retain their separate maintainer responsibilities.
+
+`stage-release.py` orchestrates native build/test, complete-set assembly,
+verification and explicit draft upload. `release_metadata.py` owns shared
+identity, asset names and checksum records; `release_archive.py` owns CLI
+archive writing and verified extraction; `release_platform.py` owns native
+build flags and linkage/distribution inspection. `test-release-staging.py`
+protects artifact integrity and exact candidate identity. The standalone
+`frontends/emacs/test/package-install.el` checks the constructed package in a
+temporary installation. [Release staging](../scripts/releasing.md) owns usage.

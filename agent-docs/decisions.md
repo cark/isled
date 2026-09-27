@@ -312,8 +312,8 @@ Users should not need a checkout, Rust toolchain, manual CLI download or
 executable-path setup for the ordinary route. The two parts work as one product,
 while downloadable CLI binaries remain available for standalone use.
 
-The first release will target three platforms. These are design commitments;
-native CI and release artifact validation still need implementation.
+The first release will target three platforms. Source CI runs native checks on
+the runners below; release staging separately checks the distributed artifacts.
 
 | Compatibility target | Rust binary target | Routine native checks |
 | --- | --- | --- |
@@ -366,8 +366,12 @@ Tagged releases use one shared version for the Rust executable and Emacs
 package, starting at 0.32.0. This advances the current frontend version rather
 than restarting its version sequence. Release tags use `vMAJOR.MINOR.PATCH`,
 beginning with `v0.32.0`. Keep Cargo, the tagged Emacs package and Nix package
-metadata aligned during release preparation. The current Rust 0.1.0 and Emacs
-0.31.1 declarations have not yet been changed by this design work.
+metadata aligned during release preparation. Metadata now declares 0.32.0.
+Ordinary Cargo builds report `0.32.0-dev`; explicit `release-binary` builds and
+the versioned Nix package report `0.32.0`. This marker separates contributor
+builds from release packaging; it does not prove a binary has been published.
+The [release staging guide](../scripts/releasing.md) owns artifact names,
+verification metadata and preparation commands.
 
 Stage the complete binary set, Emacs package, artifact manifest and SHA-256
 checksums in a draft GitHub release. Publish it with

@@ -18,8 +18,12 @@ in this directory. Python 3.9+ supports the core check/archive entry points.
 - `test-contributor-checks.py` exercises the checks in disposable Git repositories,
   including initial commits, private files, missing links and source archives.
 - `package-emacs.py` produces the frontend source tar with its user/contributor guides, demo GIFs and license, using
-  Python's portable tar writer. It takes the version from `isled-pkg.el` and does
-  not copy compiled output or tests. `make -C frontends/emacs package` is a wrapper.
+  Python's portable tar writer. It generates `isled-pkg.el` from `isled.el` headers
+  and does not copy compiled output or tests. `make -C frontends/emacs package` is a wrapper.
+
+Versioned native archives, manifest/checksums and draft preparation use
+[`stage-release.py`](releasing.md). `test-release-staging.py` checks artifact
+integrity and candidate identity without executing fixture binaries.
 
 ## Optional environment and maintainer tools
 

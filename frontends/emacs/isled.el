@@ -4,7 +4,7 @@
 ;; SPDX-License-Identifier: MIT
 
 ;; Author: Sacha De Vos
-;; Version: 0.31.1
+;; Version: 0.32.0
 ;; Package-Requires: ((emacs "30.1") (markdown-mode "2.6") (transient "0.8.0"))
 ;; Keywords: tools
 ;; URL: https://github.com/cark/isled
@@ -18,6 +18,10 @@
 ;;; Code:
 (require 'project)
 (require 'isled-file-routing)
+
+(defconst isled-required-cli-version "0.32.0"
+  "Exact CLI release compatible with this frontend.
+Independent of the version assigned by an Emacs package archive.")
 
 (autoload 'isled "isled-entry" nil t)
 (autoload 'isled-open-project "isled-entry" nil t)
