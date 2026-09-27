@@ -180,9 +180,9 @@
         (isled-program isled-test-program))
     (unwind-protect
         (progn
-          (make-directory (expand-file-name ".issues" root))
-          (with-temp-file (expand-file-name ".issues/.next-id" root)
-            (insert "1\n"))
+          (let ((result (isled-snapshot--run-process root '("init"))))
+            (ert-info ((isled-command-result-stderr result))
+              (should (zerop (isled-command-result-status result)))))
           (let ((snapshot (isled-snapshot-load root)))
             (should (equal (isled-snapshot-root snapshot)
                            (file-truename root)))
