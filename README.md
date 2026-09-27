@@ -47,10 +47,6 @@ The frontend offers to download its matching CLI on first use.
 
 ## Installation
 
-This checkout prepares **0.33.0**, including shared CLI and skill installation.
-Until it is published, use the instructions shipped with
-[0.32.0](https://github.com/cark/isled/tree/v0.32.0#installation).
-
 **In Emacs:** use the [package installation guide](frontends/emacs/README.md#installation).
 No Rust compiler or manual CLI setup is needed.
 

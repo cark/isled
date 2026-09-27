@@ -142,8 +142,7 @@ This format starts with 0.33.0 and implements the
 [shared installation design](../agent-docs/decisions.md#shared-cli-and-skill-installation).
 Published 0.32.0 archives remain immutable; older frontends retain their original
 installer and storage. Prepare and publish the new CLI assets before promoting
-an Emacs pin that requires this bundle format. Remove candidate notices from both
-READMEs when preparing the final publication candidate.
+an Emacs pin that requires this bundle format.
 
 The Emacs tar contains an `isled-VERSION/` directory. Its generated `isled-pkg.el`
 comes from the headers in `isled.el`; source, guides, demo GIFs and the root license

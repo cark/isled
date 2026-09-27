@@ -33,10 +33,6 @@ Emacs package.
 
 ## Installation
 
-This checkout prepares **0.33.0** and its shared CLI/skill installer. Until that
-release is published, use the
-[0.32.0 installation guide](https://github.com/cark/isled/blob/v0.32.0/frontends/emacs/README.md#installation).
-
 You need **Emacs 30.1+** with built-in TLS and zlib support. Your package
 manager installs **markdown-mode 2.6+** and **Transient 0.8.0+**. On first use,
 Isled offers to download the matching CLI; no Rust compiler, PATH setup or
@@ -52,8 +48,7 @@ They support the `release` branch, a fixed tag or commit, and development on
 
 ### From the release archive
 
-Download **`isled-0.33.0.tar`** from the [release page](https://github.com/cark/isled/releases)
-once 0.33.0 is published.
+Download **`isled-0.33.0.tar`** from the [release page](https://github.com/cark/isled/releases).
 Make the dependencies available through your configured GNU/NonGNU ELPA or
 MELPA archives, and allow upgrades to bundled packages:
 
