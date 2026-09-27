@@ -4,6 +4,7 @@
 import argparse
 import importlib.util
 import io
+import json
 from pathlib import Path
 import shutil
 import subprocess
@@ -163,17 +164,25 @@ class ReleaseStaging(unittest.TestCase):
         for target in TARGETS:
             self.part(target)
         output = self.assemble()
-        args = argparse.Namespace(directory=output, notes=self.root / "LICENSE")
-        with patch.object(staging, "capture", side_effect=["v1.2.3", ""]), patch.object(staging, "run") as upload:
-            with self.assertRaisesRegex(ValueError, "already exists"):
-                staging.draft(args)
-            upload.assert_not_called()
+        args = argparse.Namespace(directory=output, notes=self.root / "LICENSE", replace_draft=False)
+        for published, replace in [(False, False), (True, False), (True, True)]:
+            args.replace_draft = replace
+            with patch.object(staging, "find_release", return_value={"draft": not published}), patch.object(staging, "run") as upload:
+                with self.assertRaisesRegex(ValueError, "already exists"):
+                    staging.draft(args)
+                upload.assert_not_called()
         (output / "isled-1.2.3-SHA256SUMS").write_text("bad", encoding="utf-8")
         with patch.object(staging, "capture") as remote, patch.object(staging, "run") as upload:
             with self.assertRaisesRegex(ValueError, "SHA256SUMS"):
                 staging.draft(args)
             remote.assert_not_called()
             upload.assert_not_called()
+
+    def test_draft_lookup_uses_release_id_before_a_tag_exists(self):
+        draft = {"id": 17, "tag_name": "v1.2.3", "draft": True}
+        with patch.object(staging, "capture", side_effect=["17", json.dumps(draft)]) as remote:
+            self.assertEqual(staging.find_release("v1.2.3"), draft)
+            self.assertEqual(remote.call_args.args, ("gh", "api", "repos/cark/isled/releases/17"))
 
 
 if __name__ == "__main__":

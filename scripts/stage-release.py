@@ -137,21 +137,43 @@ def verify(directory):
     return manifest
 
 
+def find_release(tag):
+    # GitHub's /releases/tags endpoint omits drafts without an existing Git tag.
+    ids = capture("gh", "api", f"repos/{REPOSITORY}/releases", "--paginate", "--jq",
+                  f'.[] | select(.tag_name == "{tag}") | .id').splitlines()
+    if not ids:
+        return None
+    if len(ids) != 1 or not ids[0].isdigit():
+        raise ValueError(f"Ambiguous release identity for {tag}")
+    return json.loads(capture("gh", "api", f"repos/{REPOSITORY}/releases/{ids[0]}"))
+
+
 def draft(args):
     manifest = verify(args.directory)
-    # Create-only: an existing draft/release is never overwritten implicitly.
+    # An existing draft is replaced only explicitly; published releases are refused.
     tag = manifest["tag"]
-    releases = capture("gh", "api", f"repos/{REPOSITORY}/releases", "--paginate", "--jq", ".[].tag_name").splitlines()
+    existing = find_release(tag)
+    if existing and (not existing["draft"] or not args.replace_draft):
+        raise ValueError(f"{tag} already exists; only an unpublished draft with --replace-draft can be replaced")
     tags = capture("gh", "api", f"repos/{REPOSITORY}/tags", "--paginate", "--jq", ".[].name").splitlines()
-    if tag in releases or tag in tags:
-        raise ValueError(f"{tag} already exists; inspect it before replacing a draft or freezing a tag")
+    if tag in tags:
+        raise ValueError(f"{tag} already has a Git tag; inspect its frozen identity before proceeding")
     revision = capture("gh", "api", f"repos/{REPOSITORY}/commits/{manifest['revision']}", "--jq", ".sha")
     if revision != manifest["revision"]:
         raise ValueError("Candidate revision is not available on GitHub")
-    run("gh", "release", "create", tag, "--repo", REPOSITORY, "--draft", "--target", revision,
-        "--title", f"Isled {manifest['version']}", "--notes-file", args.notes,
-        *sorted(args.directory.iterdir()))
-    result = json.loads(capture("gh", "api", f"repos/{REPOSITORY}/releases/tags/{tag}"))
+    files = sorted(args.directory.iterdir())
+    options = ["--repo", REPOSITORY, "--draft=true", "--target", revision,
+               "--title", f"Isled {manifest['version']}", "--notes-file", args.notes]
+    if existing:
+        if {entry["name"] for entry in existing["assets"]} - {path.name for path in files}:
+            raise ValueError("Draft contains unexpected assets; inspect them before replacement")
+        run("gh", "release", "upload", tag, "--repo", REPOSITORY, "--clobber", *files)
+        run("gh", "release", "edit", tag, *options)
+    else:
+        run("gh", "release", "create", tag, *options, *files)
+    result = find_release(tag)
+    if result is None:
+        raise ValueError("Uploaded draft was not found")
     if not result["draft"] or result["target_commitish"] != revision:
         raise ValueError("Expected an unpublished draft of the exact candidate")
     expected = {(path.name, path.stat().st_size, "sha256:" + asset(path)["sha256"])
@@ -159,7 +181,8 @@ def draft(args):
     uploaded = {(entry["name"], entry["size"], entry["digest"]) for entry in result["assets"]}
     if uploaded != expected:
         raise ValueError("Uploaded draft asset identities differ from the staged set")
-    print("Draft created. Final candidate rebuild, acceptance and publication remain separate.")
+    print(result["html_url"])
+    print("Draft verified. Final candidate rebuild, acceptance and publication remain separate.")
 
 
 def main():
@@ -175,9 +198,10 @@ def main():
     assembler.add_argument("--output", type=Path, required=True, help="New output directory")
     verifier = sub.add_parser("verify", help="Check the complete set without executing binaries")
     verifier.add_argument("directory", type=Path)
-    drafter = sub.add_parser("draft", help="Upload a verified set as a new unpublished GitHub draft")
+    drafter = sub.add_parser("draft", help="Upload a verified set as an unpublished GitHub draft")
     drafter.add_argument("directory", type=Path)
     drafter.add_argument("--notes", type=Path, required=True)
+    drafter.add_argument("--replace-draft", action="store_true", help="Explicitly replace a matching unpublished draft; never a published release or tag")
     args = parser.parse_args()
     for name in ("output", "parts", "directory", "notes"):
         if hasattr(args, name):

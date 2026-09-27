@@ -164,9 +164,13 @@ python3 -B scripts/stage-release.py draft target/release-candidate \
 ```
 
 This verifies the complete set and remote source identity before uploading it
-as an unpublished draft. An existing release or tag makes the command stop;
-inspect an existing draft before deliberately replacing it. Upload failure can
-leave a partial draft, which must be repaired before acceptance. The helper never
+as an unpublished draft, then verifies its uploaded names, sizes and hashes through
+the release ID. Drafts need not have a Git tag yet. An existing draft makes the
+command stop unless `--replace-draft` is explicitly supplied. That option replaces
+the expected assets and notes while preserving draft status; it refuses published
+releases, existing Git tags and unexpected draft assets. Upload failure can
+leave a partial draft; inspect it and rerun with `--replace-draft` to repair it.
+The helper never
 publishes a release, creates a tag itself, changes repository settings or pushes
 branches. Draft assets require maintainer authentication; ordinary users cannot
 download them yet.
