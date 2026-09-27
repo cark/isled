@@ -73,6 +73,9 @@ preserve downloaded binaries."
             (let* ((target (isled-release-current-target))
                    (cached (isled-install-cached root version target)))
               (if cached (isled-executable-verify cached version nil callback)
+                (unless (and (fboundp 'zlib-available-p) (zlib-available-p)
+                             (gnutls-available-p))
+                  (error "Managed Isled downloads need Emacs with built-in TLS and zlib support; alternatively set isled-program"))
                 (isled-cli--consent root version)
                 (isled-install root version target callback)))))))
 

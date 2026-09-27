@@ -78,6 +78,14 @@
     (should-not requests) (should (= executions 0))
     (should-not (file-exists-p isled-cli-directory))))
 
+(ert-deftest isled-install-missing-capability-fails-before-consent ()
+  (isled-install-test--with-fixture
+    (dolist (capability '(zlib-available-p gnutls-available-p))
+      (cl-letf (((symbol-function capability) (lambda () nil)))
+        (should (string-match-p "built-in TLS and zlib" (cadr (isled-install-test--result)))))
+      (should-not requests) (should (= offers 0))
+      (should-not (file-exists-p isled-cli-directory)))))
+
 (ert-deftest isled-install-cancel-cleans-stage-and-retries-with-consent ()
   (isled-install-test--with-fixture
     (setq hold t)

@@ -14,13 +14,17 @@
 (require 'cl-lib)
 (require 'isled-release)
 
+(declare-function zlib-decompress-region "decompress.c" (start end &optional allow-partial))
+(declare-function zlib-available-p "decompress.c" ())
+
 (cl-defstruct (isled-archive (:constructor isled-archive--create))
   "Verified executable and accompanying license from a release archive."
   executable license)
 
 (defun isled-archive--inflate (bytes)
   "Decompress gzip BYTES using Emacs, without an external program."
-  (unless (zlib-available-p) (error "This Emacs needs built-in zlib support for Isled downloads"))
+  (unless (and (fboundp 'zlib-available-p) (zlib-available-p))
+    (error "This Emacs needs built-in zlib support for Isled downloads"))
   (with-temp-buffer
     (set-buffer-multibyte nil)
     (insert bytes)
