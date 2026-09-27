@@ -102,6 +102,9 @@ emacs -Q --batch -l frontends/emacs/test/install-packages.el
 The setup requires an explicit package directory; it does not load your init or
 alter your normal packages. It allows built-in upgrades because Emacs 30 bundles
 a Transient older than the [required version](README.md#requirements).
+Signed archives also require GnuPG. Windows CI installs native GnuPG 2.5.21 and
+selects it with `ISLED_CHECK_GPG`; use that variable for an explicit verifier path
+when reproducing package setup. Signature verification stays enabled.
 Build the candidate CLI, then set `ISLED_CHECK_PACKAGE_DIR` to that directory and
 run the isolated entry point. In a POSIX shell:
 

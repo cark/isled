@@ -13,6 +13,9 @@
 ;; generic "Failed to download archive" message in unattended checks.
 (setq debug-on-error t)
 
+(when-let ((program (getenv "ISLED_CHECK_GPG")))
+  (setq epg-gpg-program program))
+
 (let ((directory (getenv "ISLED_CHECK_PACKAGE_DIR")))
   (unless (and directory (not (equal directory "")))
     (error "Set ISLED_CHECK_PACKAGE_DIR to an isolated dependency directory"))
@@ -24,7 +27,12 @@
                            ("nongnu" . "https://elpa.nongnu.org/nongnu/"))))
 
 (package-initialize)
-(package-refresh-contents)
+(condition-case failure
+    (package-refresh-contents)
+  (error
+   (when-let ((details (get-buffer "*Error*")))
+     (princ (with-current-buffer details (buffer-string))))
+   (signal (car failure) (cdr failure))))
 (dolist (name '(markdown-mode transient package-lint))
   (package-install name))
 
