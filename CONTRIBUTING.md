@@ -52,9 +52,19 @@ work and is not established merely by running these checks on Linux.
 
 ## GitHub CI
 
-The [CI workflow](.github/workflows/ci.yml) runs on pushes, pull requests and
-manual dispatch. Its three native jobs use Rust 1.97.1, Emacs 30.2 from the
-existing Nixpkgs pin on Linux/macOS, and Emacs 30.1 on Windows. The
+Ordinary branch and tag pushes do not start hosted checks. Run the applicable
+[local validation](#validation) before pushing. The [CI workflow](.github/workflows/ci.yml)
+provides one Linux job for pull requests and the full native matrix for release
+preparation:
+
+| Event | Hosted checks |
+| --- | --- |
+| Pull request | Linux source, frontend and published-CLI checks. |
+| Push to `release-artifacts` | All three CI platforms, plus the separate [release staging workflow](scripts/releasing.md#native-staging). |
+| Manual CI run | All three CI platforms. Use this for an earlier platform check or live publication checks. |
+
+Jobs use Rust 1.97.1, Emacs 30.2 from the existing Nixpkgs pin on Linux/macOS,
+and Emacs 30.1 on Windows. The
 [shared editor setup](.github/actions/setup-emacs/action.yml) checks built-in
 TLS and zlib support before installation tests:
 
@@ -63,6 +73,9 @@ TLS and zlib support before installation tests:
 | `ubuntu-24.04` | `x86_64-unknown-linux-musl` |
 | `macos-15` (Apple Silicon) | `aarch64-apple-darwin` |
 | `windows-latest` (Windows Server) | `x86_64-pc-windows-msvc` |
+
+Full Windows/macOS acceptance happens during release preparation. A passing
+Linux PR check alone does not establish those platforms' compatibility.
 
 Each job runs the contributor Python checks, Rust tests and isolated Emacs
 static/ERT checks against the CLI it builds. Linux also runs formatting and

@@ -2,6 +2,7 @@ name: CI
 
 on:
   push:
+    branches: ['release-artifacts']
   pull_request:
   workflow_dispatch:
 
@@ -20,16 +21,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: ubuntu-24.04
-            target: x86_64-unknown-linux-musl
-            rustflags: -C target-cpu=x86-64
-          - os: macos-15
-            target: aarch64-apple-darwin
-            rustflags: ''
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-            rustflags: -C target-cpu=x86-64
+        # PR feedback needs one runner; release candidates and manual runs use all three.
+        include: ${{ fromJSON(github.event_name == 'pull_request' &&
+          '[{"os":"ubuntu-24.04","target":"x86_64-unknown-linux-musl","rustflags":"-C target-cpu=x86-64"}]' ||
+          '[{"os":"ubuntu-24.04","target":"x86_64-unknown-linux-musl","rustflags":"-C target-cpu=x86-64"},
+            {"os":"macos-15","target":"aarch64-apple-darwin","rustflags":""},
+            {"os":"windows-latest","target":"x86_64-pc-windows-msvc","rustflags":"-C target-cpu=x86-64"}]') }}
     defaults:
       run:
         shell: bash

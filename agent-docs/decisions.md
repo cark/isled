@@ -317,11 +317,20 @@ while downloadable CLI binaries remain available for standalone use.
 The first release will target three platforms. Source CI runs native checks on
 the runners below; release staging separately checks the distributed artifacts.
 
-| Compatibility target | Rust binary target | Routine native checks |
+| Compatibility target | Rust binary target | Native acceptance runner |
 | --- | --- | --- |
 | Linux kernel 5.4+, x86-64 | `x86_64-unknown-linux-musl` | `ubuntu-24.04` |
 | Windows 10+, x86-64 | `x86_64-pc-windows-msvc` | `windows-latest` (Windows Server) |
 | macOS 15+, Apple Silicon | `aarch64-apple-darwin` | `macos-15` |
+
+Use local validation for ordinary development pushes. Hosted CI runs one Linux
+job on pull requests so contributors get feedback. Reserve the full three-platform
+matrix for the `release-artifacts` preparation branch and explicit manual runs;
+ordinary branch and tag pushes start no workflows. Release staging keeps its
+native artifact, installation, upgrade and rollback checks before publication.
+There is no scheduled CI. This limits repeated work while retaining release
+acceptance; Windows/macOS regressions may be found later during preparation.
+Run the full matrix manually sooner when a platform-sensitive change warrants it.
 
 Keep the initial build and support scope small. Intel Macs, Linux ARM64 and
 native Windows ARM64 releases are deferred; revisit them if users need them.

@@ -28,6 +28,9 @@ commit and rejects untracked source. No tag is needed yet.
 The [Release staging workflow](../.github/workflows/release.yml) runs manually or
 when the preparation branch `release-artifacts` is pushed. It does not run on a
 schedule, create a release, push a tag or advance a distribution branch.
+That branch also starts the full three-platform [CI workflow](../.github/workflows/ci.yml).
+Ordinary branch and tag pushes start neither workflow. Pull requests receive
+one Linux CI job; manual CI runs provide all three platforms whenever needed.
 
 The three jobs build on the same native runners as source CI, using Rust 1.97.1
 and the [pinned full editors](../CONTRIBUTING.md#github-ci). Each job:
@@ -177,8 +180,11 @@ After publication, `python3 -B scripts/check-published-cli.py --dependencies
 /path/to/check-packages --output /path/to/new-check` anonymously retrieves the
 complete release selected by the current frontend pin. It verifies all assets,
 runs the installed package through real GitHub first use and offline reuse,
-then runs the source frontend suite against that managed CLI. Native CI runs
-the same check on every push and pull request. A missing release fails; there
+then runs the source frontend suite against that managed CLI. CI runs the same
+check on Linux for pull requests and on all three platforms for release
+preparation or manual runs. After publishing a new CLI pin, run CI manually at
+the accepted revision to check its public delivery on all three platforms.
+A missing release fails; there
 is no source-build fallback. Keep the receipts and compare their source/package
 identity with the accepted candidate.
 
