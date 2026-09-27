@@ -22,7 +22,7 @@
   "Return the selected fixture ref."
   (pcase (getenv "ISLED_RECIPE_SELECTOR")
     ("branch" "release")
-    ("development" "development")
+    ("development" (if (equal (getenv "ISLED_RECIPE_PUBLISHED") "1") "main" "development"))
     ("tag" (concat "v" (getenv "ISLED_RECIPE_CLI_PIN")))
     ("commit" (getenv "ISLED_RECIPE_REVISION"))))
 

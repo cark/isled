@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Install a candidate Emacs package and provision a real staged CLI in isolation."""
+"""Install a candidate package and provision a staged or published CLI in isolation."""
 
 import argparse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -21,8 +21,11 @@ def main():
     for name in ('package', 'artifacts', 'dependencies', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--upgrade', type=Path, help='Complete verified version-only upgrade candidate')
+    parser.add_argument('--live', action='store_true', help='Use public GitHub delivery without URL substitution')
     parser.add_argument('--emacs', default='emacs')
     args = parser.parse_args()
+    if args.live and args.upgrade:
+        parser.error('--live cannot use a disposable upgrade fixture')
     root = Path(__file__).resolve().parent.parent
     verify = runpy.run_path(str(root / 'scripts/stage-release.py'))['verify']
     manifest = verify(args.artifacts)
@@ -73,15 +76,19 @@ def main():
             except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
                 pass  # Expected when the editor cancels a request.
 
-    server = ThreadingHTTPServer(('127.0.0.1', 0), Handler)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
+    server = None
+    if not args.live:
+        server = ThreadingHTTPServer(('127.0.0.1', 0), Handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
     env = dict(os.environ, PATH=str(empty_path), ISLED_INSTALL_CHECK_DIR=str(args.output.resolve()),
-               ISLED_INSTALL_TEST_ORIGIN=f'http://127.0.0.1:{server.server_port}',
+               ISLED_INSTALL_TEST_ORIGIN=f'http://127.0.0.1:{server.server_port}' if server else '',
                ISLED_PACKAGE_ARCHIVE=str(args.package.resolve()),
                ISLED_INSTALL_BASE_VERSION=manifest['version'],
                ISLED_CHECK_PACKAGE_DIR=str(args.dependencies.resolve()))
     modes = ['decline', 'missing', 'cancel', 'install', 'offline', 'explicit', 'unsupported']
+    if args.live:
+        modes = ['decline', 'install', 'offline', 'explicit', 'unsupported']
     if upgrade:
         modes += ['corrupt', 'interrupted', 'upgrade', 'rollback', 'mismatch']
     try:
@@ -103,12 +110,15 @@ def main():
                    'macos_assessment': security,
                    'package_sha256': sha256(args.package), 'output': str(args.output),
                    'checks': modes, 'compiler_and_cli_path': 'empty'}
+        receipt['delivery'] = 'public HTTPS' if args.live else 'staged loopback'
+        receipt['program'] = (args.output / 'program').read_text(encoding='utf-8').strip()
         write_json(args.output / 'receipt.json', receipt)
         print(json.dumps(receipt))
     finally:
-        server.shutdown()
-        thread.join()
-        server.server_close()
+        if server:
+            server.shutdown()
+            thread.join()
+            server.server_close()
 
 
 if __name__ == '__main__':

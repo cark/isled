@@ -136,6 +136,12 @@ hash checks, extraction, identity checks and activation remain enabled. This
 fixture establishes acceptance only on the native host where it runs; public
 endpoint checks remain part of publication. Logs and the JSON receipt record
 each case, the source and package identities, editor version and platform.
+Use `--live` instead of the upgrade fixture to check public HTTPS delivery with
+no URL substitution. It covers consent, installation, offline package replacement,
+explicit executables and unsupported-platform handling.
+`check-published-cli.py` retrieves and verifies the complete pinned release, runs
+those live cases, then runs the frontend suite against the managed executable;
+native CI uses this alongside the source-built checks.
 
 ## Reproduce the packaging checks
 
@@ -169,8 +175,10 @@ Checks cover MELPA package construction, direct Git branch/tag/commit selection,
 all runtime libraries and bytecode, dependency versions, load-time side effects,
 and the CLI pin's mapping to real verified artifacts. They also install an
 unreleased frontend with a different Lisp version and the same CLI pin.
-This is a focused package-manager check on one host, not an OS-by-manager matrix
-or acceptance of CLI provisioning. Logs and JSON receipts remain in the
+Add `--published` to check the actual public `release`, tag, commit and `main`
+refs anonymously; omit it to keep using disposable local refs. This is a focused
+package-manager check on one host, not an OS-by-manager matrix or acceptance of
+CLI provisioning. Logs and JSON receipts remain in the
 output directory; `--managers` and `--selectors` allow focused reruns.
 
 ## Submission handoff

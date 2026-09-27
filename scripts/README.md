@@ -28,6 +28,10 @@ integrity and candidate identity without executing fixture binaries.
 upgrade acceptance. `check-cli-installer.py` exercises prepared packages and
 real CLI artifacts without exposing a compiler on the editor's PATH; see
 [installer acceptance](../frontends/emacs/packaging.md#shared-installer-boundary).
+`check-published-cli.py` fetches the exact frontend pin anonymously, verifies the
+complete release, exercises live installation/offline reuse and runs the frontend
+suite against the managed executable. It takes `--dependencies` and a new
+`--output` directory, with optional `--emacs`.
 
 ## Optional environment and maintainer tools
 

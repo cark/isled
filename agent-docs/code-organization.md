@@ -502,7 +502,7 @@ outputs are acceptance material, never release versions. The standalone
 temporary installation. [Release staging](../scripts/releasing.md) owns usage.
 
 `check-package-recipes.py` verifies staged artifacts and creates disposable Git
-refs for native package-manager checks. `test/package-recipes.el` owns installed
+refs for native package-manager checks, or checks public refs with `--published`. `test/package-recipes.el` owns installed
 package assertions; `test/package-recipe-managers.el` invokes each manager using
 the canonical recipes in `frontends/emacs/recipes/`. The
 [packaging guide](../frontends/emacs/packaging.md) owns recipe usage, source
@@ -513,7 +513,10 @@ selection, installer lifecycle constraints and submission preparation.
 package, downloads/verifies/runs the native CLI, then replaces the package and
 checks offline cache reuse, failure recovery, real pin upgrades and rollback.
 The previous executable stays running during upgrade. Its test-only URL substitution does not change
-production origins. `test/cli-fixtures.py` builds disposable regression fixtures
+production origins; `--live` uses those public origins unchanged.
+`check-published-cli.py` owns anonymous complete-release retrieval and runs the
+shared installer acceptance followed by the frontend suite against its managed
+CLI. `test/cli-fixtures.py` builds disposable regression fixtures
 with the existing release writer; it is not part of the installed package.
 
 `.github/actions/setup-emacs/action.yml` owns the shared native CI editor setup.

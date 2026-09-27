@@ -77,9 +77,10 @@ Invalid-byte filename recovery is exercised on Linux; the native macOS filesyste
 rejects those fixtures during creation. Unix permission/symlink tests retain their
 platform guards.
 Keep these gaps separate from the [planned compatibility targets](agent-docs/decisions.md#public-installation-direction-planned).
-No release binary is required for this initial workflow. Once releases exist,
-the same frontend checks will also run against the explicitly selected published
-CLI pin; a missing or incompatible release must fail that check.
+Each job also downloads the frontend's exact published CLI pin anonymously,
+checks the release assets, exercises managed first use and offline reuse, then
+runs the frontend suite against that executable. A missing or incompatible
+release fails the check. Source-built tests still run separately.
 
 To reproduce a target locally, install Rust 1.97.1 with that target, set
 `CARGO_BUILD_TARGET`, then run `cargo test --locked --no-fail-fast`

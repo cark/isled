@@ -52,7 +52,7 @@
          (directory (file-name-directory library))
          (pin (symbol-value 'isled-required-cli-version))
          (expected-files (directory-files
-                          (expand-file-name "frontends/emacs" (getenv "ISLED_RECIPE_SOURCE"))
+                          (expand-file-name "frontends/emacs" (getenv "ISLED_RECIPE_ROOT"))
                           nil "\\`isled.*\\.el\\'")))
     (unless (and (file-in-directory-p library user-emacs-directory)
                  (string-suffix-p ".elc" library)

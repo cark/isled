@@ -171,6 +171,21 @@ These checks establish candidate evidence, not a claim of a published, signed,
 or fully accepted end-user installation. Record native results and unresolved
 distribution behavior before proceeding to publication.
 
+## Live publication checks
+
+After publication, `python3 -B scripts/check-published-cli.py --dependencies
+/path/to/check-packages --output /path/to/new-check` anonymously retrieves the
+complete release selected by the current frontend pin. It verifies all assets,
+runs the installed package through real GitHub first use and offline reuse,
+then runs the source frontend suite against that managed CLI. Native CI runs
+the same check on every push and pull request. A missing release fails; there
+is no source-build fallback. Keep the receipts and compare their source/package
+identity with the accepted candidate.
+
+Advance the `release` branch only after live first use passes. Check the public
+manager recipes with `check-package-recipes.py --published` using the documented
+[check arguments](../frontends/emacs/packaging.md#reproduce-the-packaging-checks).
+
 ## Draft preparation and final publication
 
 Download a successful workflow's complete candidate:

@@ -119,3 +119,19 @@ jobs:
 
       - name: Emacs static checks and CLI integration tests
         run: emacs -Q --batch -l frontends/emacs/test/run-check.el
+
+      - name: Published CLI delivery and frontend integration
+        run: |
+          python -B scripts/check-published-cli.py \
+            --dependencies "$ISLED_CHECK_PACKAGE_DIR" --output "$RUNNER_TEMP/isled-published-check"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: published-cli-${{ matrix.target }}
+          path: |
+            ${{ runner.temp }}/isled-published-check/frontend.log
+            ${{ runner.temp }}/isled-published-check/install/*.log
+            ${{ runner.temp }}/isled-published-check/install/receipt.json
+          if-no-files-found: warn
+          retention-days: 14

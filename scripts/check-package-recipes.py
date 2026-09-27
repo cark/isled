@@ -52,12 +52,14 @@ def check_case(args, source, manager, selector, expected_revision, pin):
     directory.mkdir()
     environment = dict(os.environ, ISLED_RECIPE_CHECK_DIR=str(directory),
                        ISLED_RECIPE_ROOT=str(ROOT), ISLED_RECIPE_SOURCE=str(source),
-                       ISLED_RECIPE_SOURCE_URL=source.as_uri(),
+                       ISLED_RECIPE_SOURCE_URL=source.as_uri() if isinstance(source, Path) else source,
+                       ISLED_RECIPE_PUBLISHED='1' if args.published else '',
                        ISLED_RECIPE_MANAGER=manager, ISLED_RECIPE_SELECTOR=selector,
                        ISLED_RECIPE_REVISION=expected_revision, ISLED_RECIPE_CLI_PIN=pin,
                        ISLED_CHECK_PACKAGE_DIR=str(args.dependencies),
                        ISLED_RECIPE_MELPA=str(args.melpa), ISLED_RECIPE_ELPACA=str(args.elpaca),
-                       ISLED_RECIPE_STRAIGHT=str(args.straight), GIT_TERMINAL_PROMPT="0")
+                       ISLED_RECIPE_STRAIGHT=str(args.straight), GIT_TERMINAL_PROMPT="0",
+                       GIT_CONFIG_COUNT='1', GIT_CONFIG_KEY_0='credential.helper', GIT_CONFIG_VALUE_0='')
     try:
         with (directory / "check.log").open("w", encoding="utf-8") as log:
             subprocess.run([args.emacs, "-Q", "--batch", "-l",
@@ -86,6 +88,7 @@ def main():
     parser.add_argument("--straight", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True, help="New directory; retains logs and fixtures")
     parser.add_argument("--emacs", default="emacs")
+    parser.add_argument("--published", action="store_true", help="Use anonymous public Git refs, not fixture refs")
     parser.add_argument("--managers", nargs="+", choices=["melpa", "elpaca", "straight", "package-vc"],
                         default=["melpa", "elpaca", "straight", "package-vc"])
     parser.add_argument("--selectors", nargs="+", choices=["branch", "tag", "commit", "development"],
@@ -101,16 +104,25 @@ def main():
     if pin != manifest["version"]:
         raise ValueError("Frontend CLI pin does not map to the verified staged artifacts")
     args.output.mkdir(parents=True, exist_ok=False)
-    source, development = fixture_repository(args.output, revision, pin)
+    if args.published:
+        source = 'https://github.com/cark/isled.git'
+        expected_refs = {'tag': manifest['revision'], 'commit': manifest['revision']}
+        for selector, branch in [('branch', 'release'), ('development', 'main')]:
+            expected_refs[selector] = capture('git', '-c', 'credential.helper=', 'ls-remote',
+                                               source, 'refs/heads/' + branch).split()[0]
+    else:
+        source, development = fixture_repository(args.output, revision, pin)
+        expected_refs = {selector: development if selector == 'development' else revision
+                         for selector in args.selectors}
     receipts = []
     for manager in args.managers:
         for selector in args.selectors:
             if manager == "melpa" and selector in {"tag", "commit"}:
                 continue  # Regular MELPA intentionally follows the release branch.
-            expected = development if selector == "development" else revision
+            expected = expected_refs[selector]
             receipts.append(check_case(args, source, manager, selector, expected, pin))
     result = {"source_revision": revision, "cli_version": pin,
-              "artifact_source_revision": manifest["revision"], "cases": receipts,
+              "artifact_source_revision": manifest["revision"], "published": args.published, "cases": receipts,
               "tools": {name: capture("git", "rev-parse", "HEAD", cwd=getattr(args, name))
                         for name in ("melpa", "elpaca", "straight")}}
     (args.output / "results.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")

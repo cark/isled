@@ -1,8 +1,8 @@
 ;;; cli-install-staged.el --- Native staged installation acceptance -*- lexical-binding: t; -*-
 
 ;;; Commentary:
-;; The Python runner serves verified release assets over loopback.  Only the
-;; request destination changes; selection, verification and execution are real.
+;; The Python runner selects staged loopback or public HTTPS delivery.  Selection,
+;; verification and execution are real in either case.
 ;; Each case gets a fresh editor and package directory.  No compiler is on PATH.
 
 ;;; Code:
@@ -82,9 +82,12 @@
                        (unless (string-prefix-p "https://github.com/cark/isled/releases/download/" url)
                          (error "Unexpected production asset URL: %s" url))
                        (push url requests)
-                       (apply retriever
-                              (concat (getenv "ISLED_INSTALL_TEST_ORIGIN") "/" mode "/"
-                                      (file-name-nondirectory url)) callback arguments))))
+                       (let ((origin (getenv "ISLED_INSTALL_TEST_ORIGIN")))
+                         (apply retriever
+                                (if (and origin (not (string-empty-p origin)))
+                                    (concat origin "/" mode "/" (file-name-nondirectory url))
+                                  url)
+                                callback arguments)))))
             (let ((noninteractive nil) program failure done)
               (let ((system-configuration (if (equal mode "unsupported") "unsupported" system-configuration)))
                 (isled-cli-ensure (lambda (path error) (setq program path failure error done t))))
@@ -108,6 +111,8 @@
                 (unless (file-in-directory-p program isled-cli-directory) (error "CLI escaped managed storage"))
                 (unless (file-exists-p (expand-file-name "LICENSE" (file-name-directory program)))
                   (error "Installed executable has no license"))
+                (let ((coding-system-for-write 'utf-8-unix))
+                  (with-temp-file (expand-file-name "program" root) (insert program "\n")))
                 (let ((ledger (expand-file-name (concat "ledger-" mode) root)) result)
                   (make-directory ledger t)
                   (isled-process-command ledger (list "--root" ledger "init") nil
