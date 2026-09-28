@@ -53,9 +53,12 @@ def main():
     manifest = runpy.run_path(str(ROOT / 'scripts/stage-release.py'))['verify'](artifacts)
     if manifest['version'] != pin:
         raise ValueError('Published release does not match the frontend CLI pin')
+    package = args.output / 'isled-candidate.tar'
+    subprocess.run([sys.executable, '-B', str(ROOT / 'scripts/package-emacs.py'),
+                    '--output', str(package)], cwd=ROOT, check=True, timeout=120)
     install = args.output / 'install'
     subprocess.run([sys.executable, '-B', str(ROOT / 'scripts/check-cli-installer.py'), '--live',
-                    '--package', str(artifacts / manifest['emacs']['name']),
+                    '--package', str(package),
                     '--artifacts', str(artifacts), '--dependencies', str(args.dependencies),
                     '--output', str(install), '--emacs', args.emacs], check=True, timeout=1000)
     receipt = json.loads((install / 'receipt.json').read_text(encoding='utf-8'))

@@ -35,7 +35,7 @@ Emacs package.
 
 You need **Emacs 30.1+** with built-in TLS and zlib support. Your package
 manager installs **markdown-mode 2.6+** and **Transient 0.8.0+**. On first use,
-Isled offers to download the matching CLI; no Rust compiler, PATH setup or
+Isled automatically downloads the matching CLI; no Rust compiler, PATH setup or
 separate verification tools are needed.
 
 ### With your package manager
@@ -64,7 +64,8 @@ Transient was already loaded when you upgraded it.
 
 ### First use
 
-Visit your project and run **`M-x isled`**. Accept the CLI download when asked.
+Visit your project and run **`M-x isled`**. Its matching CLI downloads automatically
+on first use, with progress and cancellation.
 You can also run `M-x isled-setup-cli` to prepare it separately.
 
 Setup opens a side window with the full executable and agent skill paths through

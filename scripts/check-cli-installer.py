@@ -95,9 +95,9 @@ def check_installer(args, manifest, upgrade):
                ISLED_PACKAGE_ARCHIVE=str(args.package.resolve()),
                ISLED_INSTALL_BASE_VERSION=manifest['version'],
                ISLED_CHECK_PACKAGE_DIR=str(args.dependencies.resolve()))
-    modes = ['decline', 'missing', 'cancel', 'install', 'offline', 'explicit', 'unsupported']
+    modes = ['missing', 'cancel', 'install', 'offline', 'explicit', 'unsupported']
     if args.live:
-        modes = ['decline', 'install', 'offline', 'explicit', 'unsupported']
+        modes = ['install', 'offline', 'explicit', 'unsupported']
     if upgrade:
         modes += ['corrupt', 'interrupted', 'upgrade', 'rollback', 'mismatch']
     try:

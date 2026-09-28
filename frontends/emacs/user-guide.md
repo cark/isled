@@ -630,22 +630,21 @@ Automatic setup uses the exact published CLI release required by your Emacs
 package. See [installation](README.md#installation) for package-manager recipes
 and the downloadable Emacs archive.
 
-With `isled-program` set to nil, the first command that needs the CLI asks to
-download it from the project's GitHub release. Emacs checks the download before
-running it. Setup needs Emacs's built-in TLS and zlib support, with no compiler,
+With `isled-program` set to nil, the first command that needs the CLI downloads
+it automatically from the project's GitHub release. Emacs checks the download
+before running it. Setup needs Emacs's built-in TLS and zlib support, with no compiler,
 administrator access, PATH changes or separate verification tools.
 
 Some minimal Emacs builds omit TLS or decompression support. Isled explains this
-before asking to download anything. Use an Emacs build with those facilities,
+before starting a download. Use an Emacs build with those facilities,
 or configure a separately installed CLI with `isled-program`.
 
 Downloads run in the background and report progress. Use `M-x isled-cancel-setup`
 to cancel. After a failure, retry the original command, press `g` in the view,
 or run `M-x isled-setup-cli` to prepare the CLI separately.
 
-Your initial consent also covers later matching CLI updates. A frontend update
-that keeps the same CLI version reuses the cached executable, including offline.
-An update needing another version downloads it on first use. Earlier versions
+A frontend update that keeps the same CLI version reuses the cached executable,
+including offline. An update needing another version downloads it on first use. Earlier versions
 stay available for frontend rollback; failed setup leaves them untouched.
 
 The CLI and its matching skill live in the platform's shared user-data directory,
@@ -663,11 +662,8 @@ Use its `current` paths in shell and agent configuration. Emacs runs its exact
 versioned executable, so a standalone upgrade cannot redirect the frontend.
 Run `M-x isled-setup-cli` to select the frontend's version again.
 
-Consent stays in `isled/cli/download-consent` under your Emacs directory, or in
-the explicitly configured installation directory. Deleting that file makes the
-next required download ask again. If a stored version fails its integrity check,
-inspect it and move only that version aside before retrying. Isled never runs the
-damaged file.
+If a stored version fails its integrity check, inspect it and move only that
+version aside before retrying. Isled never runs the damaged file.
 
 To use a manually installed or Nix-managed release, set `isled-program` to its
 path, or to a command name on PATH. It must report the required CLI version.

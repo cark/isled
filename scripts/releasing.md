@@ -58,7 +58,7 @@ identity. The main checkout stays unchanged. The second set is named
 `upgrade-candidate`; it is test material and must never be published as a release.
 
 After assembly, three fresh native jobs install the actual packages and CLIs.
-They test consent, cancellation, missing/interrupted/corrupt downloads, retries,
+They test automatic setup, cancellation, missing/interrupted/corrupt downloads, retries,
 offline cache reuse after package replacement, explicit executables, a real pin
 upgrade while the old executable is running, and frontend rollback. Each editor
 starts with an empty tool PATH and private state. On macOS, the check requires

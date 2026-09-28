@@ -183,7 +183,7 @@ is not source and is ignored.
 
 ## Code map
 
-- `isled-cli.el` owns consent and shared CLI readiness; `isled-executable.el`
+- `isled-cli.el` owns automatic setup and shared CLI readiness; `isled-executable.el`
   checks identity asynchronously and caches evidence only for unchanged files.
 - `isled-install.el` owns private download staging and invokes the Rust installer.
   `isled-installation.el` owns that process and the default-root locator;

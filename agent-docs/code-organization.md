@@ -397,7 +397,7 @@ request parser validates text and kind criteria before project discovery.
 ## Frontend boundary
 
 `isled-cli.el` resolves the pinned executable, preserves explicit overrides and
-shares consent/setup across pending commands. `isled-executable.el` owns bounded
+shares automatic setup across pending commands. `isled-executable.el` owns bounded
 asynchronous identity checks and unchanged-file verification reuse.
 `isled-install.el` stages verified bundles for the Rust installer;
 earlier versions remain available. `isled-download.el` owns HTTPS transport,

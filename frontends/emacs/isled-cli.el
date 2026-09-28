@@ -7,7 +7,7 @@
 ;; Keywords: tools
 
 ;;; Commentary:
-;; Package managers install Lisp.  This module owns consent and shared first-use
+;; Package managers install Lisp.  This module owns automatic shared first-use
 ;; readiness for managed releases and explicitly configured executables.
 
 ;;; Code:
@@ -50,18 +50,6 @@ for old frontend versions; new releases use the shared executable/skill layout."
       (condition-case problem (funcall callback program failure)
         (error (message "Isled command callback failed: %s" (error-message-string problem)))))))
 
-(defun isled-cli--consent (root version)
-  "Ensure persistent managed-download consent under ROOT for VERSION."
-  (let ((file (expand-file-name "download-consent" root))
-        (text "Download pinned Isled releases from cark/isled on GitHub.\n"))
-    (unless (and (file-exists-p file) (equal (isled-install--read file) text))
-      (when (or noninteractive
-                (not (y-or-n-p (format "Download Isled %s from GitHub now and matching CLI updates on future use? " version))))
-        (user-error "Isled download declined; invoke the command again to retry, or set isled-program"))
-      (make-directory root t)
-      (set-file-modes root #o700)
-      (isled-install--write file text))))
-
 (defun isled-cli--prepare (job version program development root)
   "Prepare JOB for VERSION using PROGRAM/DEVELOPMENT or managed ROOT."
   (let ((callback (lambda (path failure)
@@ -80,8 +68,6 @@ for old frontend versions; new releases use the shared executable/skill layout."
                 (unless (and (fboundp 'zlib-available-p) (zlib-available-p)
                              (gnutls-available-p))
                   (error "Managed Isled downloads need Emacs with built-in TLS and zlib support; alternatively set isled-program"))
-                (isled-cli--consent (if isled-cli-directory root
-                                      (locate-user-emacs-file "isled/cli/")) version)
                 (isled-install root version target callback)))))))
 
 (defun isled-cli--cached (program root version callback)
@@ -110,8 +96,9 @@ Deliver its exact path to CALLBACK; other installations cannot redirect it."
 
 (defun isled-cli-ensure (callback)
   "Resolve the pinned CLI and call CALLBACK with PROGRAM and nil, or nil and error.
-Concurrent commands share one setup.  No download happens merely by loading
-this library.  Explicit executables always take precedence."
+Download the matching release automatically when it is not cached.
+Concurrent commands share one setup.  Loading this library never downloads.
+Explicit executables always take precedence."
   (require 'isled)
   (condition-case failure
       (let* ((version (isled-release-validate-version isled-required-cli-version))
@@ -157,7 +144,7 @@ this library.  Explicit executables always take precedence."
 
 ;;;###autoload
 (defun isled-setup-cli ()
-  "Prepare the compatible CLI, or retry a failed setup."
+  "Download and prepare the compatible CLI if needed, or retry failed setup."
   (interactive)
   (clrhash isled-cli--activated)
   (isled-cli-ensure (lambda (program failure)

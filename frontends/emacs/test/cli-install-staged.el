@@ -37,18 +37,18 @@
        (custom-file (expand-file-name "custom.el" root))
        (exec-path nil)
        (mode (getenv "ISLED_INSTALL_CHECK_MODE"))
-       (isolated (member mode '("decline" "missing" "cancel" "unsupported")))
+       (isolated (member mode '("missing" "cancel" "unsupported")))
        (offline (member mode '("offline" "rollback" "explicit" "mismatch")))
-       (failure-pattern (cdr (assoc mode '(("decline" . "declined") ("missing" . "HTTP 404")
+       (failure-pattern (cdr (assoc mode '(("missing" . "HTTP 404")
                                           ("cancel" . "cancel") ("corrupt" . "mismatch")
                                           ("interrupted" . ".") ("mismatch" . "Expected Isled")
                                           ("unsupported" . "No Isled binary")))))
        (retriever (symbol-function 'url-retrieve))
        (launcher (symbol-function 'make-process))
-       (offers 0) (executions 0) requests holder)
+       (executions 0) requests holder)
   (when (cl-some #'executable-find '("isled" "cargo" "rustc"))
     (error "CLI or Rust compiler is visible in the clean acceptance environment"))
-  ;; Package replacement must not remove the CLI or the consent it shares.
+  ;; Package replacement must not remove the shared CLI installation.
   (when (file-exists-p package-user-dir) (delete-directory package-user-dir t))
   (make-directory user-emacs-directory t)
   (package-initialize)
@@ -64,8 +64,7 @@
          (old (expand-file-name (isled-release-executable (isled-release-current-target))
                                 (isled-install-directory isled-cli-directory
                                                          (getenv "ISLED_INSTALL_BASE_VERSION"))))
-         (old-hash (and (file-exists-p old) (secure-hash 'sha256 (isled-install--read old))))
-         (consented (file-exists-p (expand-file-name "download-consent" isled-cli-directory))))
+         (old-hash (and (file-exists-p old) (secure-hash 'sha256 (isled-install--read old)))))
     (when (member mode '("explicit" "mismatch")) (setq isled-program old))
     (unwind-protect
         (progn
@@ -77,7 +76,7 @@
             (accept-process-output holder 0.05)
             (unless (process-live-p holder) (error "Previous CLI did not remain running")))
           (cl-letf (((symbol-function 'y-or-n-p)
-                     (lambda (&rest _) (cl-incf offers) (not (equal mode "decline"))))
+                     (lambda (&rest _) (error "CLI setup requested confirmation")))
                     ((symbol-function 'make-process)
                      (lambda (&rest arguments)
                        (cl-incf executions)
@@ -99,13 +98,13 @@
                                     (concat origin "/" mode "/" (file-name-nondirectory url))
                                   url)
                                 callback arguments)))))
-            (let ((noninteractive nil) program failure done)
+            (let (program failure done)
               (let ((system-configuration (if (equal mode "unsupported") "unsupported" system-configuration)))
                 (isled-cli-ensure (lambda (path error) (setq program path failure error done t))))
               (when (equal mode "cancel") (isled-cancel-setup))
               (isled-install-check--wait (lambda () done))
-              (unless (= offers (if (or consented (equal mode "unsupported")) 0 1))
-                (error "Unexpected consent count in %s: %s" mode offers))
+              (when (file-exists-p (expand-file-name "download-consent" isled-cli-directory))
+                (error "Automatic setup wrote a consent file"))
               (if failure-pattern
                   (progn
                     (unless (and (null program) failure (string-match-p failure-pattern failure))

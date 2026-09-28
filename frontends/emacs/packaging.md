@@ -2,7 +2,7 @@
 
 These recipes install Isled directly from GitHub. The `release` branch follows
 frontend versions whose compatible CLI is already published; `v0.33.0` selects
-this release. On first use, the frontend offers to download its
+this release. On first use, the frontend automatically downloads its
 matching CLI. Isled is not yet on MELPA.
 
 You can also follow `main`: an unreleased frontend can keep the same published
@@ -103,7 +103,7 @@ using the frontend's explicit pin. It stores complete executable/skill bundles o
 directories and preserves them when a manager rebuilds or replaces the Lisp
 package. It works without inspecting Git state, package-manager metadata
 or archive version numbers. The [release contract](../../agent-docs/decisions.md#public-installation-direction-planned)
-owns consent, integrity, upgrade and recovery behavior.
+owns automatic download, integrity, upgrade and recovery behavior.
 
 The downloader allows HTTPS only, with redirects limited to GitHub's release
 delivery hosts. Metadata is limited to 256 KiB and archive/executable sizes to
@@ -117,7 +117,7 @@ storage and `current` activation, with a cancellable one-minute timeout.
 Emacs displays the returned stable paths and executes its exact versioned CLI.
 
 The [user guide](user-guide.md#cli-setup-and-upgrades) explains setup commands,
-consent, cache recovery and explicit release/development executables.
+cancellation, cache recovery and explicit release/development executables.
 
 To test an installed package against real staged binaries before publication:
 
@@ -130,7 +130,7 @@ python3 scripts/check-cli-installer.py \
 
 This verifies the complete staged set and serves it on loopback. Each scenario
 starts a fresh batch editor with an empty tool PATH and replaces its package
-directory. Checks cover first use, declined/canceled setup, missing assets,
+directory. Checks cover automatic first use, canceled setup, missing assets,
 offline cache reuse, explicit executables and unsupported platforms.
 Add `--upgrade /path/to/upgrade-candidate` for two real versioned builds: corrupt
 and interrupted upgrade downloads, retry, upgrade with the old CLI still running,
@@ -143,10 +143,11 @@ fixture establishes acceptance only on the native host where it runs; public
 endpoint checks remain part of publication. Logs and the JSON receipt record
 each case, the source and package identities, editor version and platform.
 Use `--live` instead of the upgrade fixture to check public HTTPS delivery with
-no URL substitution. It covers consent, installation, offline package replacement,
+no URL substitution. It covers automatic installation, offline package replacement,
 explicit executables and unsupported-platform handling.
-`check-published-cli.py` retrieves and verifies the complete pinned release, runs
-those live cases, then runs the frontend suite against the managed executable;
+`check-published-cli.py` retrieves and verifies the complete pinned release, builds
+the current frontend package and runs those live cases against the published CLI.
+It then runs the frontend suite against the managed executable;
 native CI uses this alongside the source-built checks.
 
 ## Reproduce the packaging checks

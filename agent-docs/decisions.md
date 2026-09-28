@@ -307,8 +307,8 @@ The current local ignored-ledger default is unchanged.
 ### Public installation direction
 
 The target is a normal Emacs package installation with package-managed setup of a
-compatible, precompiled Rust executable. On first use, Isled offers the download
-with a brief confirmation and completes setup inside Emacs. This timing works
+compatible, precompiled Rust executable. On first use, Isled downloads it
+automatically and completes setup inside Emacs. This timing works
 across package managers without downloading during package loading or compilation.
 Users should not need a checkout, Rust toolchain, manual CLI download or
 executable-path setup for the ordinary route. The two parts work as one product,
@@ -423,16 +423,19 @@ leave it untouched. Do not silently substitute a managed executable for an
 explicit override. Explicit development builds remain a contributor workflow;
 identify them as such rather than presenting them as published release binaries.
 
-After the initial download consent, upgrading the Emacs package automatically
-fetches its pinned CLI on first use when that binary is not already cached,
-with progress and cancellation. A frontend update that retains the same CLI pin
+The first command that needs the CLI automatically downloads the pinned release
+when it is not already cached, with progress and cancellation. No confirmation
+prompt or stored consent is required: installing the frontend and invoking its
+commands is sufficient. The same behavior applies after frontend upgrades.
+A frontend update that retains the same CLI pin
 reuses the existing binary. Keep executables in version-specific locations and
 retain the previous binary so
 rolling back the Emacs package can reuse it. If download, verification or
 activation fails, preserve existing binaries and offer retry; the new frontend
 waits for its matching executable instead of using an incompatible older one.
 This managed upgrade policy does not replace or bypass an explicit executable
-override. Package loading and compilation still perform no downloads.
+override. Package loading and compilation still perform no downloads. Any consent
+files left by older frontends are ignored and left untouched.
 
 Use direct Git installation through Elpaca, straight.el and package-vc for the
 initial packaged release. Publish and verify the pinned CLI assets before
@@ -599,7 +602,7 @@ scope does not include an automatic downloader/updater in the CLI. Installation
 needs no administrator privileges and does not edit shell or agent configuration.
 
 Emacs downloads and verifies its exact compatible release, then calls the same
-CLI installer. Preserve first-use download consent, offline reuse and explicit
+CLI installer. Preserve automatic first-use downloads, offline reuse and explicit
 executable overrides. Emacs continues executing the exact versioned path so
 another installation changing `current` cannot change its selected CLI.
 

@@ -24,12 +24,13 @@
           (isled-executable--verified (make-hash-table :test #'equal))
           (isled-bundle--verified (make-hash-table :test #'equal))
           (isled-cli--activated (make-hash-table :test #'equal))
-          (offers 0) (executions 0) requests (accept t) offline corrupt hold delivery)
+          (executions 0) requests offline corrupt hold delivery)
      (unwind-protect
          (progn
            (should (zerop (call-process (or (executable-find "python3") (executable-find "python"))
                                        nil nil nil isled-install-test--script assets)))
-           (cl-letf (((symbol-function 'y-or-n-p) (lambda (&rest _) (cl-incf offers) accept))
+           (cl-letf (((symbol-function 'y-or-n-p)
+                      (lambda (&rest _) (ert-fail "CLI setup requested confirmation")))
                      ((symbol-function 'isled-installation-run)
                       (lambda (program root _command callback &optional version)
                         (let* ((root (or root (expand-file-name "platform-data" fixture)))
@@ -77,35 +78,37 @@
 (ert-deftest isled-install-first-use-cache-upgrade-and-rollback ()
   (isled-install-test--with-fixture
     (let* ((first (isled-install-test--result)) (old (car first)))
-      (should old) (should-not (cadr first)) (should (= offers 1)) (should (= (length requests) 3))
+      (should old) (should-not (cadr first)) (should (= (length requests) 3))
       (should (file-in-directory-p old isled-cli-directory))
       (should (file-regular-p (expand-file-name "LICENSE" (file-name-directory old))))
       (should (equal first (isled-install-test--result)))
       (should (= (length requests) 3))
       (setq isled-required-cli-version "0.32.1")
       (let ((new (car (isled-install-test--result))))
-        (should new) (should-not (equal old new)) (should (= offers 1))
+        (should new) (should-not (equal old new))
         (should (= (length requests) 6)) (should (file-exists-p old))
         (setq isled-required-cli-version "0.32.0" offline t)
         (should (equal old (car (isled-install-test--result))))
         (should (= (length requests) 6))))))
 
-(ert-deftest isled-install-decline-does-not-download-or-write ()
-  (isled-install-test--with-fixture
-    (setq accept nil)
-    (should (string-match-p "declined" (cadr (isled-install-test--result))))
-    (should-not requests) (should (= executions 0))
-    (should-not (file-exists-p isled-cli-directory))))
+(ert-deftest isled-install-first-use-needs-no-input-or-consent-file ()
+  (dolist (batch '(nil t))
+    (isled-install-test--with-fixture
+      (let ((noninteractive batch))
+        (should (car (isled-install-test--result)))
+        (should (= (length requests) 3))
+        (should-not (file-exists-p (expand-file-name "download-consent" isled-cli-directory)))
+        (should-not (file-exists-p (expand-file-name "isled/cli/download-consent" user-emacs-directory)))))))
 
-(ert-deftest isled-install-missing-capability-fails-before-consent ()
+(ert-deftest isled-install-missing-capability-fails-before-download ()
   (isled-install-test--with-fixture
     (dolist (capability '(zlib-available-p gnutls-available-p))
       (cl-letf (((symbol-function capability) (lambda () nil)))
         (should (string-match-p "built-in TLS and zlib" (cadr (isled-install-test--result)))))
-      (should-not requests) (should (= offers 0))
+      (should-not requests)
       (should-not (file-exists-p isled-cli-directory)))))
 
-(ert-deftest isled-install-cancel-cleans-stage-and-retries-with-consent ()
+(ert-deftest isled-install-cancel-cleans-stage-and-retries ()
   (isled-install-test--with-fixture
     (setq hold t)
     (let (result second)
@@ -115,12 +118,11 @@
       (isled-cancel-setup)
       (should (equal result second)) (should-not (car result))
       (should (string-match-p "[Cc]ancel" (cadr result)))
-      (should-not (directory-files isled-cli-directory nil "\\`\\.install-"))
+      (should-not (file-exists-p isled-cli-directory))
       (funcall delivery) ; A late response cannot install or execute anything.
       (should (= executions 0))
       (setq hold nil)
-      (should (car (isled-install-test--result)))
-      (should (= offers 1)))))
+      (should (car (isled-install-test--result))))))
 
 (ert-deftest isled-install-checksum-failure-never-executes-and-preserves-old ()
   (isled-install-test--with-fixture
@@ -130,16 +132,15 @@
       (should (= executions 0)) (should (file-exists-p old))
       (should-not (directory-files isled-cli-directory nil "\\`\\.install-"))
       (setq corrupt nil)
-      (should (car (isled-install-test--result)))
-      (should (= offers 1)))))
+      (should (car (isled-install-test--result))))))
 
-(ert-deftest isled-install-offline-retry-preserves-consent ()
+(ert-deftest isled-install-offline-retry-downloads-automatically ()
   (isled-install-test--with-fixture
     (setq offline t)
     (should (equal "Offline; retry" (cadr (isled-install-test--result))))
     (should (= executions 0)) (should-not isled-cli--pending)
     (setq offline nil)
-    (should (car (isled-install-test--result))) (should (= offers 1))))
+    (should (car (isled-install-test--result)))))
 
 (ert-deftest isled-install-cleanup-failure-still-releases-waiting-commands ()
   (isled-install-test--with-fixture
@@ -170,7 +171,7 @@
                (lambda (_program _version _development callback)
                  (funcall callback nil "Version mismatch") #'ignore)))
       (should (equal "Version mismatch" (cadr (isled-install-test--result))))
-      (should-not requests) (should (= offers 0))
+      (should-not requests)
       (should-not (file-exists-p isled-cli-directory)))))
 
 (ert-deftest isled-install-checksums-and-identity-are-strict ()
@@ -225,7 +226,7 @@
     (setq isled-cli-directory nil)
     (let* ((first (isled-install-test--result))
            (root (isled-installation-known-root nil)))
-      (should (car first)) (should root) (should (= offers 1))
+      (should (car first)) (should root)
       (with-current-buffer "*Isled installation*"
         (should (string-match-p "current[/\\\\]skill[/\\\\]SKILL.md" (buffer-string)))
         (should (string-match-p "isled-show-installation" (buffer-string))))
@@ -233,7 +234,6 @@
       (should (equal first (isled-install-test--result)))
       (setq offline nil isled-required-cli-version "0.32.1")
       (should (car (isled-install-test--result)))
-      (should (= offers 1))
       (should (equal root (isled-installation-known-root nil))))))
 
 (ert-deftest isled-install-cancellation-reaches-installer-after-cached-version-check ()

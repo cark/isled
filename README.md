@@ -43,7 +43,7 @@ in a structured draft. The view refreshes when files change, including changes
 made by an agent through the CLI.
 
 [See the demos and install the package](frontends/emacs/README.md).
-The frontend offers to download its matching CLI on first use.
+The frontend downloads its matching CLI automatically on first use.
 
 ## Installation
 
