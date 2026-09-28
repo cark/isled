@@ -167,7 +167,8 @@ this library.  Explicit executables always take precedence."
 
 ;;;###autoload
 (defun isled-show-installation ()
-  "Show copyable current executable and skill paths without downloading."
+  "Show current executable and skill paths in a persistent side window.
+Download nothing.  Press `q' in that window to dismiss it."
   (interactive)
   (require 'isled)
   (when isled-program

@@ -67,10 +67,11 @@ Transient was already loaded when you upgraded it.
 Visit your project and run **`M-x isled`**. Accept the CLI download when asked.
 You can also run `M-x isled-setup-cli` to prepare it separately.
 
-Setup opens a buffer with the full executable and agent skill paths through
-`current`. Copy these into your shell or agent setup; they follow future upgrades.
-Use **`M-x isled-show-installation`** to find them again. Emacs itself keeps using
-its exact compatible CLI version.
+Setup opens a side window with the full executable and agent skill paths through
+`current`. It stays visible while the ledger opens. Copy the paths into your shell
+or agent setup, or follow **Open installation folder** to browse them.
+Press **`q`** in that window when you are done; **`M-x isled-show-installation`**
+brings it back. The paths follow upgrades; Emacs keeps using its exact compatible CLI.
 
 Managed downloads support x86-64 Linux and Windows, and Apple Silicon macOS;
 see [platform requirements](../../README.md#requirements) for minimum versions

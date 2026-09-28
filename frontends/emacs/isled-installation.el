@@ -12,6 +12,7 @@
 
 ;;; Code:
 (require 'isled-bundle)
+(require 'isled-installation-view)
 
 (defun isled-installation--locator ()
   "Return the editor's local installation locator filename."
@@ -113,25 +114,6 @@ Return a cancellation function.  Use no shell or external installer tools."
             (setq timer (run-at-time 60 nil (lambda () (finish nil "Isled installation timed out; retry setup")))))
         ((error quit) (finish nil (error-message-string failure))))
       (lambda () (finish nil "Isled setup cancelled; retry setup to inspect and recover installation")))))
-
-(defun isled-installation-display (paths &optional program)
-  "Display copyable stable PATHS and optional exact Emacs PROGRAM."
-  (let ((buffer (get-buffer-create "*Isled installation*")))
-    (with-current-buffer buffer
-      (let ((inhibit-read-only t))
-        (erase-buffer)
-        (insert (format "Isled %s\n\n" (or (alist-get 'version paths) "installation")))
-        (dolist (entry '(("Executable" . executable) ("Skill directory" . skill)
-                         ("Skill instructions" . skill_file) ("Add to PATH" . path_directory)))
-          (insert (format "%s:\n%s\n\n" (car entry) (alist-get (cdr entry) paths))))
-        (insert "Use these current paths in your shell and agent setup.\n"
-                "They follow the selected release when you upgrade or roll back.\n"
-                "An existing agent conversation may need to reload the skill.\n\n")
-        (when program (insert (format "Emacs uses this compatible executable:\n%s\n\n" program)))
-        (insert "Show this information again with M-x isled-show-installation.\n")
-        (goto-char (point-min))
-        (special-mode)))
-    (display-buffer buffer)))
 
 (provide 'isled-installation)
 ;;; isled-installation.el ends here

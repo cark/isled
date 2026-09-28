@@ -186,8 +186,9 @@ is not source and is ignored.
 - `isled-cli.el` owns consent and shared CLI readiness; `isled-executable.el`
   checks identity asynchronously and caches evidence only for unchanged files.
 - `isled-install.el` owns private download staging and invokes the Rust installer.
-  `isled-installation.el` owns that process, the default-root locator and copyable
-  installation buffer. `isled-bundle.el` validates complete stored bundles.
+  `isled-installation.el` owns that process and the default-root locator;
+  `isled-installation-view.el` keeps copyable paths in a dismissible side window.
+  `isled-bundle.el` validates complete stored bundles.
   `isled-download.el` owns cancellable HTTPS delivery with restricted redirects;
   `isled-release.el` validates pinned metadata and `isled-archive.el` reads only
   the expected regular archive members using built-in decompression.

@@ -654,10 +654,13 @@ outside installed Emacs packages. The CLI chooses the location. Customize
 See [storage locations and rollback](../../user-docs/installation.md#where-it-lives)
 for the full layout. Existing caches from older frontends stay untouched.
 
-Setup displays the full executable, skill directory and `SKILL.md` paths through
-`current`. Run **`M-x isled-show-installation`** to retrieve this copyable buffer
-later. Use its `current` paths in shell and agent configuration. Emacs runs its
-exact versioned executable, so a standalone upgrade cannot redirect the frontend.
+Setup keeps a side window visible with the full executable, skill directory and
+`SKILL.md` paths through `current`. Opening the ledger does not replace it.
+Follow **Open installation folder** to browse the bundle. Press **`q`** in the
+side window to dismiss it; **`M-x isled-show-installation`** brings it back.
+
+Use its `current` paths in shell and agent configuration. Emacs runs its exact
+versioned executable, so a standalone upgrade cannot redirect the frontend.
 Run `M-x isled-setup-cli` to select the frontend's version again.
 
 Consent stays in `isled/cli/download-consent` under your Emacs directory, or in

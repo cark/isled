@@ -44,6 +44,7 @@ PHASE is nil for all checks, static for compilation/lint, or tests for ERT."
                     "isled-executable.el"
                     "isled-install.el"
                     "isled-bundle.el"
+                    "isled-installation-view.el"
                     "isled-installation.el"
                     "isled-cli.el"
                     "isled-snapshot.el"
@@ -145,6 +146,7 @@ PHASE is nil for all checks, static for compilation/lint, or tests for ERT."
               (load (expand-file-name "isled-download-test.el" test-directory) nil t)
               (load (expand-file-name "isled-executable-test.el" test-directory) nil t)
               (load (expand-file-name "isled-install-test.el" test-directory) nil t)
+              (load (expand-file-name "isled-installation-view-test.el" test-directory) nil t)
               (load (expand-file-name "isled-snapshot-test.el"
                                       test-directory)
                     nil t)

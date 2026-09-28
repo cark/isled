@@ -399,8 +399,8 @@ request parser validates text and kind criteria before project discovery.
 `isled-cli.el` resolves the pinned executable, preserves explicit overrides and
 shares consent/setup across pending commands. `isled-executable.el` owns bounded
 asynchronous identity checks and unchanged-file verification reuse.
-`isled-install.el` stages and atomically activates version-specific directories;
-it never replaces an earlier executable. `isled-download.el` owns HTTPS transport,
+`isled-install.el` stages verified bundles for the Rust installer;
+earlier versions remain available. `isled-download.el` owns HTTPS transport,
 redirect restrictions, progress and cancellation. `isled-release.el` validates
 release metadata into a typed target descriptor; `isled-archive.el` verifies and
 reads the expected regular members without extracting paths or invoking tools.
@@ -530,8 +530,9 @@ with the existing release writer; it is not part of the installed package.
 
 Emacs download orchestration remains in `isled-install.el`. Complete archive and
 cached-bundle verification live in `isled-archive.el` and `isled-bundle.el`;
-`isled-installation.el` calls the verified Rust installer, remembers its default
-root and shows stable paths. Rust alone owns directory defaults and activation.
+`isled-installation.el` calls the verified Rust installer and remembers its default
+root. `isled-installation-view.el` keeps stable paths in a dismissible side window
+with a link to browse the current bundle. Rust alone owns directory defaults and activation.
 The frontend retains an exact versioned program, never executes through `current`,
 and activates a cached bundle at most once per editor session unless setup is
 explicitly requested. Unchanged file attributes reuse hash/version evidence.
