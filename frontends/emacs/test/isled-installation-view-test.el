@@ -60,7 +60,8 @@
             (setq directory-buffer (window-buffer (selected-window))))
           (with-current-buffer directory-buffer
             (should (derived-mode-p 'dired-mode))
-            (should (equal default-directory (file-name-as-directory current))))
+            ;; Dired may abbreviate HOME or expand Windows short path names.
+            (should (file-equal-p default-directory current)))
           (should (get-buffer-window "*Isled installation*")))
       (dolist (buffer (list project directory-buffer (get-buffer "*Isled installation*")))
         (when (buffer-live-p buffer) (kill-buffer buffer)))
