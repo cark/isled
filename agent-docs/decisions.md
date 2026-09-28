@@ -385,7 +385,7 @@ Tagged releases use one shared version for the Rust executable and Emacs
 package, starting at 0.32.0. This advances the current frontend version rather
 than restarting its version sequence. Release tags use `vMAJOR.MINOR.PATCH`,
 beginning with `v0.32.0`. Keep Cargo, the tagged Emacs package and Nix package
-metadata aligned during release preparation. The current candidate is 0.33.0.
+metadata aligned during release preparation. The current candidate is 0.33.1.
 Ordinary Cargo builds report `VERSION-dev`; explicit `release-binary` builds and
 the versioned Nix package report `VERSION`. This marker separates contributor
 builds from release packaging; it does not prove a binary has been published.

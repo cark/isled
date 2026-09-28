@@ -48,7 +48,7 @@ They support the `release` branch, a fixed tag or commit, and development on
 
 ### From the release archive
 
-Download **`isled-0.33.0.tar`** from the [release page](https://github.com/cark/isled/releases).
+Download **`isled-0.33.1.tar`** from the [release page](https://github.com/cark/isled/releases).
 Make the dependencies available through your configured GNU/NonGNU ELPA or
 MELPA archives, and allow upgrades to bundled packages:
 

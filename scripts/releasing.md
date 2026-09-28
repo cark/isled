@@ -104,7 +104,7 @@ Collect the three part directories, then assemble them from the same checkout:
 python3 -B scripts/stage-release.py assemble --revision COMMIT \
   --parts target/release-parts --output target/release-candidate
 python3 -B scripts/stage-release.py verify target/release-candidate
-ISLED_PACKAGE_ARCHIVE="$PWD/target/release-candidate/isled-0.33.0.tar" \
+ISLED_PACKAGE_ARCHIVE="$PWD/target/release-candidate/isled-0.33.1.tar" \
   emacs -Q --batch -l frontends/emacs/test/package-install.el
 ```
 
@@ -115,17 +115,17 @@ inspect the complete set on any platform.
 
 ## Artifact contract
 
-For version `0.33.0`, the set contains:
+For version `0.33.1`, the set contains:
 
 | File | Contents |
 | --- | --- |
-| `isled-0.33.0-x86_64-unknown-linux-musl.tar.gz` | Linux executable, license and complete skill bundle |
-| `isled-0.33.0-aarch64-apple-darwin.tar.gz` | macOS executable, license and complete skill bundle |
-| `isled-0.33.0-x86_64-pc-windows-msvc.zip` | Windows executable, license and complete skill bundle |
-| `isled-0.33.0.tar` | Installable Emacs source package |
-| `isled-0.33.0-TARGET.build.json` (one per target) | Source identity, build settings, platform inspection and completed checks |
-| `isled-0.33.0-manifest.json` | Release identity and exact artifact descriptors |
-| `isled-0.33.0-SHA256SUMS` | SHA-256 of all the preceding files, including the manifest |
+| `isled-0.33.1-x86_64-unknown-linux-musl.tar.gz` | Linux executable, license and complete skill bundle |
+| `isled-0.33.1-aarch64-apple-darwin.tar.gz` | macOS executable, license and complete skill bundle |
+| `isled-0.33.1-x86_64-pc-windows-msvc.zip` | Windows executable, license and complete skill bundle |
+| `isled-0.33.1.tar` | Installable Emacs source package |
+| `isled-0.33.1-TARGET.build.json` (one per target) | Source identity, build settings, platform inspection and completed checks |
+| `isled-0.33.1-manifest.json` | Release identity and exact artifact descriptors |
+| `isled-0.33.1-SHA256SUMS` | SHA-256 of all the preceding files, including the manifest |
 
 Each CLI archive contains six regular files under `isled-VERSION-TARGET/`:
 `isled` (`isled.exe` on Windows), `LICENSE`, `bundle.json`, `skill/SKILL.md`,
