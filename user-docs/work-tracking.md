@@ -48,9 +48,10 @@ and `awaiting-owner`.
 
 Press **`w`** on an issue for the Work menu. It offers the same queue, start,
 pause, owner-wait and history actions, including **Start without timing**.
-Use `C-u` with Start to supply an activity. Headings show work state, completed
-time and whether a clock is running. **Work history** shows the full spans and
-the elapsed total at the time you open it, including the running span.
+Use `C-u` with Start to supply an activity. Headings show **Queued**, **In
+progress**, **Question** or **Review**, plus nonzero completed time. **Work
+history** shows clock status, the full spans and the elapsed total at the time
+you open it, including the running span.
 
 Filter with `w:queued`, `w:in-progress` or another state. Combine it with status,
 for example `s:open w:awaiting-owner`. A pending question appears in Work history

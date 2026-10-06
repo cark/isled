@@ -54,7 +54,7 @@ Keep font selection frame-local and semantic faces theme-aware.")
           " " (isled-sections--heading-text
                 (isled-issue-title issue) 'isled-issue-title-face)
           (propertize (isled-work-data-label (isled-issue-work issue))
-                      'face 'shadow
+                      'face 'isled-issue-work-face
                       'help-echo (and (isled-issue-work issue)
                                       (isled-work-data-question (isled-issue-work issue))))
           "\n"))

@@ -272,8 +272,9 @@ Use a prefix with Start to name the activity.
 
 Awaiting owner can mean **Ready for review** or **Ask a question**. Both stop
 timing. A question stays with the current state until work resumes. Headings
-show state, completed time and whether the clock is running. **Work history**
-shows the question, spans and current elapsed total in a separate buffer.
+show **Queued**, **In progress**, **Question** or **Review**, plus completed time
+when it is nonzero. **Work history** shows the question, spans, clock status and
+current elapsed total in a separate buffer.
 
 The clock survives editor restarts. If you forgot to pause, use a prefix with
 Pause to enter the actual stop time in UTC. **Correct stop time** changes a
@@ -586,6 +587,7 @@ The ID's appearance carries the state: ready inherits success colors, waiting
 inherits link colors without an underline, and closed uses struck-through shadow.
 Kinds inherit `font-lock-type-face`, with subdued brackets. Custom kinds appear
 as written; there is no fixed color palette for them.
+Work labels use the theme's normal text color through `isled-issue-work-face`.
 
 Expanded issues sit in a bordered panel with a padded Markdown body. The title
 sits in the top border. By default its background is uncolored; set
@@ -639,6 +641,7 @@ Markdown faces.
 | Header errors and warnings | `isled-error-face`, `isled-warning-face` |
 | Issue ID base and ready, waiting or closed state | `isled-issue-id-face`, `isled-ready-issue-id-face`, `isled-waiting-issue-id-face`, `isled-closed-issue-id-face` |
 | Issue title, kind and kind brackets | `isled-issue-title-face`, `isled-issue-kind-face`, `isled-issue-kind-bracket-face` |
+| Work state and completed time | `isled-issue-work-face` |
 | Expanded body, optional title background and ledger warning area | `isled-expanded-body-face`, `isled-panel-title-face`, `isled-panel-title-background-face`, `isled-ledger-warning-face` |
 | Panel bracket and rule | `isled-body-bracket-face`, `isled-panel-rule-face` |
 | Ready, waiting, closed and missing references | `isled-ready-reference-face`, `isled-waiting-reference-face`, `isled-closed-reference-face`, `isled-missing-target-reference-face` |

@@ -100,6 +100,11 @@
   "Subdued brackets surrounding an issue classification."
   :group 'isled)
 
+(defface isled-issue-work-face
+  '((t :inherit default :weight normal :slant normal))
+  "Face used for work state and time in an issue heading."
+  :group 'isled)
+
 (defface isled-expanded-body-face
   '((t :extend t))
   "Theme-aware background face used for expanded issue content.

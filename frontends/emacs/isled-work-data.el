@@ -108,7 +108,7 @@
     (format "%dm %02ds" (/ seconds 60) (% seconds 60))))
 
 (defun isled-work-data-label (work)
-  "Return state, completed time and clock status for WORK.
+  "Return a compact state and nonzero completed time for WORK.
 Running elapsed time is available in Work history without a presentation timer."
   (if (null work) ""
     (let* ((state (isled-work-data-state work))
@@ -116,14 +116,12 @@ Running elapsed time is available in Work history without a presentation timer."
                     ("not-queued" "") ("queued" "Queued")
                     ("in-progress" "In progress")
                     ("awaiting-owner" (if (equal (isled-work-data-reason work) "review")
-                                          "Owner review" "Owner question"))))
-           (timed (or (> (isled-work-data-recorded-seconds work) 0)
-                      (isled-work-data-running-since work))))
+                                          "Review" "Question"))))
+           (seconds (isled-work-data-recorded-seconds work))
+           (timed (> seconds 0)))
       (if (and (string-empty-p label) (not timed)) ""
         (concat "  [" label (if (and timed (not (string-empty-p label))) " · " "")
-                (when timed (concat (isled-work-data-duration (isled-work-data-recorded-seconds work))
-                                    (when (isled-work-data-running-since work) " recorded")))
-                (when (isled-work-data-running-since work) " + running") "]")))))
+                (when timed (isled-work-data-duration seconds)) "]")))))
 
 (provide 'isled-work-data)
 ;;; isled-work-data.el ends here

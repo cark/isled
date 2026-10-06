@@ -25,6 +25,7 @@
                   isled-issue-title-face
                   isled-issue-kind-face
                   isled-issue-kind-bracket-face
+                  isled-issue-work-face
                   isled-expanded-body-face
                   isled-ledger-warning-face
                   isled-body-bracket-face

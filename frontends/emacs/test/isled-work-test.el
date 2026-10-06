@@ -22,7 +22,7 @@
     (should (= (length (isled-work-data-spans work)) 2))
     (should (= (isled-work-data-seconds work
                (isled-work-data--time "2026-10-06 10:15:00")) 2700))
-    (should (string-match-p "In progress.*running" (isled-work-data-label work)))
+    (should (equal (isled-work-data-label work) "  [In progress · 30m 00s]"))
     (should (equal (isled-work-data-duration 2700) "45m 00s"))
     (should (equal (isled-work-data-label (isled-work-data-create)) ""))))
 
@@ -95,8 +95,9 @@
     (setf (isled-work-data-question work) "Changed question?")
     (should-not (isled-rows-heading-matches-p row issue))
     (let* ((heading (isled-sections--heading issue))
-           (position (string-match "Owner question" heading)))
-      (should (equal (get-text-property position 'help-echo heading) "Changed question?")))))
+           (position (string-match "Question" heading)))
+      (should (equal (get-text-property position 'help-echo heading) "Changed question?"))
+      (should (eq (get-text-property position 'face heading) 'isled-issue-work-face)))))
 
 (ert-deftest isled-work-actions-roundtrip-through-the-real-cli ()
   (let* ((directory (make-temp-file "isled-work-test-" t))
