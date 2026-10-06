@@ -54,12 +54,13 @@ Independent of the version assigned by an Emacs package archive.")
 (declare-function isled-history-back "isled-browser")
 (declare-function isled-history-forward "isled-browser")
 (declare-function isled-work "isled-work")
+(declare-function isled-listing-order "isled-listing")
 (declare-function isled-help "isled-browser")
 (declare-function isled-jump-to-issue "isled-jump")
 (declare-function isled-jump-to-warning "isled-warnings")
 
 (defvar isled--mode-map-version
-  (if (featurep 'isled-browser) 0 8)
+  (if (featurep 'isled-browser) 0 9)
   "Version of package-owned migrations applied to the issue mode map.")
 
 (defvar-keymap isled-mode-map
@@ -69,6 +70,7 @@ Independent of the version assigned by an Emacs package archive.")
   "c" #'isled-close-issue
   "s" #'isled-open-source
   "f" #'isled-filter
+  "S" #'isled-listing-order
   "v" #'isled-graph-toggle
   "d" #'isled-graph-reverse
   "O" #'isled-filter-open

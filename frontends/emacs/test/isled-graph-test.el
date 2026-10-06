@@ -195,7 +195,7 @@
             (should (equal (mapcar #'isled-row-value (append isled-rows nil)) '("0001" "0002")))
             (should (equal (isled-sections-id-at-point) "0001"))
             (should (equal (isled-sections-expanded-ids) '("0001")))
-            (should (equal (isled-graph-header-filter isled--filter) "s:open · flat"))
+            (should (equal (isled-graph-header-filter isled--filter) "s:open · flat · issue ID"))
             (should-error (isled-graph-reverse) :type 'user-error)
             (isled-filter--request "s:open needle t:rust")
             (isled-loading-test--await)

@@ -46,11 +46,21 @@
         query
       (concat query " "))))
 
+(defun isled-filter-query-order (filter)
+  "Return the explicit flat order in FILTER, or nil when absent."
+  (let (order)
+    (dolist (token (isled-filter-query-tokens (isled-filter-query-text filter)))
+      (unless (nth 3 token)
+        (pcase (nth 2 token)
+          ("o:oldest-first" (setq order 'oldest-first))
+          ("o:id" (setq order 'id)))))
+    order))
+
 (defun isled-filter-query-criteria (filter)
   "Parse FILTER into bounded-protocol criteria, or signal actionable input errors."
   (when (string-match-p "[\n\r]" (isled-filter-query-text filter))
     (user-error "Filter must be one line"))
-  (let ((status "all") work-state work-reason oldest-first limit tags kinds text)
+  (let ((status "all") work-state work-reason oldest-first tags kinds text)
     (dolist (token (isled-filter-query-tokens
                     (isled-filter-query-text filter)))
       (let ((value (nth 2 token)))
@@ -70,16 +80,14 @@
                 ("o" (unless (member name '("oldest-first" "id"))
                        (user-error "Order is oldest-first or id"))
                      (setq oldest-first (equal name "oldest-first")))
-                ("n" (unless (string-match-p "\\`[0-9]+\\'" name)
-                       (user-error "Limit is a non-negative number of issues"))
-                     (setq limit (string-to-number name)))
+                ("n" (user-error "Issue limits are available only in the CLI"))
                 ("t" (push name tags))
                 ("k" (push name kinds))))
           (unless (string-empty-p value) (push value text)))))
     `((status . ,status) ,@(when work-state `((work_state . ,work-state)))
       ,@(when work-reason `((work_reason . ,work-reason)))
       ,@(when oldest-first '((oldest_first . t)))
-      ,@(when limit `((limit . ,limit))) (tags . ,(vconcat (nreverse tags)))
+      (tags . ,(vconcat (nreverse tags)))
       (kinds . ,(vconcat (nreverse kinds))) (text . ,(vconcat (nreverse text))))))
 
 (defun isled-filter-query-term (filter prefix value)

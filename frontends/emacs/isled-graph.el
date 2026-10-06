@@ -14,33 +14,19 @@
 (require 'isled-graph-model)
 (require 'isled-filter-query)
 (require 'isled-navigation)
+(require 'isled-listing)
+(require 'isled-view-state)
 (defvar isled-loading-active)
 (defvar isled-loading-graph-intent)
 (declare-function isled--capture-view-state "isled-browser" ())
 (declare-function isled--restore-view-state "isled-browser" (state &optional callback))
-(declare-function isled--view-state-create "isled-browser" (&rest fields))
-(declare-function isled--view-state-filter "isled-browser" (state))
-(declare-function isled--view-state-selected-id "isled-browser" (state))
-(declare-function isled--view-state-expanded-ids "isled-browser" (state))
-(declare-function isled--view-state-point-state "isled-browser" (state))
-(declare-function isled--view-state-ledger-point "isled-browser" (state))
 
 ;;;###autoload
 (defun isled-graph-toggle ()
   "Switch flat/hierarchical presentation, preserving query and browsing state."
   (interactive nil isled-mode)
-  (isled-navigation-with-window
-    (let ((origin (isled--capture-view-state))
-          (direction (if isled-loading-active isled-loading-graph-intent isled-graph-direction)))
-      (isled--restore-view-state
-       (isled--view-state-create
-        :filter (isled--view-state-filter origin)
-        :graph-direction (unless direction (or isled-graph-layout-direction 'prerequisites))
-        :selected-id (isled--view-state-selected-id origin)
-        :expanded-ids (copy-sequence (isled--view-state-expanded-ids origin))
-        :point-state (isled--view-state-point-state origin)
-        :ledger-point (isled--view-state-ledger-point origin)
-        :preferred-state origin)))))
+  (let ((direction (if isled-loading-active isled-loading-graph-intent isled-graph-direction)))
+    (isled-listing-order (if direction isled-listing-flat-order 'hierarchy))))
 
 ;;;###autoload
 (defun isled-graph-reverse ()
@@ -50,14 +36,11 @@
     (let ((origin (isled--capture-view-state))
           (direction (if isled-loading-active isled-loading-graph-intent isled-graph-direction)))
       (unless direction (user-error "Enable hierarchical view with v first"))
-      (isled--restore-view-state
-       (isled--view-state-create
-        :filter (isled--view-state-filter origin)
-        :graph-direction (if (eq direction 'prerequisites) 'dependents 'prerequisites)
-        :selected-id (isled--view-state-selected-id origin)
-        :expanded-ids (copy-sequence (isled--view-state-expanded-ids origin))
-        :point-state (isled--view-state-point-state origin)
-        :preferred-state origin)))))
+      (let ((state (copy-isled--view-state origin)))
+        (setf (isled--view-state-graph-direction state)
+              (if (eq direction 'prerequisites) 'dependents 'prerequisites)
+              (isled--view-state-preferred-state state) origin)
+        (isled--restore-view-state state)))))
 
 (defun isled-graph-header-filter (filter)
   "Return FILTER's identity label including the current presentation."
@@ -66,7 +49,8 @@
             (pcase isled-graph-direction
               ('prerequisites "prerequisites first")
               ('dependents "dependents first")
-              (_ "flat")))))
+              (_ (if (eq (isled-filter-query-order filter) 'oldest-first)
+                     "flat · oldest first" "flat · issue ID"))))))
 
 (provide 'isled-graph)
 ;;; isled-graph.el ends here

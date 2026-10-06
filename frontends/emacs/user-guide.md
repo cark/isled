@@ -309,7 +309,7 @@ sections; quotes require a literal phrase.
 | --- | --- |
 | `s:open w:queued` | Open issues queued for work. |
 | `s:open w:awaiting-owner` | Open issues needing an owner action. |
-| `s:open w:queued o:oldest-first n:5` | The five oldest queued issues. |
+| `s:open w:queued o:oldest-first` | Queued issues in arrival order. |
 | `s:open w:awaiting-owner r:review o:oldest-first` | Reviews in arrival order. |
 | `s:open t:rust` | Open issues tagged `rust`. |
 | `k:bug` | Bugs with either status. |
@@ -328,18 +328,18 @@ Unquoted `t:`, `k:`, `s:` and `w:` prefixes select a tag, kind, status or work
 state (`not-queued`, `queued`, `in-progress`, `awaiting-owner`). `r:review` and
 `r:clarification` distinguish owner waits. Quote a term to search for its text.
 Empty values and unfinished quotes must be completed before you can accept
-the query. The last status, work-state, reason, order and limit terms win;
+the query. The last status, work-state, reason and order terms win;
 choosing a status through completion removes other status terms.
 
-In `?`, choose **Order issues** for Oldest first or ID order. Oldest first
-switches to the flat list. It sorts by the current state's entry time, breaks
-ties by issue ID, and puts unknown ages last. `v` returns to dependency grouping.
-The hierarchy keeps its own dependency order.
+Press `S` to choose **Hierarchy**, **Issue ID**, or **Oldest first**. The same
+command appears in `?`. Hierarchy follows dependencies; the other two choices
+show a flat list. Oldest first sorts by the current state's entry time, breaks
+ties by issue ID, and puts unknown ages last.
 
-**Limit issues** sets the maximum after all matching and ordering. An empty
-answer removes the cap; zero shows none. In a filter, `o:oldest-first` and `n:5`
-express the same choices. `o:id` restores ordinary ordering; removing `n:` returns
-all matches. Refresh and navigation history retain these choices.
+Press `v` to switch between hierarchy and your last chosen flat order.
+The header shows the active order. In a filter, `o:oldest-first` or `o:id`
+selects the corresponding flat list. Refresh and navigation history retain
+the choice. Emacs shows all matches; result limits belong to the CLI.
 
 `O`, `C` and `A` change only status, keeping your tag, kind and text terms.
 Refresh keeps the whole query. Duplicated views copy it and then remain independent.
@@ -424,9 +424,10 @@ prerequisites come first: for a sequence such as storage → resumable downloads
 field trial → release, storage appears before the work it unblocks. Press `d`
 to read dependencies in the opposite direction.
 
-Press `v` to switch to a flat list in issue-ID order. Switching keeps your query,
-selected issue and expanded bodies. Returning to the hierarchy restores its last
-direction. Filtering and navigation work the same way in both presentations.
+Press `v` to switch to your last chosen flat order, initially issue ID.
+Switching keeps your matching criteria, selected issue and expanded bodies.
+Returning to the hierarchy restores its last direction. Press `S` to choose
+any of the three orders directly.
 
 ### Reading the gutter
 
@@ -822,7 +823,8 @@ not need them.
 | `!` | `isled-jump-to-warning` | Visit the next known warning. |
 | `w` | `isled-work` | Work state, clocks, owner questions and history. |
 | `f` | `isled-filter` | Filter issues by status, work state, tags, kind or text. |
-| `v` | `isled-graph-toggle` | Toggle hierarchical/flat presentation. |
+| `S` | `isled-listing-order` | Choose hierarchy, issue ID or oldest first. |
+| `v` | `isled-graph-toggle` | Toggle hierarchy and the last flat order. |
 | `d` | `isled-graph-reverse` | Reverse dependency direction in hierarchical mode. |
 | `O`, `C`, `A` | `isled-filter-open`, `isled-filter-closed`, `isled-filter-all` | Select status. |
 | `g` | `isled-refresh` | Refresh the current view. |

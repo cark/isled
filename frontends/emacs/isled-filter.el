@@ -53,7 +53,7 @@ Vertico when enabled.  All interfaces also work with standard Emacs completion."
 (defvar isled-filter-history nil "Previously accepted filter strings.")
 
 (defvar-local isled-filter-help
-    "t: tag · k: kind · s: status · w: work · r: reason · o: order · n: limit · \"…\" phrase · AND · TAB complete · RET keep"
+    "t: tag · k: kind · s: status · w: work · r: reason · o: order · \"…\" phrase · AND · TAB complete · RET keep"
   "Short filter syntax and interaction reminder.")
 
 (defun isled-filter--request (query &optional criteria completion flat)
@@ -61,11 +61,7 @@ Vertico when enabled.  All interfaces also work with standard Emacs completion."
   (let ((criteria (or criteria (isled-filter-query-criteria query))))
     (isled-navigation-with-window
      (isled-loading-request
-      'view (isled--state-for-filter
-             query (or flat
-                       (and (alist-get 'oldest_first criteria)
-                            (not (alist-get 'oldest_first
-                                            (isled-filter-query-criteria isled--filter))))))
+      'view (isled--state-for-filter query flat)
       nil criteria completion))
     criteria))
 

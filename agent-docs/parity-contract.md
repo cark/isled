@@ -267,6 +267,7 @@ records retain unknown ages until a genuine transition; repeated actions never
 backfill them. Oldest-first selection sorts known times ascending, then ID, with
 unknown ages last. Owner-wait reason filtering composes with existing criteria.
 Limits count issues after all filtering and ordering, including text selection.
-Default listing order and output remain unchanged. Emacs selects flat rows when
-choosing oldest-first; dependency layout retains its own ordering over the same
-selected membership. See the [work guide](../user-docs/work-tracking.md#arrival-order).
+Default listing order and output remain unchanged. Emacs offers mutually
+exclusive hierarchy, issue-ID and oldest-first orders and shows all matches.
+Switching to hierarchy clears active flat ordering; returning to a flat list
+restores the last chosen flat order. See the [work guide](../user-docs/work-tracking.md#arrival-order).

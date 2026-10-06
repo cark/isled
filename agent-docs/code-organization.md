@@ -132,7 +132,9 @@ scripts/
 
 frontends/emacs/
 ├── isled.el          # lightweight setup, autoloads, and one-time default keymaps
-├── isled-browser.el  # major mode, interactive controller, help, and view state
+├── isled-browser.el  # major mode, controller, help and view-state restoration
+├── isled-view-state.el # shared restorable view value and last flat order
+├── isled-listing.el  # exclusive hierarchy, ID and oldest-first interaction
 ├── isled-snapshot.el # shared typed data and complete-snapshot codec
 ├── isled-frontend.el # bounded wire response validation
 ├── isled-process.el  # asynchronous subprocess lifetime and capture
@@ -421,8 +423,10 @@ and counts independently of headings, and returns compact row/lane
 routes only on explicit request. It shares the measured layout engine with the
 diagnostic preview but does not use the experimental persistent layout store.
 Emacs's graph model validates and indexes that immutable plan.
-`isled-listing.el` owns order/limit commands, retaining choices in the filter
-query and selecting flat rows for oldest-first. The bounded view decoder accepts
+`isled-listing.el` owns mutually exclusive hierarchy, ID and oldest-first
+selection. `isled-view-state.el` owns the restorable value, including the last
+chosen flat order. The browser captures and restores it; graph toggling delegates
+order selection to listing. Emacs has no issue cap. The bounded view decoder accepts
 Rust's chosen order while rejecting duplicate or overlapping identities; full
 snapshots and detail targets retain ascending-ID validation. The glyph module
 turns one row into directional node, connector and continuation lines; the gutter

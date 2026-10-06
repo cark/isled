@@ -78,11 +78,13 @@ you open it, including the running span.
 Filter with `w:queued`, `w:in-progress` or another state. Combine it with status,
 for example `s:open w:awaiting-owner`. A pending question appears in Work history
 and in the heading's help text. Normal editing preserves all tracking data.
-Add `r:review` or `r:clarification` to distinguish owner waits. In the `?` menu,
-**Order issues** offers Oldest first and ID; **Limit issues** sets a cap or clears
-it with an empty answer. You can also type `o:oldest-first` and `n:5` in a filter.
-Choosing Oldest first switches to flat rows. Press `v` to return to dependency
-grouping; filtering and the cap still apply, but the hierarchy orders by dependencies.
+Add `r:review` or `r:clarification` to distinguish owner waits. Press `S` to
+choose Hierarchy, Issue ID or Oldest first; the same command appears in `?`.
+Oldest first shows the complete matching queue as flat rows in arrival order.
+You can also type `o:oldest-first` or `o:id` to select a flat order in a filter.
+Press `v` to switch between hierarchy and the last chosen flat order. Hierarchy
+follows dependencies and clears the active flat-order term. Emacs shows all
+matches; `--limit` is a CLI option.
 
 ## A clock left running
 

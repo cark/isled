@@ -243,6 +243,9 @@ is not source and is ignored.
   connector lines. [`isled-graph-gutter.el`](isled-graph-gutter.el) paints nearby
   glyphs, anchors nodes outside folds, and composes body panel prefixes. [`isled-graph.el`](isled-graph.el) owns
   presentation toggling, direction reversal and the query/presentation header.
+  [`isled-listing.el`](isled-listing.el) owns exclusive hierarchy/ID/oldest-first
+  selection and the last flat choice. [`isled-view-state.el`](isled-view-state.el)
+  owns the restorable view value shared by those commands and the browser.
   Rust's omitted-connection
   counts preserve the circle marker when filters hide every neighbor; filters use
   the ordinary loading queue.

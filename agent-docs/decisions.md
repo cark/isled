@@ -416,11 +416,18 @@ isled list --ready --work-state queued --oldest-first --limit 1
 isled list --work-state awaiting-owner --work-reason review --oldest-first
 ```
 
-Emacs offers corresponding filtering, ordering and limit choices. Choosing
-Oldest first switches to the flat list so rows follow the exact queue order.
-The hierarchy continues to group and order by dependencies; users can return
-to it with `v`. Coordinating workflows and humans retain their choices about
-priority and blocked-task exceptions.
+Emacs offers corresponding filters and three exclusive orders: Hierarchy,
+Issue ID and Oldest first. `S` selects any order directly and also works in the
+main help menu. The two flat orders show the complete matching list; limiting
+results is a CLI concern. A hidden cap makes an interactive ledger harder to
+understand and is unnecessary for scrolling through it.
+
+Hierarchy groups and orders by dependencies, clearing any active flat-order
+term. Oldest first shows exact queue order as flat rows. `v` switches between
+hierarchy and the last selected flat order, retaining selection, expanded bodies
+and other query terms. The header reflects the active order; refresh, duplicated
+views and history retain the choice. Coordinating workflows and humans retain
+their choices about priority and blocked-task exceptions.
 
 Use the same upgrade boundary as work tracking: updated tools read existing
 records unchanged, while records containing Since require the updated CLI and

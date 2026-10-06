@@ -21,6 +21,7 @@
 (require 'isled-sections)
 (require 'isled-snapshot)
 (require 'isled-view)
+(require 'isled-view-state)
 (require 'seq)
 (require 'transient)
 (require 'isled-header)
@@ -79,17 +80,6 @@
   "Last collapsed issue-relative position for each filter in this buffer.
 This is filter memory, not jump history: restoring a jump must not resurrect
 a position discarded by a later collapse-all.")
-
-(cl-defstruct (isled--view-state
-               (:constructor isled--view-state-create))
-  "Opaque restorable state for one issue filter."
-  filter
-  selected-id
-  expanded-ids
-  point-state
-  preferred-state
-  ledger-point
-  (graph-direction 'prerequisites))
 
 (defvar-local isled--saved-view-states nil
   "Association list of filters and their last captured view states.")
@@ -160,7 +150,11 @@ a position discarded by a later collapse-all.")
   (when (< isled--mode-map-version 8)
     (unless (keymap-lookup isled-mode-map "w")
       (keymap-set isled-mode-map "w" #'isled-work))
-    (setq isled--mode-map-version 8)))
+    (setq isled--mode-map-version 8))
+  (when (< isled--mode-map-version 9)
+    (unless (keymap-lookup isled-mode-map "S")
+      (keymap-set isled-mode-map "S" #'isled-listing-order))
+    (setq isled--mode-map-version 9)))
 
 (isled--migrate-mode-map)
 
@@ -617,7 +611,6 @@ sections whose complete canonical content is displayed inline."
     ("C" "Closed" isled-filter-closed)
     ("A" "All" isled-filter-all)
     ("f" "Filter issues" isled-filter)
-    ("L" "Limit issues" isled-listing-limit)
     ("S" "Order issues" isled-listing-order)
     ""
     "Display"
@@ -732,6 +725,7 @@ sections whose complete canonical content is displayed inline."
   (isled--view-state-create
    :filter isled--filter
    :graph-direction isled-graph-direction
+   :flat-order isled-listing-flat-order
    :selected-id isled--selected-id
    :expanded-ids (copy-sequence isled--expanded-ids)
    :point-state (isled-sections-point-state)
@@ -739,9 +733,12 @@ sections whose complete canonical content is displayed inline."
 
 (defun isled--state-for-filter (query &optional flat)
   "Capture this view's position with QUERY.  Use FLAT for flat presentation."
-  (let ((state (isled--capture-view-state)))
+  (let ((state (isled--capture-view-state))
+        (order (isled-filter-query-order query)))
     (setf (isled--view-state-filter state) query)
-    (when flat (setf (isled--view-state-graph-direction state) nil))
+    (when (or flat order (not (isled--view-state-graph-direction state)))
+      (setf (isled--view-state-graph-direction state) nil
+            (isled--view-state-flat-order state) (or order 'id)))
     state))
 
 (defun isled--save-current-view-state ()
@@ -806,6 +803,7 @@ sections whose complete canonical content is displayed inline."
            (replacement-id (cons replacement-id 0)))))
     (setq isled--filter filter
           isled-graph-direction graph
+          isled-listing-flat-order (isled--view-state-flat-order state)
           isled--selected-id selected-id
           isled--expanded-ids
           (seq-filter
