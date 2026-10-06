@@ -302,6 +302,78 @@ ledger becoming useful to another contributor; distributed concurrent allocation
 conflict resolution and synchronization require a concrete multi-user use case.
 The current local ignored-ledger default is unchanged.
 
+### Optional issue work tracking (planned)
+
+Work state and the work log are optional. An absent Work state means Not queued;
+an absent log means no recorded time. Keep work state independent of Open/Closed
+and dependency readiness so ordinary issue tracking needs no scheduling or clock.
+
+The states are Not queued, Queued, In progress and Awaiting owner.
+Awaiting owner has a visible reason: Review means work ready for owner acceptance;
+Clarification means an answer is needed before work can continue. Entering either
+stops the active span. Distinguishing the reasons preserves the small state model
+while keeping review readiness separate from a task blocked on an owner answer.
+Store Reason and Question as children of the Work state metadata entry so the
+current wait is readable as one group. Clarification requires a brief, non-empty
+Question there; supporting context may stay in Statement. This lets humans and
+frontends find the pending question directly, and agents retrieve it structurally.
+
+```markdown
+- **Work state:** awaiting-owner
+  - **Reason:** clarification
+  - **Question:** Should elapsed time always be visible, or only on request?
+```
+
+For owner review, Reason is `review` and the Question entry is unnecessary.
+Different issues can proceed in parallel, with one worker at a time on each issue
+and at most one active span per issue.
+Pausing closes a span without changing In progress; resuming opens another.
+Completed spans accumulate implementation, engineering review and repair time.
+Queued and owner-waiting time remain separate from recorded work.
+
+Store spans in an optional Work log section as a Markdown table with Started
+(UTC), Stopped (UTC) and Activity columns. Activity may be empty; an empty stop
+marks the active span. Calculate totals from the spans rather than storing a
+second value that can drift. The table keeps the history readable with ordinary
+Markdown tools and gives each pause or handoff its own entry.
+
+```markdown
+## Work log
+
+| Started (UTC)       | Stopped (UTC)       | Activity       |
+|---------------------|---------------------|----------------|
+| 2026-10-06 09:00:00 | 2026-10-06 09:30:00 | Implementation |
+| 2026-10-06 10:00:00 |                     | Review         |
+```
+
+An open span persists across restarts. Ending a CLI invocation or editor session
+does not establish when work stopped. For a clock left running accidentally,
+allow the human or coordinator to record the actual stopping time later so the
+total reflects that explicit time rather than an inferred interruption.
+
+Prefer simple shared CLI and Emacs actions that update state and timing together
+where appropriate. Humans can invoke them directly; coordinators can invoke the
+same operations at worker handoffs. Start selects In progress and starts the clock
+by default. Both interfaces also offer Start without timing, which selects
+In progress without opening a span. This makes timed work one action while keeping
+state tracking usable on its own. Task assignments and queue ordering belong to
+the coordinating workflow. Work state grants no execution or closure authority.
+
+Closing an issue stops its active span, preserves its complete work log and removes
+its current Work state. Closure remains one action, and the terminal record keeps
+its timing history without claiming that work is still underway.
+
+The new implementation must read existing issues unchanged, without conversion.
+Once a ledger uses work tracking, its tools must understand the new format; older
+versions cannot read those records. Release the CLI and matching Emacs frontend
+together so users receive a compatible pair. Supported edits must preserve work
+state and span history. This keeps ordinary upgrades simple while avoiding silent
+loss of tracking data through an older tool.
+
+This records the planned direction, not available commands. Finalize command
+syntax and timing presentation during implementation within these decisions and
+the [compatibility contract](parity-contract.md).
+
 <a id="public-installation-direction-planned"></a>
 
 ### Public installation direction
