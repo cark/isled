@@ -35,18 +35,30 @@ fn list_sources<'a>(
     filters: &Filters,
     paths: Option<&OutputPaths>,
 ) -> Result<Vec<u8>, QueryError> {
-    let mut output = Vec::new();
     let views = parse_source_views(sources)?;
     let index = ViewIndex::new(&views);
+    let mut selected = Vec::new();
     for view in &views {
         if !matches_filters(view, filters, &index)? {
             continue;
         }
-        append_summary(
-            &mut output,
+        selected.push((
             view,
             paths.map(|value| value.get(view.filename())).transpose()?,
-        )?;
+        ));
+    }
+    if filters.oldest_first {
+        selected.sort_by_key(|(view, _)| {
+            let since = view.work_state().and_then(|state| state.since());
+            (since.is_none(), since, view.id())
+        });
+    }
+    let mut output = Vec::new();
+    for (view, path) in selected
+        .into_iter()
+        .take(filters.limit.unwrap_or(usize::MAX))
+    {
+        append_summary(&mut output, view, path)?;
     }
     Ok(output)
 }

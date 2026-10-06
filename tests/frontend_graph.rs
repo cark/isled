@@ -23,7 +23,7 @@ fn request(path: &Path, input: Value) -> (Value, usize) {
 }
 
 fn input(direction: &str, status: &str) -> Value {
-    json!({"schema_version":4,"mode":"view","filter":{"status":status},
+    json!({"schema_version":5,"mode":"view","filter":{"status":status},
            "graph":{"direction":direction}})
 }
 
@@ -31,7 +31,7 @@ fn input(direction: &str, status: &str) -> Value {
 fn graph_is_opt_in_and_orders_both_directions_without_body_reads() {
     let dir = fixture::fixture();
     fixture::run_successfully(dir.path(), &["cache", "refresh"]);
-    let (flat, _) = request(dir.path(), json!({"schema_version":4,"mode":"view"}));
+    let (flat, _) = request(dir.path(), json!({"schema_version":5,"mode":"view"}));
     assert!(flat.get("graph").is_none());
     for (direction, from, to) in [
         ("prerequisites", "0002", "0001"),

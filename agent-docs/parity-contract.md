@@ -254,10 +254,19 @@ ordering, nested owner questions, UTC spans and invariants; the
 All supported edits preserve work data. Closure stops the clock, removes current
 state and retains history without changing evidence, outcome or authority rules.
 
-This boundary uses snapshot/frontend schema 4, editor schema 3 and disposable
-cache schema 6. Earlier wire versions are rejected. The dependency-tree interface
+This boundary uses snapshot/frontend schema 5, editor schema 4 and disposable
+cache schema 7. Earlier wire versions are rejected. The dependency-tree interface
 remains schema 2. Once records contain tracking, older tools cannot read them.
 Ship the CLI, frontend and skill together with the matching CLI pin. Until the
 compatible release is published, source users must configure the matching build.
 Stable summaries contain completed seconds and the running start, never a
 changing elapsed total; work passage alone therefore leaves hashes unchanged.
+
+Optional Since records entry to the current state and owner-wait reason. Old
+records retain unknown ages until a genuine transition; repeated actions never
+backfill them. Oldest-first selection sorts known times ascending, then ID, with
+unknown ages last. Owner-wait reason filtering composes with existing criteria.
+Limits count issues after all filtering and ordering, including text selection.
+Default listing order and output remain unchanged. Emacs selects flat rows when
+choosing oldest-first; dependency layout retains its own ordering over the same
+selected membership. See the [work guide](../user-docs/work-tracking.md#arrival-order).

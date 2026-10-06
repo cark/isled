@@ -4,11 +4,11 @@ For compact filtered views and conditional detail batches, use the
 [bounded frontend interface](frontend.md). This complete snapshot remains supported.
 
 `isled snapshot` emits one deterministic JSON object for local
-frontends. The top-level `schema_version` is `4`; `root` identifies
+frontends. The top-level `schema_version` is `5`; `root` identifies
 the canonical ledger root and `issues` is ordered by ascending issue ID. Every
 issue contains `id`, `status`, `ready`, `kind`, `title`, `path`, and complete stored
 `content`, plus complete structured `work` data. Work contains `state`, nullable
-`reason` and `question`, completed `recorded_seconds`, nullable `running_since`,
+`reason`, `question` and UTC `since`, completed `recorded_seconds`, nullable `running_since`,
 and `spans` (each with `started`, nullable `stopped` and `activity`). Missing
 tracking in a record projects as Not queued, zero seconds and an empty history.
 Work state never changes readiness. `ready` is true exactly when the issue is open and has no relation
@@ -16,8 +16,8 @@ whose blocker is open, missing, or unreadable, matching `list --ready`. Either
 surviving relation half counts, so removing a mirror does not grant readiness.
 `kind` is the stored classification as a plain string: non-empty lowercase ASCII
 letters, digits, and hyphens, with no leading or trailing hyphen. Custom kinds
-are preserved. This field is required by the current frontend. Snapshot version 4 keeps
-`outcome` reference fields and adds work data. Update the executable and frontend
+are preserved. This field is required by the current frontend. Snapshot version 5 keeps
+`outcome` reference fields and work data, adding nullable current-state Since. Update the executable and frontend
 together. Existing records need no conversion for work tracking. Earlier versions are not accepted
 by the current frontend.
 Each issue also contains a `references` array produced by Rust. Canonical

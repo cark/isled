@@ -9,6 +9,9 @@ use crate::record::RecordView;
 pub struct Filters {
     pub status: Option<Status>,
     pub work_state: Option<crate::issue::WorkStateKind>,
+    pub work_reason: Option<crate::issue::OwnerWaitReason>,
+    pub oldest_first: bool,
+    pub limit: Option<usize>,
     pub kind: Option<Name>,
     pub tags: Vec<Tag>,
     pub waiting: Option<bool>,
@@ -27,6 +30,11 @@ pub(super) fn matches_filters(
         || filters
             .work_state
             .is_some_and(|wanted| wanted != view.work_state_kind())
+        || filters.work_reason.is_some_and(|wanted| {
+            view.work_state()
+                .and_then(|state| state.owner_wait())
+                .is_none_or(|wait| wait.reason() != wanted.as_str())
+        })
         || !view.has_tags(&filters.tags)
     {
         return Ok(false);

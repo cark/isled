@@ -13,7 +13,7 @@
 
 (defun isled-loading-test--wire (mode &optional details graph)
   "Return compact fixture wire for MODE, optional DETAILS and requested GRAPH."
-  (let* ((full (json-parse-string (isled-test--fixture "snapshot-v4.json")
+  (let* ((full (json-parse-string (isled-test--fixture "snapshot-v5.json")
                                 :object-type 'alist :array-type 'array
                                 :null-object :json-null :false-object :json-false))
          (rows (alist-get 'issues full))
@@ -22,7 +22,7 @@
                                          (memq (car field) '(content references warnings)))
                                        issue)) rows)))
     (json-serialize
-     `((schema_version . 4) (root . ,(alist-get 'root full))
+     `((schema_version . 5) (root . ,(alist-get 'root full))
        (view_hash . ,(if (memq mode '(details choices)) :json-null "0000000000000001"))
        (view . ,(if (memq mode '(details choices)) :json-null
                   `((issues . ,(vconcat summary)) (unavailable . []))))

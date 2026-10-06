@@ -1,4 +1,5 @@
 //! Optional scheduling state, independent of lifecycle and dependency readiness.
+use crate::work_log::WorkTime;
 use std::{fmt, str::FromStr};
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -51,6 +52,30 @@ pub enum OwnerWait {
     Review,
     Clarification(OwnerQuestion),
 }
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum OwnerWaitReason {
+    Review,
+    Clarification,
+}
+impl OwnerWaitReason {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Review => "review",
+            Self::Clarification => "clarification",
+        }
+    }
+}
+impl FromStr for OwnerWaitReason {
+    type Err = WorkStateError;
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        match value {
+            "review" => Ok(Self::Review),
+            "clarification" => Ok(Self::Clarification),
+            _ => Err(WorkStateError),
+        }
+    }
+}
 impl OwnerWait {
     pub fn reason(&self) -> &'static str {
         match self {
@@ -68,23 +93,49 @@ impl OwnerWait {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum WorkState {
-    Queued,
-    InProgress,
-    AwaitingOwner(OwnerWait),
+    Queued {
+        since: Option<WorkTime>,
+    },
+    InProgress {
+        since: Option<WorkTime>,
+    },
+    AwaitingOwner {
+        wait: OwnerWait,
+        since: Option<WorkTime>,
+    },
 }
 impl WorkState {
     pub fn kind(&self) -> WorkStateKind {
         match self {
-            Self::Queued => WorkStateKind::Queued,
-            Self::InProgress => WorkStateKind::InProgress,
-            Self::AwaitingOwner(_) => WorkStateKind::AwaitingOwner,
+            Self::Queued { .. } => WorkStateKind::Queued,
+            Self::InProgress { .. } => WorkStateKind::InProgress,
+            Self::AwaitingOwner { .. } => WorkStateKind::AwaitingOwner,
         }
     }
     pub fn owner_wait(&self) -> Option<&OwnerWait> {
         match self {
-            Self::AwaitingOwner(wait) => Some(wait),
+            Self::AwaitingOwner { wait, .. } => Some(wait),
             _ => None,
         }
+    }
+    pub fn since(&self) -> Option<WorkTime> {
+        match self {
+            Self::Queued { since }
+            | Self::InProgress { since }
+            | Self::AwaitingOwner { since, .. } => *since,
+        }
+    }
+    pub(crate) fn with_since(mut self, value: Option<WorkTime>) -> Self {
+        match &mut self {
+            Self::Queued { since }
+            | Self::InProgress { since }
+            | Self::AwaitingOwner { since, .. } => *since = value,
+        }
+        self
+    }
+    pub(crate) fn same_phase(&self, other: &Self) -> bool {
+        self.kind() == other.kind()
+            && self.owner_wait().map(OwnerWait::reason) == other.owner_wait().map(OwnerWait::reason)
     }
 }
 

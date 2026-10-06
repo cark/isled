@@ -35,6 +35,7 @@
 (require 'isled-filter)
 (require 'isled-graph)
 (require 'isled-work)
+(require 'isled-listing)
 
 (declare-function isled-sections-point-state
                   "isled-sections")
@@ -616,6 +617,8 @@ sections whose complete canonical content is displayed inline."
     ("C" "Closed" isled-filter-closed)
     ("A" "All" isled-filter-all)
     ("f" "Filter issues" isled-filter)
+    ("L" "Limit issues" isled-listing-limit)
+    ("S" "Order issues" isled-listing-order)
     ""
     "Display"
     ("v" "Hierarchical / flat" isled-graph-toggle)
@@ -734,10 +737,11 @@ sections whose complete canonical content is displayed inline."
    :point-state (isled-sections-point-state)
    :ledger-point (isled-sections-ledger-point-state)))
 
-(defun isled--state-for-filter (query)
-  "Capture this view's position with QUERY as its destination filter."
+(defun isled--state-for-filter (query &optional flat)
+  "Capture this view's position with QUERY.  Use FLAT for flat presentation."
   (let ((state (isled--capture-view-state)))
     (setf (isled--view-state-filter state) query)
+    (when flat (setf (isled--view-state-graph-direction state) nil))
     state))
 
 (defun isled--save-current-view-state ()

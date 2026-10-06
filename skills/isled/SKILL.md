@@ -39,7 +39,12 @@ four ASCII digits with an optional `#` and normalize to four digits. Quote a
 hash-prefixed ID in shells where `#` begins a comment.
 
 Use `list` with composable filters for metadata-only selection such as ready,
-waiting, status, work state, kind, or tags. Use `search` only when matching record text.
+waiting, status, work state, owner-wait reason, kind, or tags. Use `search` only when matching record text.
+`--oldest-first` orders by entry to the current work state, with unknown ages last;
+`--limit N` caps matching issues after all filtering and ordering. For example,
+`isled list --ready --work-state queued --oldest-first --limit 1` retrieves the
+oldest ready queued issue. `--work-reason review` selects the owner-review queue.
+Put search options before the text snippets.
 `snapshot` and `frontend --stdin` are frontend wire interfaces; do not decode them merely to
 reproduce a `list` query.
 
@@ -67,6 +72,14 @@ Optional work tracking uses `work` actions and `list --work-state STATE`.
 Missing work fields mean Not queued and no recorded time. Start times work by
 default; `--no-clock` selects In progress without timing. Use `work show --json`
 for state, owner questions and spans. Read live `help work` before transitions.
+When beginning authorized implementation of a tracked issue, mark it In progress
+with `work start ID` before working. This starts timing; use `--no-clock` when
+the consuming workflow chooses state tracking alone. Pause when work actually
+stops. At an owner handoff, use `work await` with Review or Clarification as
+appropriate. Read-only inspection and brief status questions need no transition.
+Current-state Since records real state or owner-wait-reason changes. Repeated
+actions, pause/resume and question edits retain it. Older records may have no
+Since; do not infer or backfill their age.
 Work state grants no assignment, execution or closure authority. Older tools
 cannot read work-tracked records; keep the executable and its skill paired.
 

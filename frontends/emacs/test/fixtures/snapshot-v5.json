@@ -1,5 +1,5 @@
 {
-  "schema_version": 4,
+  "schema_version": 5,
   "root": {
     "encoding": "utf-8",
     "value": "/tmp/example"
@@ -64,7 +64,8 @@
         "question": null,
         "recorded_seconds": 0,
         "running_since": null,
-        "spans": []
+        "spans": [],
+        "since": null
       }
     },
     {
@@ -104,7 +105,8 @@
         "question": null,
         "recorded_seconds": 0,
         "running_since": null,
-        "spans": []
+        "spans": [],
+        "since": null
       }
     }
   ]

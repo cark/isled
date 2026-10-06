@@ -28,10 +28,10 @@ pub fn run(root: &Path) -> Result<(), String> {
     let mut manifest = Vec::new();
     let mut metrics = Vec::new();
     for (name, path) in &cases {
-        call(path, json!({"schema_version":4,"mode":"refresh"}));
+        call(path, json!({"schema_version":5,"mode":"refresh"}));
         for direction in [None, Some("prerequisites"), Some("dependents")] {
             let label = format!("{name}-{}", direction.unwrap_or("flat"));
-            let mut input = json!({"schema_version":4,"mode":"view","filter":{"status":"all"}});
+            let mut input = json!({"schema_version":5,"mode":"view","filter":{"status":"all"}});
             if let Some(direction) = direction {
                 input["graph"] = json!({"direction":direction});
             }
@@ -50,7 +50,7 @@ pub fn run(root: &Path) -> Result<(), String> {
     }
     let (_, details) = call(
         root,
-        json!({"schema_version":4,"mode":"details","details":[{"id":"0001"}]}),
+        json!({"schema_version":5,"mode":"details","details":[{"id":"0001"}]}),
     );
     fs::write(root.join("details.json"), details).unwrap();
     fs::write(

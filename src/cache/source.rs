@@ -85,8 +85,8 @@ impl Cache<'_> {
         self.connection.execute(
             "INSERT INTO issues(id,filename,title,status,kind,created,size,
             modified_seconds,modified_nanos,changed_seconds,changed_nanos,content_hash,
-            work_state,work_reason,work_question,work_seconds,work_started)
-            VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17)",
+            work_state,work_reason,work_question,work_seconds,work_started,work_since)
+            VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18)",
             params![
                 id.get(),
                 name,
@@ -105,7 +105,8 @@ impl Cache<'_> {
                 work.reason,
                 work.question,
                 seconds,
-                work.running_since
+                work.running_since,
+                work.since
             ],
         )?;
         self.write_tags(issue)?;

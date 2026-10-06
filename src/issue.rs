@@ -12,7 +12,9 @@ pub use name::{Name, ParseNameError};
 pub use relation::{IssueRelation, ParseWaitReasonError, WaitReason, WaitRelation};
 pub use status::{ParseStatusError, Status};
 pub use tag::{ParseTagError, Tag};
-pub use work_state::{OwnerQuestion, OwnerWait, WorkState, WorkStateError, WorkStateKind};
+pub use work_state::{
+    OwnerQuestion, OwnerWait, OwnerWaitReason, WorkState, WorkStateError, WorkStateKind,
+};
 
 /// Parsed issue data, publicly readable but not externally constructible or mutable.
 ///

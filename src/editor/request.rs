@@ -33,7 +33,7 @@ impl Request {
     pub fn parse(bytes: &[u8]) -> Result<Self, FieldError> {
         let input: Input =
             serde_json::from_slice(bytes).map_err(|e| FieldError::new("request", e))?;
-        if input.schema_version != 3 {
+        if input.schema_version != 4 {
             return Err(FieldError::new(
                 "request",
                 "Unsupported editor schema version",

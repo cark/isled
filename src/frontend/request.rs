@@ -46,6 +46,10 @@ struct Filter {
     status: Option<String>,
     kind: Option<String>,
     work_state: Option<String>,
+    work_reason: Option<String>,
+    #[serde(default)]
+    oldest_first: bool,
+    limit: Option<usize>,
     #[serde(default)]
     tags: Vec<String>,
     #[serde(default)]
@@ -67,7 +71,7 @@ impl Request {
 
     pub fn parse(bytes: &[u8]) -> Result<Self, String> {
         let input: Input = serde_json::from_slice(bytes).map_err(|e| e.to_string())?;
-        if input.schema_version != 4 {
+        if input.schema_version != 5 {
             return Err("unsupported frontend request version".into());
         }
         let criteria = Criteria::parse(input.filter)?;
@@ -118,6 +122,16 @@ pub(crate) struct Criteria {
 impl Criteria {
     fn parse(filter: Filter) -> Result<Self, String> {
         let filters = Filters {
+            work_reason: filter
+                .work_reason
+                .map(|value| {
+                    value
+                        .parse()
+                        .map_err(|e: crate::issue::WorkStateError| e.to_string())
+                })
+                .transpose()?,
+            oldest_first: filter.oldest_first,
+            limit: filter.limit,
             work_state: filter
                 .work_state
                 .map(|value| {

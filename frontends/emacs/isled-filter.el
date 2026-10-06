@@ -36,7 +36,7 @@ Vertico when enabled.  All interfaces also work with standard Emacs completion."
 (defvar isled-loading-intent)
 (declare-function isled-loading-request "isled-loading")
 (declare-function isled--capture-view-state "isled-browser")
-(declare-function isled--state-for-filter "isled-browser" (query))
+(declare-function isled--state-for-filter "isled-browser" (query &optional flat))
 (declare-function isled--window-anchors "isled-browser")
 (declare-function isled--restore-window-anchors "isled-browser")
 
@@ -53,15 +53,20 @@ Vertico when enabled.  All interfaces also work with standard Emacs completion."
 (defvar isled-filter-history nil "Previously accepted filter strings.")
 
 (defvar-local isled-filter-help
-    "t: tag · k: kind · s: status · w: work · \"…\" literal phrase · AND · TAB complete · RET keep"
+    "t: tag · k: kind · s: status · w: work · r: reason · o: order · n: limit · \"…\" phrase · AND · TAB complete · RET keep"
   "Short filter syntax and interaction reminder.")
 
-(defun isled-filter--request (query &optional criteria completion)
-  "Preview QUERY through normal loading with CRITERIA and optional COMPLETION."
+(defun isled-filter--request (query &optional criteria completion flat)
+  "Preview QUERY with CRITERIA and COMPLETION.  Use FLAT for flat presentation."
   (let ((criteria (or criteria (isled-filter-query-criteria query))))
     (isled-navigation-with-window
      (isled-loading-request
-      'view (isled--state-for-filter query) nil criteria completion))
+      'view (isled--state-for-filter
+             query (or flat
+                       (and (alist-get 'oldest_first criteria)
+                            (not (alist-get 'oldest_first
+                                            (isled-filter-query-criteria isled--filter))))))
+      nil criteria completion))
     criteria))
 
 (defvar-local isled-filter--position nil "Last completion cursor offset.")
@@ -227,7 +232,7 @@ Vertico when enabled.  All interfaces also work with standard Emacs completion."
          accepted)
     (setq isled-filter-active (list t) isled-filter-feedback nil
           isled-filter-help
-          (concat "t: tag · k: kind · s: status · w: work · \"…\" literal phrase · AND · "
+          (concat "t: tag · k: kind · s: status · w: work · r: reason · o: order · n: limit · \"…\" phrase · AND · "
                   (if (eq interface 'separate-filter-picker)
                       "TAB pick token" "TAB complete")
                   " · RET keep"))

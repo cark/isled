@@ -63,9 +63,10 @@ const HAS_ACTIVE_WAIT: &str =
     WHERE d.waiting_issue_id=i.id AND (b.status='open' OR b.status IS NULL))";
 
 impl Cache<'_> {
+    /// Select and order metadata; callers cap only after their additional matching.
     pub fn summaries(&self, filters: &Filters) -> Result<Vec<Summary>, CacheError> {
         let mut sql = format!(
-            "SELECT i.id,i.filename,i.title,i.status,i.kind,(i.status='open' AND NOT {HAS_ACTIVE_WAIT}),i.work_state,i.work_reason,i.work_question,i.work_seconds,i.work_started FROM issues i WHERE i.error IS NULL"
+            "SELECT i.id,i.filename,i.title,i.status,i.kind,(i.status='open' AND NOT {HAS_ACTIVE_WAIT}),i.work_state,i.work_reason,i.work_question,i.work_seconds,i.work_started,i.work_since FROM issues i WHERE i.error IS NULL"
         );
         let mut values = Vec::<Value>::new();
         if let Some(status) = filters.status {
@@ -79,6 +80,10 @@ impl Cache<'_> {
         if let Some(state) = filters.work_state {
             sql.push_str(" AND i.work_state=?");
             values.push(state.as_str().to_owned().into());
+        }
+        if let Some(reason) = filters.work_reason {
+            sql.push_str(" AND i.work_reason=?");
+            values.push(reason.as_str().to_owned().into());
         }
         for tag in &filters.tags {
             sql.push_str(
@@ -94,7 +99,11 @@ impl Cache<'_> {
             sql.push_str(" AND EXISTS(SELECT 1 FROM dependencies d LEFT JOIN issues b ON b.id=d.blocking_issue_id WHERE d.waiting_issue_id=i.id AND d.blocking_issue_id=? AND (b.status='open' OR b.status IS NULL))");
             values.push(i64::from(id.get()).into());
         }
-        sql.push_str(" ORDER BY i.id");
+        sql.push_str(if filters.oldest_first {
+            " ORDER BY i.work_since IS NULL,i.work_since,i.id"
+        } else {
+            " ORDER BY i.id"
+        });
         let mut statement = self.connection.prepare(&sql)?;
         let mut rows = statement.query(rusqlite::params_from_iter(values))?;
         let mut result = Vec::new();
@@ -145,7 +154,7 @@ impl Cache<'_> {
 
     pub(super) fn summary(&self, id: IssueId) -> Result<Summary, CacheError> {
         let sql = format!(
-            "SELECT i.id,i.filename,i.title,i.status,i.kind,(i.status='open' AND NOT {HAS_ACTIVE_WAIT}),i.work_state,i.work_reason,i.work_question,i.work_seconds,i.work_started FROM issues i WHERE i.id=?1 AND i.error IS NULL"
+            "SELECT i.id,i.filename,i.title,i.status,i.kind,(i.status='open' AND NOT {HAS_ACTIVE_WAIT}),i.work_state,i.work_reason,i.work_question,i.work_seconds,i.work_started,i.work_since FROM issues i WHERE i.id=?1 AND i.error IS NULL"
         );
         let mut statement = self.connection.prepare(&sql)?;
         let mut rows = statement.query([id.get()])?;
@@ -230,6 +239,16 @@ fn decode_work(row: &rusqlite::Row<'_>) -> Result<crate::work_wire::WorkSummary,
     if running.is_some() && state != WorkStateKind::InProgress {
         return Err(CacheError::Corrupt("invalid cached running clock".into()));
     }
+    let since: Option<String> = row.get(11)?;
+    let since = since
+        .map(|value| value.parse())
+        .transpose()
+        .map_err(|e: crate::work_log::WorkLogError| CacheError::Corrupt(e.to_string()))?;
+    if since.is_some() && state == WorkStateKind::NotQueued {
+        return Err(CacheError::Corrupt(
+            "not-queued issue has a cached entry time".into(),
+        ));
+    }
     Ok(crate::work_wire::WorkSummary::from_cached(
         state,
         reason,
@@ -237,5 +256,6 @@ fn decode_work(row: &rusqlite::Row<'_>) -> Result<crate::work_wire::WorkSummary,
         u64::try_from(row.get::<_, i64>(9)?)
             .map_err(|_| CacheError::Corrupt("negative cached work time".into()))?,
         running,
+        since,
     ))
 }

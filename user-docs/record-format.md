@@ -54,7 +54,7 @@ tools are not part of the supported CLI.
   between Statement and Evidence.
 - Metadata is a Markdown list. `Status`, `Kind`, and `Created` are mandatory,
   unique, and ordered. Optional `Work state` follows Created; its nested
-  Reason and Question belong to that entry. `Tags` is one optional comma-and-space-separated line;
+  Reason, Question and Since belong to that entry. `Tags` is one optional comma-and-space-separated line;
   tag order is preserved and an empty collection omits the line. Optional
   unique `Waiting on` and `Blocking` entries follow tags and contain nested
   relation lists. Each relation stores canonical `#NNNN — Title` text so the
@@ -100,13 +100,23 @@ see [work state and time](work-tracking.md).
 - **Work state:** awaiting-owner
   - **Reason:** clarification
   - **Question:** Should this also run offline?
+  - **Since:** 2026-10-06 10:30:00
 ```
 
 Work state accepts `not-queued`, `queued`, `in-progress` and `awaiting-owner`.
 Generated Not queued records omit the entry. Awaiting owner requires exactly one
 nested Reason, `review` or `clarification`. Clarification also requires one
 non-empty, single-line Question. Review has no Question. Other states have
-neither child. Closed issues have no current Work state.
+neither owner-wait child. Queued, In progress and Awaiting owner may have one
+Since child, after Reason and Question when present. It uses canonical UTC
+`YYYY-MM-DD HH:MM:SS`. Missing Since means unknown age, including on older
+tracked records. Not queued cannot have Since. Closed issues have no current
+Work state.
+
+Since marks the current uninterrupted state and owner-wait reason. Work actions
+set it on genuine transitions; repeating an action or editing a question retains
+it, even when unknown. Leaving and returning, or switching Review/Clarification,
+sets a new timestamp. It is independent of the work-log clock.
 
 When present, Work log contains exactly this three-column Markdown table, with
 at least one span:

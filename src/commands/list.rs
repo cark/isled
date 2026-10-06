@@ -15,7 +15,11 @@ pub(crate) fn run(
     }
     with_cached_query(&project, |cache| {
         let mut output = Vec::new();
-        for summary in cache.summaries(&filters)? {
+        for summary in cache
+            .summaries(&filters)?
+            .into_iter()
+            .take(filters.limit.unwrap_or(usize::MAX))
+        {
             let path = with_path
                 .then(|| project.issue_path_bytes(summary.filename().as_bytes()))
                 .transpose()?;

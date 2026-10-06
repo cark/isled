@@ -9,7 +9,7 @@
 
 (ert-deftest isled-filter-inline-scopes-current-token ()
   (dolist (case '(("s:open t:ru suffix" 11 8 12 ("t:rust" "t:runtime"))
-                  ("s:open   suffix" 8 9 9 ("t:rust" "t:runtime" "k:bug" "s:open"))
+                  ("s:open   suffix" 8 9 9 ("t:rust" "t:runtime" "k:bug" "s:open" "o:oldest-first" "o:id"))
                   ("k: suffix" 2 1 3 ("k:bug"))
                   ("s: suffix" 2 1 3 ("s:open"))))
     (with-temp-buffer
@@ -104,7 +104,8 @@
   (let* ((choices '("t:rust" "t:runtime" "k:bug" "s:open"))
          (table (apply-partially #'isled-filter-minibuffer-table choices)))
     (should (equal (all-completions "s:open t:ru" table) '("t:rust" "t:runtime")))
-    (should (equal (all-completions "s:open " table) choices))
+    (should (equal (all-completions "s:open " table)
+                   (append choices '("o:oldest-first" "o:id"))))
     (should (equal (completion-boundaries "s:open t:ru" table nil "st k:bug") '(7 . 2)))
     (should (equal (try-completion "s:open k:b" table) "s:open k:bug "))))
 

@@ -14,7 +14,7 @@ fn call(
     editor::respond(
         &ProjectRoot::explicit(root).unwrap(),
         &serde_json::to_vec(
-            &json!({"schema_version":3,"mode":mode,"id":id,"expected":expected,"draft":draft}),
+            &json!({"schema_version":4,"mode":mode,"id":id,"expected":expected,"draft":draft}),
         )
         .unwrap(),
     )
@@ -254,7 +254,7 @@ fn closing(root: &Path, mode: &str, old: &Value, draft: Value) -> Value {
     editor::respond(
         &ProjectRoot::explicit(root).unwrap(),
         &serde_json::to_vec(
-            &json!({"schema_version":3,"mode":mode,"id":old["record"]["id"],
+            &json!({"schema_version":4,"mode":mode,"id":old["record"]["id"],
                 "expected":old["record"]["version"],"draft":draft,"close":true}),
         )
         .unwrap(),

@@ -44,6 +44,28 @@ with other filters: `isled list --ready --work-state not-queued`. Search accepts
 the same work-state filter. The spellings are `not-queued`, `queued`, `in-progress`
 and `awaiting-owner`.
 
+## Arrival order
+
+Isled records **Since** when an issue enters Queued, In progress or Awaiting
+owner. Repeating Queue preserves its place. Pausing and resuming work preserve
+Since too. Switching between Review and Clarification starts a new wait; editing
+the pending question keeps the existing wait.
+
+```console
+isled list --ready --work-state queued --oldest-first --limit 1
+isled list --work-state awaiting-owner --work-reason review --oldest-first
+isled search --work-reason clarification --oldest-first --limit 5 offline
+```
+
+Oldest first sorts by Since, breaking ties by issue ID. Older records without
+Since come last, in ID order. Their age stays unknown until a real transition;
+inspection and repeated actions do not backfill it. Ordinary listing keeps ID
+order. Omit `--limit` for all matches; zero returns none. Limits count issues
+after all filtering and ordering, including text matching.
+
+Since measures the current stay in a state. The work log measures time spent
+working. **Work history** shows both; headings keep their compact labels.
+
 ## In Emacs
 
 Press **`w`** on an issue for the Work menu. It offers the same queue, start,
@@ -56,6 +78,11 @@ you open it, including the running span.
 Filter with `w:queued`, `w:in-progress` or another state. Combine it with status,
 for example `s:open w:awaiting-owner`. A pending question appears in Work history
 and in the heading's help text. Normal editing preserves all tracking data.
+Add `r:review` or `r:clarification` to distinguish owner waits. In the `?` menu,
+**Order issues** offers Oldest first and ID; **Limit issues** sets a cap or clears
+it with an empty answer. You can also type `o:oldest-first` and `n:5` in a filter.
+Choosing Oldest first switches to flat rows. Press `v` to return to dependency
+grouping; filtering and the cap still apply, but the hierarchy orders by dependencies.
 
 ## A clock left running
 
@@ -85,13 +112,13 @@ The [record format](record-format.md#optional-work-tracking) stores current stat
 in Metadata and spans in an optional Work log table. Activity labels may be empty;
 when present they use one line without pipes or surrounding whitespace.
 
-`isled work show 42 --json` returns schema 1 with `id`, `state`, `reason`,
-`question`, `recorded_seconds`, `running_since`, `spans` and `total_seconds`.
+`isled work show 42 --json` returns schema 2 with `id`, `state`, `reason`,
+`question`, nullable `since`, `recorded_seconds`, `running_since`, `spans` and `total_seconds`.
 Each span contains `started`, nullable `stopped` and `activity`.
 `recorded_seconds` counts completed spans; `total_seconds` also counts the
 running span at the report time. `--at` selects that report time explicitly.
 
-Snapshot/frontend schema 4 and editor schema 3 carry the same stable work data.
+Snapshot/frontend schema 5 and editor schema 4 carry the same stable work data.
 Browsing summaries omit spans; complete issues and editor records include them.
 Their totals contain completed time only, with a separate running start, so
 clock passage alone does not invalidate content hashes. Work is read-only in

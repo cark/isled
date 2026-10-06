@@ -20,7 +20,7 @@
 
 (cl-defstruct (isled-work-data (:constructor isled-work-data-create))
   "Validated work summary with an optional complete span history."
-  (state "not-queued") reason question (recorded-seconds 0) running-since spans)
+  (state "not-queued") reason question since (recorded-seconds 0) running-since spans)
 
 (cl-defstruct (isled-work-span (:constructor isled-work-span-create))
   "One validated UTC work span."
@@ -49,6 +49,7 @@
   (let* ((state (isled-work-data--field wire 'state))
          (reason (isled-work-data--field wire 'reason))
          (question (isled-work-data--field wire 'question))
+         (since (isled-work-data--field wire 'since))
          (seconds (isled-work-data--field wire 'recorded_seconds))
          (running (isled-work-data--field wire 'running_since)))
     (unless (and (member state '("not-queued" "queued" "in-progress" "awaiting-owner"))
@@ -59,10 +60,12 @@
                               (not (string-empty-p (string-trim question)))
                               (not (string-match-p "[\n\r\0]" question))))
                    (and (null reason) (null question)))
-                 (or (null running) (equal state "in-progress")))
+                 (or (null running) (equal state "in-progress"))
+                 (or (null since) (not (equal state "not-queued"))))
       (signal 'isled-work-data-error '("Invalid work summary")))
     (let ((work (isled-work-data-create
                  :state state :reason reason :question question
+                 :since (and since (isled-work-data--time since))
                  :recorded-seconds seconds
                  :running-since (and running (isled-work-data--time running)))))
       (when complete

@@ -30,7 +30,7 @@
                 :stderr ""
                 :stdout
                 (json-serialize
-                 `((schema_version . 4)
+                 `((schema_version . 5)
                    (root . ((encoding . "utf-8") (value . ,directory)))
                    (issues . [])))))))
         (unwind-protect
@@ -72,7 +72,7 @@
             :stderr ""
             :stdout
             (json-serialize
-             `((schema_version . 4)
+             `((schema_version . 5)
                (root . ((encoding . "utf-8") (value . ,directory)))
                (issues . []))))))
         buffer)
@@ -105,7 +105,7 @@
             :stderr ""
             :stdout
             (json-serialize
-             `((schema_version . 4)
+             `((schema_version . 5)
                (root . ((encoding . "utf-8") (value . ,directory)))
                (issues . []))))))
         buffer)

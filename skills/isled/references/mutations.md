@@ -106,13 +106,20 @@ changing its activity. Show reports totals and complete history; `--json`
 provides structured data. Work state remains separate from lifecycle and
 readiness, and grants no workflow authority.
 
+State or owner-wait-reason transitions set the optional UTC Since child.
+Repeated actions, pause/resume and clarification-question edits retain it.
+Older records may have unknown age: do not backfill Since during inspection or
+repeated actions. Unqueue and closure remove it with the current work state.
+Use `list --work-reason review|clarification --oldest-first --limit N` to inspect
+bounded owner queues; ordinary state, readiness and tag filters still compose.
+
 Closure stops timing, removes current state and preserves history. Explicit
 stop corrections may update closed history with the historical-edit warning.
 Normal title, prose, tag, relation and complete-draft edits preserve work data.
 
 ## Complete drafts
 
-`editor --stdin` provides schema-3 load, validate and complete-draft save requests;
+`editor --stdin` provides schema-4 load, validate and complete-draft save requests;
 the consuming project's user documentation owns the exact wire contract. Inspect
 `ok`/`code` in its JSON response even on exit 0. Retain the load version for stale
 save rejection. Validation publishes nothing and consumes no ID. Replacing a

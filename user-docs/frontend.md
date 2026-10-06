@@ -1,24 +1,29 @@
 # Bounded frontend protocol
 
 `isled frontend --stdin` reads one JSON request and writes one complete,
-newline-terminated JSON response. Both use `schema_version: 4`. Invalid input
+newline-terminated JSON response. Both use `schema_version: 5`. Invalid input
 fails before project discovery; operational failures produce stderr, exit 1,
-and no partial JSON. Version 4 adds structured work tracking while retaining
+and no partial JSON. Version 5 adds current-state entry times, owner-reason
+filtering, oldest-first ordering and limits to work tracking. It retains
 Open/Closed lifecycle values and `outcome` reference fields. Older requests are
 rejected; update the CLI and frontend together. Existing records need no conversion
-for work tracking. Complete schema-4 `snapshot` output is supported separately.
+for work tracking. Complete schema-5 `snapshot` output is supported separately.
 
 ## Request
 
 ```json
-{"schema_version":4,"mode":"refresh","filter":{"status":"open"},"view_hash":null,"details":[{"id":"0058","hash":null}]}
+{"schema_version":5,"mode":"refresh","filter":{"status":"open"},"view_hash":null,"details":[{"id":"0058","hash":null}]}
 ```
 
 - `mode` is `refresh`, `view`, `details`, or `choices`.
 - `filter` is optional: `status` defaults to `open`, accepts `closed` or `all`;
-  optional `kind`, `work_state` and a `tags` array use existing list semantics.
+  optional `kind`, `work_state`, `work_reason` and a `tags` array use existing list semantics.
   Work-state values are `not-queued`, `queued`, `in-progress` and `awaiting-owner`.
-  Rust filters summaries; tags are not sent per summary.
+  Work reasons are `review` and `clarification`. `oldest_first` defaults to false;
+  true sorts by Since, then ID, with undated issues last. Optional non-negative
+  integer `limit` caps issues after all criteria, including kinds and text; zero
+  returns none. No limit means all matches. Rust filters summaries; tags are not
+  sent per summary.
 - `choice_filter` optionally supplies independently parsed completion criteria,
   using the same fields and defaults as `filter`. See [completion choices](#filter-selection-and-completion-choices).
 - `view_hash` is an optional previous view hash.
@@ -56,7 +61,7 @@ The top-level fields are `schema_version`, losslessly encoded `root`,
 null when no retained issue findings exist, otherwise the lowest affected ID as
 `{"type":"issue","issue":SUMMARY}` or `{"type":"problem","problem":PROBLEM}`.
 Summary/problem shapes are the same as below. This field was introduced in
-schema 3; schema-4 consumers may still treat absence as unavailable warning
+schema 3; schema-5 consumers may still treat absence as unavailable warning
 navigation. It is returned even when `view` and `changes` are unchanged.
 `warning_targets` contains every affected issue once, ordered by ID, using the
 same summary/problem shapes. It is independent of filtering and conditional
@@ -70,9 +75,9 @@ findings that cannot yet be disproved because a related record is unreadable.
 For refresh/view requests, `view_hash` identifies the current view; `view` is
 null when it matches the supplied hash, otherwise an object with:
 
-- `issues`: ascending-ID summaries containing `id`, `status`, `ready`, `kind`,
+- `issues`: summaries in the requested order (ascending ID by default) containing `id`, `status`, `ready`, `kind`,
   encoded `title`, encoded `path`, and `work` with `state`, nullable `reason`
-  and `question`, completed `recorded_seconds` and nullable `running_since`.
+  and `question`, nullable UTC `since`, completed `recorded_seconds` and nullable `running_since`.
   Complete detail issues also contain `work.spans`; see [work tracking](work-tracking.md#files-and-agent-data).
 - `unavailable`: ledger-wide unreadable entries, with `id`, encoded `path`, and
   actual `error`, including files outside the filter.
@@ -84,7 +89,8 @@ requested IDs whose current live hash differs, in ascending order. Each has
 
 - `issue`: `detail` contains `issue` in the complete snapshot issue format,
   `targets` with referenced/diagnostic target summaries, and `unavailable` with
-  relevant unreadable targets. Targets can be outside the filtered view.
+  relevant unreadable targets. Targets can be outside the filtered view; target
+  summaries remain ordered by ID.
 - `deleted`: the requested identity is absent.
 - `problem`: `problem` has `id`, `path`, and `error`. A null path means identity
   could not be established safely; offer no file action for it.
@@ -114,19 +120,22 @@ retain their existing contracts.
 
 ## Dependency layout
 
-Graph data remains opt-in in schema 4 (introduced in schema 3). Existing graph
-semantics and ascending-ID `view.issues` stay unchanged. Graph clients use `graph.plan.rows` for display
-order, keeping complete heading metadata separate from bounded body requests:
+Graph data remains opt-in in schema 5 (introduced in schema 3). Dependency layout
+rules remain unchanged. `view.issues` follows the requested selection order,
+ascending ID by default. Graph clients use `graph.plan.rows` for display order,
+keeping complete heading metadata separate from bounded body requests:
 
 ```sh
 isled frontend --stdin <<'EOF'
-{"schema_version":4,"mode":"view","filter":{"status":"open"},"graph":{"direction":"prerequisites"}}
+{"schema_version":5,"mode":"view","filter":{"status":"open"},"graph":{"direction":"prerequisites"}}
 EOF
 ```
 
 `graph` accepts `direction` (`prerequisites` or `dependents`) and an optional
 previous `hash`, with the same 16-lowercase-hex syntax as other conditional tokens.
-It is valid only with `view` or `refresh`. All ordinary filter criteria apply:
+It is valid only with `view` or `refresh`. All ordinary filter criteria apply, including issue limits after matching and
+oldest-first selection. Layout orders that selected set by dependencies; it does
+not promise FIFO row order:
 status first, then work state, tag, kind and text selection. Emacs requests a graph only in
 hierarchical mode; flat mode requests summaries without one.
 
@@ -134,7 +143,7 @@ For a filtered Open graph:
 
 ```sh
 isled frontend --stdin <<'EOF'
-{"schema_version":4,"mode":"view","filter":{"status":"open","tags":["rust"],"text":["timeout"]},"graph":{"direction":"prerequisites"}}
+{"schema_version":5,"mode":"view","filter":{"status":"open","tags":["rust"],"text":["timeout"]},"graph":{"direction":"prerequisites"}}
 EOF
 ```
 
@@ -208,10 +217,10 @@ exceeding it rejects the graph request, preserving
 the previous view. No edge is silently omitted, and lane width has no fixed cap.
 Cycles are errors. Clients keep their last good view on failure.
 
-Graph view requires the updated CLI and frontend. There is no graph fallback for
-older CLIs; existing flat clients continue working with the updated executable.
+Graph view requires the matching CLI and frontend. There is no graph fallback for
+older CLIs. Flat and graph clients both use the current wire schema.
 Graph layout itself does not change issue files. Optional work tracking is a
-separate schema-4 boundary shared with complete snapshots.
+separate schema-5 boundary shared with complete snapshots.
 
 ## Filter selection and completion choices
 
@@ -230,7 +239,7 @@ or validate dependency neighborhoods. A full refresh remains the reconciliation
 boundary.
 
 Refresh/view responses also contain `choices`, an array of prefixed strings:
-`t:NAME`, `k:NAME`, `s:open`, `s:closed`, and `w:STATE` for all four work states. Choices cover the ledger's cached
+`t:NAME`, `k:NAME`, `s:open`, `s:closed`, `w:STATE` for all four work states, and `r:review`/`r:clarification`. Choices cover the ledger's cached
 metadata, independently of the current filter, and are returned even when `view`
 is null. `s:closed` is a frontend label for stored status `closed`; request
 `filter.status` still uses `closed`. Detail responses omit choices. Clients
@@ -244,8 +253,11 @@ status constraint, because choosing a status replaces status rather than adding
 another constraint. With no matching issue, that category has no choices;
 an empty ledger yields an empty array. Statuses appear first (`open`, `closed`),
 then work states in `not-queued`, `queued`, `in-progress`, `awaiting-owner`
-order, then unique alphabetically ordered tags and kinds. Work-state choices
-ignore the supplied work-state constraint while respecting the other criteria. Cached tag and kind values
+order, then owner reasons (`review`, `clarification`), then unique alphabetically
+ordered tags and kinds. Work-state choices
+ignore the supplied work-state constraint while respecting the other criteria.
+Owner-reason choices similarly ignore the reason constraint. Limits never cap
+completion choices; they describe matching metadata, not just displayed rows. Cached tag and kind values
 are fully validated in that order before contextual choices return, including
 when no issue matches. Text read failures still fail the complete response.
 
@@ -259,4 +271,4 @@ or partial token can request `choices` alone; valid text edits can obtain both
 the preview and contextual choices in one `view` request. Both selections share
 the command's retained file reads. There is no persistent completion cache or
 text index. Omitting `choice_filter` retains the older ledger-wide choices,
-including both status labels and all four work states.
+including both status labels, all four work states and both owner reasons.

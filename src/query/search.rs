@@ -78,7 +78,7 @@ fn search_records(
         .collect::<Vec<_>>();
     let views = parse_record_views(records)?;
     let index = ViewIndex::new(&views);
-    let mut output = Vec::new();
+    let mut selected_rows = Vec::new();
 
     for (record, view) in records.iter().zip(views.iter()) {
         if !matches_filters(view, filters, &index)? {
@@ -88,14 +88,24 @@ fn search_records(
         let Some(selected) = select_lines(text, folded_needles.iter().map(Vec::as_slice)) else {
             continue;
         };
-        append_summary(
-            &mut output,
-            view,
-            paths
-                .map(|value| value.get(record.filename()))
-                .transpose()?,
-        )?;
-        append_selected_lines(&mut output, selected);
+        let path = paths
+            .map(|value| value.get(record.filename()))
+            .transpose()?;
+        selected_rows.push((view, selected, path));
+    }
+    if filters.oldest_first {
+        selected_rows.sort_by_key(|(view, _, _)| {
+            let since = view.work_state().and_then(|state| state.since());
+            (since.is_none(), since, view.id())
+        });
+    }
+    let mut output = Vec::new();
+    for (view, lines, path) in selected_rows
+        .into_iter()
+        .take(filters.limit.unwrap_or(usize::MAX))
+    {
+        append_summary(&mut output, view, path)?;
+        append_selected_lines(&mut output, lines);
     }
     Ok(output)
 }

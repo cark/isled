@@ -3,7 +3,7 @@ use rusqlite::{CachedStatement, Connection, Params, Row};
 use std::{fs, io, path::Path};
 
 // Version 3 fixes the fingerprint interpretation to XXH3-64 on raw source bytes.
-const VERSION: i64 = 6;
+const VERSION: i64 = 7;
 
 /// Owns SQLite lifecycle exceptions; data access always uses bounded statement reuse.
 pub(super) struct Database {
@@ -71,7 +71,7 @@ fn open_connection(path: &Path) -> Result<(Connection, bool), CacheError> {
 fn validate_schema(connection: &Connection) -> Result<(), CacheError> {
     for sql in [
         "SELECT directory_seconds,directory_nanos,diagnostics FROM cache_state LIMIT 0",
-        "SELECT id,filename,title,status,kind,created,size,modified_seconds,modified_nanos,changed_seconds,changed_nanos,error,content_hash FROM issues LIMIT 0",
+        "SELECT id,filename,title,status,kind,created,size,modified_seconds,modified_nanos,changed_seconds,changed_nanos,error,content_hash,work_state,work_reason,work_question,work_seconds,work_started,work_since FROM issues LIMIT 0",
         "SELECT owner_issue_id,source_id,target_id,code,message,needs_reason FROM relation_warnings LIMIT 0",
         "SELECT issue_id,tag FROM issue_tags LIMIT 0",
         "SELECT owner_issue_id,waiting_issue_id,blocking_issue_id,reason FROM dependencies LIMIT 0",

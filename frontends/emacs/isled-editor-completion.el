@@ -22,7 +22,7 @@
   (let ((buffer (current-buffer)))
     (isled-process-start
      isled-editor-root
-     (json-encode '((schema_version . 4) (mode . "view")
+     (json-encode '((schema_version . 5) (mode . "view")
                     (filter . ((status . "all"))) (details . [])))
      (lambda (result)
        (when (buffer-live-p buffer)

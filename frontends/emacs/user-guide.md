@@ -276,6 +276,11 @@ show **Queued**, **In progress**, **Question** or **Review**, plus completed tim
 when it is nonzero. **Work history** shows the question, spans, clock status and
 current elapsed total in a separate buffer.
 
+Work history also shows **Since**, the time the issue entered its current state.
+Pausing and resuming do not reset it. Switching between Review and Question
+does; editing the question does not. Older records may have no known entry time.
+Since stays out of headings.
+
 The clock survives editor restarts. If you forgot to pause, use a prefix with
 Pause to enter the actual stop time in UTC. **Correct stop time** changes a
 numbered span; Work history shows their numbers. See the
@@ -304,6 +309,8 @@ sections; quotes require a literal phrase.
 | --- | --- |
 | `s:open w:queued` | Open issues queued for work. |
 | `s:open w:awaiting-owner` | Open issues needing an owner action. |
+| `s:open w:queued o:oldest-first n:5` | The five oldest queued issues. |
+| `s:open w:awaiting-owner r:review o:oldest-first` | Reviews in arrival order. |
 | `s:open t:rust` | Open issues tagged `rust`. |
 | `k:bug` | Bugs with either status. |
 | `s:closed "disk full"` | Closed issues containing the phrase `disk full`. |
@@ -318,10 +325,21 @@ every term for an unfiltered view. Press `f` again to refine a query; it returns
 with a trailing space ready for the next term.
 
 Unquoted `t:`, `k:`, `s:` and `w:` prefixes select a tag, kind, status or work
-state (`not-queued`, `queued`, `in-progress`, `awaiting-owner`). Quote them to
-search for the text itself. Empty values and unfinished quotes must be completed
-before you can accept the query. The last status term and last work-state term win;
-choosing a status through completion replaces them all.
+state (`not-queued`, `queued`, `in-progress`, `awaiting-owner`). `r:review` and
+`r:clarification` distinguish owner waits. Quote a term to search for its text.
+Empty values and unfinished quotes must be completed before you can accept
+the query. The last status, work-state, reason, order and limit terms win;
+choosing a status through completion removes other status terms.
+
+In `?`, choose **Order issues** for Oldest first or ID order. Oldest first
+switches to the flat list. It sorts by the current state's entry time, breaks
+ties by issue ID, and puts unknown ages last. `v` returns to dependency grouping.
+The hierarchy keeps its own dependency order.
+
+**Limit issues** sets the maximum after all matching and ordering. An empty
+answer removes the cap; zero shows none. In a filter, `o:oldest-first` and `n:5`
+express the same choices. `o:id` restores ordinary ordering; removing `n:` returns
+all matches. Refresh and navigation history retain these choices.
 
 `O`, `C` and `A` change only status, keeping your tag, kind and text terms.
 Refresh keeps the whole query. Duplicated views copy it and then remain independent.
@@ -332,7 +350,7 @@ Following a reference outside the results can temporarily leave the query;
 
 A syntax hint appears in the view's header while filtering. Completion offers
 tags after `t:`, kinds after `k:`, statuses after `s:`, work states after `w:`,
-and all structured choices
+owner reasons after `r:`, ordering after `o:`, and all structured choices
 between terms. Quoted terms remain literal.
 
 Choices come from readable cached issues matching the rest of your query. The

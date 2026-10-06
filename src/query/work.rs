@@ -26,7 +26,7 @@ pub fn work_report(
     }
     let document = selected.ok_or(QueryError::MissingIssue(id))?.document()?;
     Ok(WorkReport {
-        schema_version: 1,
+        schema_version: 2,
         id: id.to_string(),
         total_seconds: document.work_log.total_seconds(at),
         work: WorkData::new(&document.issue, &document.work_log),
@@ -36,6 +36,9 @@ impl WorkReport {
     pub fn render(&self) -> Vec<u8> {
         let summary = &self.work.summary;
         let mut text = format!("Issue {}\nWork state: {}\n", self.id, summary.state);
+        if let Some(since) = &summary.since {
+            text.push_str(&format!("Since (UTC): {since}\n"));
+        }
         if let Some(reason) = summary.reason {
             text.push_str(&format!("Reason: {reason}\n"));
         }

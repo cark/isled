@@ -95,8 +95,11 @@ pub(super) fn prepare(
     criteria: &Request,
     request: &GraphRequest,
 ) -> Result<(Vec<Summary>, GraphResponse), CacheError> {
-    let summaries =
+    let mut summaries =
         cache.filter_summaries(&criteria.filters, &criteria.kinds, criteria.text.as_ref())?;
+    if let Some(limit) = criteria.filters.limit {
+        summaries.truncate(limit);
+    }
     // Strict status selection precedes the additional filters. Only its direct
     // edges can contribute to omitted-connection counts; never bridge a gap.
     let edges = cache.layout_edges(criteria.filters.status, MAX_EDGES)?;

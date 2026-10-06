@@ -327,6 +327,9 @@ implementation modules group complete responsibilities: search retains its
 snippet type, Unicode algorithms, excerpt selection, and tests; lookup retains
 raw `show`, path projection, identity checks, and the supporting path map.
 Metadata listing owns the summary row reused by search and direct wait output.
+Listing and search order the fully matched set before applying issue limits;
+SQLite summary selection applies the same metadata order without truncating
+early, leaving text matching and final caps to its callers.
 Filters own selection criteria and use the wait module's relation checks.
 Borrowed record/header adapters stay together in `records.rs`. `RecordView`
 borrows retained header metadata for stored records; raw codec inputs own their
@@ -394,7 +397,8 @@ before reading candidate content through the existing held-lock reader. It adds
 no persistent index. `cache/filter_choices.rs` assembles completion choices, retaining the legacy
 ledger-wide request behavior and supporting independently scoped criteria.
 Eager cached tag-before-kind validation precedes contextual summary/text selection;
-status suggestions remove the status restriction and tags/kinds retain it.
+status, work-state and owner-reason suggestions remove their own restriction;
+tags/kinds retain the selected criteria. Completion ignores listing caps.
 Choice-only requests skip view construction and detail inspection.
 `cache/frontend.rs` owns issue identity, readability and diagnostic metadata. The bounded
 request parser validates text and kind criteria before project discovery.
@@ -416,7 +420,11 @@ metadata, counts direct connections omitted by additional criteria, hashes topol
 and counts independently of headings, and returns compact row/lane
 routes only on explicit request. It shares the measured layout engine with the
 diagnostic preview but does not use the experimental persistent layout store.
-Emacs's graph model validates and indexes that immutable plan. The glyph module
+Emacs's graph model validates and indexes that immutable plan.
+`isled-listing.el` owns order/limit commands, retaining choices in the filter
+query and selecting flat rows for oldest-first. The bounded view decoder accepts
+Rust's chosen order while rejecting duplicate or overlapping identities; full
+snapshots and detail targets retain ascending-ID validation. The glyph module
 turns one row into directional node, connector and continuation lines; the gutter
 module owns bounded painting and fold-safe heading/body decoration. The indexed
 row model reserves real connector lines between headings and foldable bodies;

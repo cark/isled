@@ -71,12 +71,13 @@ fn default_reads_do_not_convert_existing_records() {
     let root = fixture();
     let original = source(&root);
     let work = report(&root);
+    assert_eq!(work["schema_version"], 2);
     assert_eq!(work["state"], "not-queued");
     assert_eq!(work["total_seconds"], 0);
     assert_eq!(work["spans"], json!([]));
     assert_eq!(source(&root), original);
     let snapshot: Value = serde_json::from_slice(&run(&root, &["snapshot"]).stdout).unwrap();
-    assert_eq!(snapshot["schema_version"], 4);
+    assert_eq!(snapshot["schema_version"], 5);
     assert_eq!(snapshot["issues"][0]["work"]["state"], "not-queued");
     assert_eq!(source(&root), original);
 }
@@ -226,7 +227,7 @@ fn metadata_and_complete_draft_edits_preserve_work_data_and_prose() {
     let loaded = request(
         &root,
         "editor",
-        json!({"schema_version":3,"mode":"load","id":"0001"}),
+        json!({"schema_version":4,"mode":"load","id":"0001"}),
     );
     assert_eq!(loaded["record"]["work"]["spans"], before["spans"]);
     let mut draft = loaded["record"]["draft"].clone();
@@ -234,11 +235,12 @@ fn metadata_and_complete_draft_edits_preserve_work_data_and_prose() {
     let saved = request(
         &root,
         "editor",
-        json!({"schema_version":3,"mode":"save","id":"0001","expected":loaded["record"]["version"],"draft":draft}),
+        json!({"schema_version":4,"mode":"save","id":"0001","expected":loaded["record"]["version"],"draft":draft}),
     );
     assert_eq!(saved["ok"], true);
     assert_eq!(report(&root)["spans"], before["spans"]);
     assert_eq!(report(&root)["state"], "in-progress");
+    assert_eq!(report(&root), before);
     assert!(
         source(&root).contains("A human-readable concern.\n\nA separate paragraph.\n\n## Work log")
     );
@@ -309,7 +311,7 @@ fn filters_and_bounded_views_use_work_state_without_changing_readiness() {
     let view = request(
         &root,
         "frontend",
-        json!({"schema_version":4,"mode":"view","filter":{"work_state":"awaiting-owner"}}),
+        json!({"schema_version":5,"mode":"view","filter":{"work_state":"awaiting-owner"}}),
     );
     assert_eq!(
         view["view"]["issues"][0]["work"]["question"],
@@ -408,7 +410,7 @@ fn a_work_action_rejects_a_stale_draft_and_editor_closure_stops_timing() {
     let loaded = request(
         &root,
         "editor",
-        json!({"schema_version":3,"mode":"load","id":"0001"}),
+        json!({"schema_version":4,"mode":"load","id":"0001"}),
     );
     run(
         &root,
@@ -418,7 +420,7 @@ fn a_work_action_rejects_a_stale_draft_and_editor_closure_stops_timing() {
     let stale = request(
         &root,
         "editor",
-        json!({"schema_version":3,"mode":"save","id":"0001",
+        json!({"schema_version":4,"mode":"save","id":"0001",
         "expected":loaded["record"]["version"],"draft":loaded["record"]["draft"]}),
     );
     assert_eq!(stale["code"], "conflict");
@@ -430,12 +432,13 @@ fn a_work_action_rejects_a_stale_draft_and_editor_closure_stops_timing() {
     let closed = request(
         &root,
         "editor",
-        json!({"schema_version":3,"mode":"save","id":"0001",
+        json!({"schema_version":4,"mode":"save","id":"0001",
         "expected":stale["current"]["version"],"draft":draft,"close":true}),
     );
     assert_eq!(closed["ok"], true);
     assert_eq!(closed["record"]["status"], "closed");
     assert_eq!(closed["record"]["work"]["state"], "not-queued");
+    assert!(closed["record"]["work"]["since"].is_null());
     assert!(closed["record"]["work"]["running_since"].is_null());
     assert!(!closed["record"]["work"]["spans"][0]["stopped"].is_null());
 }
@@ -462,7 +465,7 @@ fn unrelated_mutations_preserve_authored_table_padding_and_contextual_choices() 
     let choices = request(
         &root,
         "frontend",
-        json!({"schema_version":4,"mode":"choices",
+        json!({"schema_version":5,"mode":"choices",
         "choice_filter":{"work_state":"queued","tags":["rust"]}}),
     );
     assert_eq!(choices["choices"], json!(["w:in-progress"]));

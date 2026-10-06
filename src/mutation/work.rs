@@ -40,7 +40,11 @@ pub fn work_update(
     match action {
         WorkAction::Queue => {
             document.work_log.stop(at)?;
-            document.issue.work_state = Some(WorkState::Queued);
+            transition(
+                &mut document.issue.work_state,
+                WorkState::Queued { since: None },
+                at,
+            );
         }
         WorkAction::Unqueue => {
             document.work_log.stop(at)?;
@@ -52,14 +56,25 @@ pub fn work_update(
             } else {
                 document.work_log.stop(at)?;
             }
-            document.issue.work_state = Some(WorkState::InProgress);
+            transition(
+                &mut document.issue.work_state,
+                WorkState::InProgress { since: None },
+                at,
+            );
         }
         WorkAction::Pause => {
             document.work_log.stop(at)?;
         }
         WorkAction::AwaitOwner(wait) => {
             document.work_log.stop(at)?;
-            document.issue.work_state = Some(WorkState::AwaitingOwner(wait.clone()));
+            transition(
+                &mut document.issue.work_state,
+                WorkState::AwaitingOwner {
+                    wait: wait.clone(),
+                    since: None,
+                },
+                at,
+            );
         }
         WorkAction::CorrectStop { span, stopped } => {
             document.work_log.correct_stop(span.get() - 1, *stopped)?;
@@ -72,4 +87,12 @@ pub fn work_update(
         return Ok(MutationPlan::default());
     }
     Ok(plan_record_replacement(record, document))
+}
+
+fn transition(current: &mut Option<WorkState>, next: WorkState, at: WorkTime) {
+    let since = match current.as_ref() {
+        Some(previous) if previous.same_phase(&next) => previous.since(),
+        _ => Some(at),
+    };
+    *current = Some(next.with_since(since));
 }

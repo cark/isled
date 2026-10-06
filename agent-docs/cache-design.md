@@ -19,7 +19,7 @@ Bundling adds build-time C compilation and responsibility for SQLite updates.
 | Table | Fields and identity |
 | --- | --- |
 | `cache_state` | One row: optional last reconciled directory timestamp hint and filename diagnostics; format version uses SQLite `user_version` |
-| `issues` | ID primary key; unique filename; semantic title, status, kind, created date; file size, optional modification and metadata-change timestamp hints; optional XXH3-64 content fingerprint |
+| `issues` | ID primary key; unique filename; semantic title, status, kind, created date; work state, owner reason/question, optional UTC Since, completed seconds and running start; file size, optional modification and metadata-change timestamp hints; optional XXH3-64 content fingerprint |
 | `issue_tags` | Unique `(issue_id, tag)` pair; index by tag |
 | `relation_warnings` | Last-known structured findings keyed by affected issue, directed relation and code; message and reason requirement retained for display/actions |
 | `dependencies` | Authored claims keyed by `(owner_issue_id, waiting_issue_id, blocking_issue_id)`; outgoing reason; indexes for both directions |
@@ -36,6 +36,13 @@ mirrored displays. Unchanged findings do not rewrite SQLite. Pending edits and
 membership changes inspect one layer of old/new direct neighbors; newly found
 neighbors do not recursively extend that layer. The [known-warning contract](../user-docs/cache.md#known-warnings)
 owns user-visible freshness and scope.
+
+Schema 7 includes the optional current-state Since introduced after schema 6's
+work tracking. Cache rebuilds preserve unknown ages from older Markdown; they
+never infer timestamps. Metadata selection can order by Since with unknowns last,
+then issue ID. Callers apply limits after any additional kind/text matching;
+completion choices remain uncapped. [Work tracking](../user-docs/work-tracking.md#arrival-order)
+owns the user-visible rules.
 
 ## Prepared-statement execution boundary
 

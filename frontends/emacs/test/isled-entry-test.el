@@ -23,7 +23,7 @@
              (isled-command-result-create
               :status 0 :stderr ""
               :stdout (json-serialize
-                       `((schema_version . 4)
+                       `((schema_version . 5)
                          (root . ((encoding . "utf-8") (value . ,directory)))
                          (issues . [])))))))
      (make-directory child)

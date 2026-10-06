@@ -33,12 +33,15 @@ pub fn respond(cache: &mut Cache<'_>, request: &Request) -> Result<Vec<u8>, Cach
     let (view_hash, view) = if matches!(request.mode, Mode::Details | Mode::Choices) {
         (None, None)
     } else {
-        let summaries = match graph_rows {
+        let mut summaries = match graph_rows {
             Some(rows) => rows,
             None => {
                 cache.filter_summaries(&request.filters, &request.kinds, request.text.as_ref())?
             }
         };
+        if let Some(limit) = request.filters.limit {
+            summaries.truncate(limit);
+        }
         let view = View {
             issues: summaries
                 .iter()
@@ -65,7 +68,7 @@ pub fn respond(cache: &mut Cache<'_>, request: &Request) -> Result<Vec<u8>, Cach
         (Some(hash), changed.then_some(view))
     };
     let mut output = serde_json::to_vec(&Response {
-        schema_version: 4,
+        schema_version: 5,
         graph,
         root: Bytes(cache.root().path_bytes_lossless()?.to_vec()),
         view_hash,

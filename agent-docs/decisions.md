@@ -366,11 +366,14 @@ state and span history. This keeps ordinary upgrades simple while avoiding silen
 loss of tracking data through an older tool.
 
 The [work tracking guide](../user-docs/work-tracking.md) owns implemented actions
-and correction syntax. Emacs headings show completed time and clock status; Work
-history calculates the current running total. Snapshot/frontend schema 4 and
-editor schema 3 carry stable projections, without time passage changing hashes.
+and correction syntax. Emacs headings show work state and completed time; Work
+history shows clock status and calculates the current running total.
+Snapshot/frontend schema 5 and editor schema 4 carry stable projections, without
+time passage changing hashes.
 
-## Work-state entry times and oldest-first listing (planned)
+<a id="work-state-entry-times-and-oldest-first-listing-planned"></a>
+
+## Work-state entry times and oldest-first listing
 
 Persisting when an issue entered its current work state makes waiting visible
 and lets humans and agents retrieve issues in arrival order without maintaining

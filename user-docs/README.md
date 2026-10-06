@@ -133,7 +133,7 @@ kind, tags, evidence, and outcome.
 
 ## Frontend snapshot
 
-The [snapshot wire contract](snapshot.md) owns schema version 4, byte encodings,
+The [snapshot wire contract](snapshot.md) owns schema version 5, byte encodings,
 readiness, and inline-reference recognition and coordinates. This is a frontend
 interface, not a replacement for focused CLI queries.
 

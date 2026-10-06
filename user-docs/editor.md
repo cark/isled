@@ -1,14 +1,15 @@
 # Complete issue drafts
 
 `isled editor --stdin` serves one JSON request and returns one JSON response.
-Editor schema 3 accompanies browsing/snapshot schema 4 and optional work tracking.
+Editor schema 4 accompanies browsing/snapshot schema 5 and optional work tracking
+with current-state entry times.
 Older versions are rejected. A decoded domain response exits 0: consumers must
 inspect `ok`.
 CLI/root/stream failures use the existing nonzero stderr boundary. Consumers
 must treat missing or undecodable save responses as uncertain, never retry
 creation automatically.
 
-Requests have `schema_version: 3`, `mode` (`load`, `validate` or `save`), optional
+Requests have `schema_version: 4`, `mode` (`load`, `validate` or `save`), optional
 `id`, optional `expected`, optional `draft`, and optional boolean `close` (false
 by default). Load requires an existing ID.
 Validate/save require a complete draft; omit ID/expected for creation. Existing
@@ -25,7 +26,7 @@ a stable filename from the initial title and allocate an ID under the lock.
 
 Success has `ok: true`, `record` and `path`; record contains `id`, `filename`,
 `status`, `version`, `source`, `draft` and read-only `work`.
-Work contains state, owner-wait details and complete span history; it is separate
+Work contains state, owner-wait details, nullable UTC Since and complete span history; it is separate
 from editable draft fields. Existing saves preserve it, and a work action after
 load changes the source version, rejecting a stale save. Validation success
 instead contains

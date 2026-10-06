@@ -20,10 +20,10 @@ pub(super) fn parse_state(
         .ok()
         .and_then(|text| text.parse::<WorkStateKind>().ok())
         .ok_or(RecordError::InvalidWorkState)?;
-    Ok(match kind {
+    let state = match kind {
         WorkStateKind::NotQueued => None,
-        WorkStateKind::Queued => Some(WorkState::Queued),
-        WorkStateKind::InProgress => Some(WorkState::InProgress),
+        WorkStateKind::Queued => Some(WorkState::Queued { since: None }),
+        WorkStateKind::InProgress => Some(WorkState::InProgress { since: None }),
         WorkStateKind::AwaitingOwner => {
             let reason = lines
                 .get(*index)
@@ -48,9 +48,26 @@ pub(super) fn parse_state(
                 }
                 _ => return Err(RecordError::InvalidWorkState),
             };
-            Some(WorkState::AwaitingOwner(wait))
+            Some(WorkState::AwaitingOwner { wait, since: None })
         }
-    })
+    };
+    let since = lines
+        .get(*index)
+        .and_then(|line| line.strip_prefix(b"  - **Since:** "));
+    if let Some(value) = since {
+        *index += 1;
+        let at = std::str::from_utf8(value)
+            .map_err(|_| RecordError::InvalidWorkState)?
+            .parse()
+            .map_err(|_| RecordError::InvalidWorkState)?;
+        Ok(Some(
+            state
+                .ok_or(RecordError::InvalidWorkState)?
+                .with_since(Some(at)),
+        ))
+    } else {
+        Ok(state)
+    }
 }
 
 pub(super) fn render_state(output: &mut Vec<u8>, state: Option<&WorkState>) {
@@ -62,6 +79,9 @@ pub(super) fn render_state(output: &mut Vec<u8>, state: Option<&WorkState>) {
             if let Some(question) = wait.question() {
                 output.extend_from_slice(format!("  - **Question:** {question}\n").as_bytes());
             }
+        }
+        if let Some(since) = state.since() {
+            output.extend_from_slice(format!("  - **Since:** {since}\n").as_bytes());
         }
     }
 }

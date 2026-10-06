@@ -177,6 +177,9 @@ impl<'a> RecordView<'a> {
     pub fn work_state_kind(&self) -> crate::issue::WorkStateKind {
         self.header.work_state_kind()
     }
+    pub fn work_state(&self) -> Option<&crate::issue::WorkState> {
+        self.header.work_state()
+    }
     pub fn has_tags(&self, wanted: &[Tag]) -> bool {
         wanted.iter().all(|tag| self.tags().contains(tag))
     }

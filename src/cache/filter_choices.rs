@@ -13,6 +13,7 @@ impl Cache<'_> {
             ["not-queued", "queued", "in-progress", "awaiting-owner"]
                 .map(|state| format!("w:{state}")),
         );
+        choices.extend(["r:review".into(), "r:clarification".into()]);
         self.append_tag_choices(&mut choices)?;
         self.append_kind_choices(&mut choices)?;
         Ok(choices)
@@ -63,6 +64,31 @@ impl Cache<'_> {
                     && filters.status.is_none_or(|status| row.status() == status)
             }) {
                 choices.push(format!("w:{state}"));
+            }
+        }
+        let reason_rows = if filters.work_reason.is_some() {
+            self.filter_summaries(
+                &Filters {
+                    work_reason: None,
+                    ..filters.clone()
+                },
+                kinds,
+                text,
+            )?
+        } else {
+            Vec::new()
+        };
+        let reason_rows = if filters.work_reason.is_some() {
+            &reason_rows
+        } else {
+            &rows
+        };
+        for reason in ["review", "clarification"] {
+            if reason_rows.iter().any(|row| {
+                row.work().reason == Some(reason)
+                    && filters.status.is_none_or(|status| row.status() == status)
+            }) {
+                choices.push(format!("r:{reason}"));
             }
         }
         let selected = rows

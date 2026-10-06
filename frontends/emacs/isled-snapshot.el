@@ -96,7 +96,7 @@ runner.")
      (isled-command-result-stdout result))))
 
 (defun isled-snapshot-decode (json)
-  "Decode and validate a version 4 snapshot from JSON."
+  "Decode and validate a version 5 snapshot from JSON."
   (condition-case error-data
       (let* ((wire (json-parse-string json
                                       :object-type 'alist
@@ -108,7 +108,7 @@ runner.")
                     (isled-snapshot--bytes
                      (isled-snapshot--field wire 'root) "root")))
              (wire-issues (isled-snapshot--field wire 'issues)))
-        (unless (eql version 4)
+        (unless (eql version 5)
           (isled-snapshot--invalid
            "unsupported schema version: %S" version))
         (unless (and (stringp root) (file-name-absolute-p root))
@@ -427,15 +427,15 @@ unchanged, including literal backslashes."
         (setq previous id)))))
 
 (defun isled-snapshot--validate-distinct-identities (issues unavailable)
-  "Require sorted ISSUES and UNAVAILABLE files to have disjoint identities."
-  (while (and issues unavailable)
-    (let ((issue-id (isled-issue-id (car issues)))
-          (file-id (isled-unavailable-id (car unavailable))))
-      (cond
-       ((equal issue-id file-id)
-        (isled-snapshot--invalid "unavailable identity is also an issue"))
-       ((string< issue-id file-id) (setq issues (cdr issues)))
-       (t (setq unavailable (cdr unavailable)))))))
+  "Require ISSUES and UNAVAILABLE files to have unique, disjoint identities."
+  (let ((ids (make-hash-table :test #'equal)))
+    (dolist (issue issues)
+      (let ((id (isled-issue-id issue)))
+        (when (gethash id ids) (isled-snapshot--invalid "duplicate issue identity"))
+        (puthash id t ids)))
+    (dolist (file unavailable)
+      (when (gethash (isled-unavailable-id file) ids)
+        (isled-snapshot--invalid "unavailable identity is also an issue")))))
 
 (defun isled-snapshot--field (object field)
   "Return required FIELD from alist OBJECT."

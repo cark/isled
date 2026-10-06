@@ -87,6 +87,18 @@ pub(crate) fn parse_filters(
     };
 
     Ok(Filters {
+        work_reason: arguments
+            .work_reason
+            .map(|value| {
+                value.parse().map_err(|_| {
+                    AppError::Invocation(format!(
+                        "invalid work reason: {value}; use review or clarification"
+                    ))
+                })
+            })
+            .transpose()?,
+        oldest_first: arguments.oldest_first,
+        limit: arguments.limit,
         status,
         work_state: arguments
             .work_state
