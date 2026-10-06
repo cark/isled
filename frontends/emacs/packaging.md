@@ -3,7 +3,7 @@
 These recipes install Isled directly from GitHub. The `release` branch follows
 frontend versions whose compatible CLI is already published; `v0.33.1` selects
 this release. On first use, the frontend automatically downloads its
-matching CLI. Isled is not yet on MELPA.
+matching CLI.
 
 You can also follow `main`: an unreleased frontend can keep the same published
 CLI pin. To test an unpublished CLI change, use the
@@ -11,25 +11,20 @@ CLI pin. To test an unpublished CLI change, use the
 
 All managers install the same Lisp libraries and declared dependencies. The
 frontend's `isled-required-cli-version` selects its compatible CLI; a package
-manager's version number does not. An unreleased frontend can retain that pin only while its required CLI behavior
+manager's version number does not.
+
+An unreleased frontend can retain that pin only while its required CLI behavior
 remains compatible. A wire change requires a new compatible CLI pin and a paired
 release. Until that release is published, use the matching source build described
 in [source development setup](CONTRIBUTING.md#source-development-setup).
 
 ## MELPA
 
-The [recipe](recipes/melpa/isled) follows `release`, which advances only after
-the matching CLI release is publicly available. It selects the frontend libraries
-and root MIT license. MELPA generates the package descriptor from `isled.el`.
-There is no committed `isled-pkg.el` or package-specific build command.
+Isled is not listed on MELPA yet. Use one of the GitHub recipes below or the
+[release archive](README.md#from-the-release-archive).
 
-The recipe omits tests, demos, contributor tools and Markdown documentation,
-following [MELPA's packaging guidance](https://github.com/melpa/melpa/blob/master/CONTRIBUTING.org).
-The standalone source tar retains its guides and images.
-
-After archive acceptance, normal `package-install` or `use-package :ensure`
-will install Isled. Emacs 30's bundled Transient is older than Isled requires;
-package.el users need `package-install-upgrade-built-in` enabled.
+Package.el users need `package-install-upgrade-built-in` enabled so Emacs 30's
+older bundled Transient can be upgraded.
 
 ## Elpaca
 
@@ -95,116 +90,30 @@ scripts, recipes, tests and demos from byte compilation of the cloned repository
 See the Emacs Info node `(emacs) Fetching Package Sources` and
 `(use-package) Install package from VC`.
 
-## Shared installer boundary
+## CLI setup and updates
 
-Package managers own fetching Lisp, dependencies, autoloads and compilation.
-They need no Isled-specific download or install hooks. Loading and compiling
-the package must not fetch or run its CLI.
+Your package manager installs the Lisp code, dependencies, autoloads and bytecode.
+It needs no Isled-specific install hook. Loading or compiling the package does
+not download or run a CLI.
 
-The installer runs on the first Isled command that needs the CLI,
-using the frontend's explicit pin. It stores complete executable/skill bundles outside package
-directories and preserves them when a manager rebuilds or replaces the Lisp
-package. It works without inspecting Git state, package-manager metadata
-or archive version numbers. The [release contract](../../agent-docs/decisions.md#public-installation-direction-planned)
-owns automatic download, integrity, upgrade and recovery behavior.
+The first Isled command that needs it downloads the frontend's exact compatible
+CLI and matching agent skill. They live outside package directories, so package
+rebuilds leave them intact. Setup shows their stable `current` paths; retrieve
+them again with `M-x isled-show-installation`.
 
-The downloader allows HTTPS only, with redirects limited to GitHub's release
-delivery hosts. Metadata is limited to 256 KiB and archive/executable sizes to
-128 MiB: generous headroom for the current few-megabyte binaries, with finite
-limits for unexpected responses. Each asset gets two minutes to download;
-executable identity checks get ten seconds. Both waits are cancellable. Hashing
-and decompression use Emacs facilities; extraction accepts only the six regular
-members in the [release bundle](../../scripts/releasing.md#artifact-contract).
-The verified CLI then owns platform-directory resolution, immutable version
-storage and `current` activation, with a cancellable one-minute timeout.
-Emacs displays the returned stable paths and executes its exact versioned CLI.
+A frontend update reuses its CLI offline while the pin is unchanged. A new pin
+needs its published release, or an explicit matching source build. Work state,
+timers and queue ordering in current `main` need the 0.35 pair; the published
+0.33.1 package predates them.
 
-The [user guide](user-guide.md#cli-setup-and-upgrades) explains setup commands,
-cancellation, cache recovery and explicit release/development executables.
+See [setup and recovery](user-guide.md#cli-setup-and-upgrades) for cancellation,
+upgrades and separately installed executables.
 
-To test an installed package against real staged binaries before publication:
+<a id="shared-installer-boundary"></a>
+<a id="reproduce-the-packaging-checks"></a>
+<a id="submission-handoff"></a>
 
-```console
-python3 scripts/package-emacs.py --output /path/to/isled-candidate.tar
-python3 scripts/check-cli-installer.py \
-  --package /path/to/isled-candidate.tar --artifacts /path/to/release-candidate \
-  --dependencies /path/to/check-packages --output /path/to/new-installer-check
-```
+## For contributors
 
-This verifies the complete staged set and serves it on loopback. Each scenario
-starts a fresh batch editor with an empty tool PATH and replaces its package
-directory. Checks cover automatic first use, canceled setup, missing assets,
-offline cache reuse, explicit executables and unsupported platforms.
-Add `--upgrade /path/to/upgrade-candidate` for two real versioned builds: corrupt
-and interrupted upgrade downloads, retry, upgrade with the old CLI still running,
-frontend rollback and an explicit version mismatch. The
-[native staging workflow](../../scripts/releasing.md#native-staging) builds this
-second candidate strictly for acceptance, with no version change to the release.
-Only the test's request destination changes. Production HTTPS/redirect policy,
-hash checks, extraction, identity checks and activation remain enabled. This
-fixture establishes acceptance only on the native host where it runs; public
-endpoint checks remain part of publication. Logs and the JSON receipt record
-each case, the source and package identities, editor version and platform.
-Use `--live` instead of the upgrade fixture to check public HTTPS delivery with
-no URL substitution. It covers automatic installation, offline package replacement,
-explicit executables and unsupported-platform handling.
-`check-published-cli.py` retrieves and verifies the complete pinned release, builds
-the current frontend package and runs those live cases against the published CLI.
-It then runs the frontend suite against the managed executable;
-native CI uses this alongside the source-built checks.
-
-## Reproduce the packaging checks
-
-The check uses Python 3.9+, Git, Emacs 30.1+ and three external tool checkouts:
-[MELPA](https://github.com/melpa/melpa),
-[Elpaca](https://github.com/progfolio/elpaca) and
-[straight.el](https://github.com/radian-software/straight.el).
-Record their exact revisions; the output receipt does this automatically.
-Git-based managers resolve their normal dependencies over the network. The
-archive and package-vc checks use an explicit isolated directory populated by
-the [contributor dependency setup](../../CONTRIBUTING.md#emacs-checks-without-nix).
-
-Start from a committed or snapshotted Isled candidate, with the complete verified
-artifact set from [release staging](../../scripts/releasing.md):
-
-```console
-python3 -B scripts/check-package-recipes.py \
-  --revision COMMIT --artifacts /path/to/release-candidate \
-  --dependencies /path/to/check-packages \
-  --melpa /path/to/melpa --elpaca /path/to/elpaca \
-  --straight /path/to/straight.el --output /path/to/new-check-directory
-```
-
-Use straight.el's `develop` branch when preparing its checkout. The output
-directory must be new. Each case gets a separate editor configuration and package
-directory; no working daemon or real ledger is used. The check creates local
-release/tag refs and an unreleased frontend revision in a disposable Git
-repository. It neither publishes refs nor changes the source checkout.
-
-Checks cover MELPA package construction, direct Git branch/tag/commit selection,
-all runtime libraries and bytecode, dependency versions, load-time side effects,
-and the CLI pin's mapping to real verified artifacts. They also install an
-unreleased frontend with a different Lisp version and the same CLI pin.
-Add `--published` to check the actual public `release`, tag, commit and `main`
-refs anonymously; omit it to keep using disposable local refs. This is a focused
-package-manager check on one host, not an OS-by-manager matrix or acceptance of
-CLI provisioning. Logs and JSON receipts remain in the
-output directory; `--managers` and `--selectors` allow focused reruns.
-
-## Submission handoff
-
-The initial packaged release uses the direct Git routes above. Once the pinned
-CLI assets and distribution refs are public and verified, users can install
-through their package manager without waiting for MELPA listing.
-
-The [MELPA submission draft](recipes/melpa-submission.md) is prepared locally.
-Before sending it, confirm the public release assets and `release` branch are
-available and that the maintainer has reviewed the package and submission.
-MELPA's [PR template](https://github.com/melpa/melpa/blob/master/.github/PULL_REQUEST_TEMPLATE.md)
-also requires at least one month of public repository history. Keep that
-submission condition separate from local recipe acceptance and the first release.
-
-Runtime files retain their MIT SPDX headers, author credit and `Assisted-by`
-attribution. Attribution identifies current Codex assistance; it is not a complete
-historical model inventory. Recheck MELPA's current requirements and package
-lint when submitting. Archive acceptance remains MELPA's decision.
+Recipe construction, installer acceptance and archive submission live in
+[package installation and release checks](CONTRIBUTING.md#package-installation-and-release-checks).

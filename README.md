@@ -1,6 +1,6 @@
 # Isled — a personal issue ledger
 
-Keep project concerns, evidence and decisions beyond the current conversation.
+Keep the next step clear, even after the conversation ends.
 Isled stores issues as local Markdown files, with a CLI to manage them and an
 [Emacs frontend](frontends/emacs/README.md) to explore and edit them.
 
@@ -15,6 +15,8 @@ and pick up where the last session stopped.
 
 - **Context:** what needs attention and why it matters.
 - **Dependencies:** what is ready and what is waiting on other work.
+- **Work in progress:** what is queued, being worked on, or waiting for an answer or review.
+- **Time:** separate work sessions and their total, when you choose to track them.
 - **Evidence and outcomes:** what was checked and how the concern was resolved.
 
 Each issue has a stable ID and a file under `.issues/`. Markdown is the source
@@ -38,9 +40,9 @@ Isled; [contributor guidance](CONTRIBUTING.md) covers working on Isled itself.
 
 ## Emacs frontend
 
-Browse a dependency hierarchy, filter as you type, and create or edit issues
-in a structured draft. The view refreshes when files change, including changes
-made by an agent through the CLI.
+Browse a dependency hierarchy, filter as you type, and create or edit issues.
+Queue the next task, start its timer, or leave a question for the owner. The view
+follows changes made on disk, including changes made by an agent through the CLI.
 
 [See the demos and install the package](frontends/emacs/README.md).
 The frontend downloads its matching CLI automatically on first use.
@@ -90,6 +92,32 @@ in the current directory or its parents. Use `--root PATH` to choose one explici
 Continue with the [user guide](user-docs/README.md), or run
 `isled help COMMAND` for exact syntax and examples.
 
+## Pick up work, pause, come back
+
+Work tracking is optional. Queue an issue when it is next in line, start when
+you begin, and pause when you stop:
+
+```console
+isled work queue 1
+isled work start 1 --activity Implementation
+isled work pause 1
+isled work start 1 --activity Testing
+isled work await 1 --reason review
+isled work show 1
+```
+
+Each resumed session adds a span. The total counts work, leaving breaks and
+waiting time out. Use `--no-clock` with Start if you only want the state.
+In Emacs, press `w` on the issue for the same actions.
+
+Find the oldest ready task with
+`isled list --ready --work-state queued --oldest-first --limit 1`.
+The [work guide](user-docs/work-tracking.md) covers questions, review queues
+and forgotten timers.
+
+Work tracking and queue ordering are in the current 0.35 source version. Until
+its paired release is published, use a matching [source build](CONTRIBUTING.md#build).
+
 ## Requirements
 
 | What you use | What you need |
@@ -101,8 +129,8 @@ Continue with the [user guide](user-docs/README.md), or run
 Prebuilt releases target **x86-64 Linux 5.4+**, **x86-64 Windows 10+** and
 **Apple Silicon macOS 15+**. Other platforms can use a source build.
 
-Native CI checks installation and recovery on Ubuntu 24.04, Windows Server 2025
-and macOS 15. The new shared installer still needs native release acceptance.
+Release checks cover installation and recovery on Ubuntu 24.04, Windows Server 2025
+and macOS 15.
 Linux 5.4 and Windows 10 are compatibility targets, not direct test environments.
 See the [release checks](scripts/releasing.md#native-staging).
 

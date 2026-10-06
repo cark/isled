@@ -1,9 +1,14 @@
 # Bounded frontend protocol
 
+Use this protocol to build a client that loads headings first and issue bodies
+as needed. For everyday commands, start with the [user guide](README.md).
+
 `isled frontend --stdin` reads one JSON request and writes one complete,
 newline-terminated JSON response. Both use `schema_version: 5`. Invalid input
 fails before project discovery; operational failures produce stderr, exit 1,
-and no partial JSON. Version 5 adds current-state entry times, owner-reason
+and no partial JSON.
+
+Version 5 adds current-state entry times, owner-reason
 filtering, oldest-first ordering and limits to work tracking. It retains
 Open/Closed lifecycle values and `outcome` reference fields. Older requests are
 rejected; update the CLI and frontend together. Existing records need no conversion
@@ -16,14 +21,7 @@ for work tracking. Complete schema-5 `snapshot` output is supported separately.
 ```
 
 - `mode` is `refresh`, `view`, `details`, or `choices`.
-- `filter` is optional: `status` defaults to `open`, accepts `closed` or `all`;
-  optional `kind`, `work_state`, `work_reason` and a `tags` array use existing list semantics.
-  Work-state values are `not-queued`, `queued`, `in-progress` and `awaiting-owner`.
-  Work reasons are `review` and `clarification`. `oldest_first` defaults to false;
-  true sorts by Since, then ID, with undated issues last. Optional non-negative
-  integer `limit` caps issues after all criteria, including kinds and text; zero
-  returns none. No limit means all matches. Rust filters summaries; tags are not
-  sent per summary.
+- `filter` is optional; see [filters](#filters) below.
 - `choice_filter` optionally supplies independently parsed completion criteria,
   using the same fields and defaults as `filter`. See [completion choices](#filter-selection-and-completion-choices).
 - `view_hash` is an optional previous view hash.
@@ -37,16 +35,36 @@ Unknown request fields and duplicate detail IDs are errors. Root discovery and
 An optional `graph` field requests the [dependency layout](#dependency-layout).
 Omitting it preserves the existing flat response and avoids graph extraction.
 
-`refresh` reconciles the full ledger once, then obtains filtered summaries,
-ledger-wide unreadable diagnostics, and requested details under the same lock.
-`view` selects cached summaries, with ordinary best-effort cache freshness.
-`choices` returns only completion choices: it does not select a view or inspect
-requested details. Its `view_hash` must be absent/null and `details` absent/empty.
+### Filters
+
+| Field | Selection |
+| --- | --- |
+| `status` | `open` by default; also `closed` or `all`. |
+| `kind`, `work_state`, `work_reason`, `tags` | Metadata constraints with the same semantics as CLI listing. |
+| `oldest_first` | False by default; true sorts by Since, then ID, with undated issues last. |
+| `limit` | Optional non-negative integer; caps issues after every criterion, including text. Zero returns none; absent means all matches. |
+
+Work states are `not-queued`, `queued`, `in-progress` and `awaiting-owner`.
+Owner reasons are `review` and `clarification`. Rust filters summaries;
+tags are not sent per summary. See [text and completion](#filter-selection-and-completion-choices)
+for `text`, conjunctive `kinds` and scoped choices.
+
+### Read scopes
+
+| Mode | Read scope |
+| --- | --- |
+| `refresh` | Reconcile the whole ledger, then get filtered summaries, ledger-wide unreadable diagnostics and requested details under one lock. |
+| `view` | Select cached summaries with ordinary best-effort freshness. |
+| `details` | Inspect requested records and their direct neighbors, sharing reads and parsing. |
+| `choices` | Return completion choices without selecting a view or inspecting requested details. |
+
+Choices-only requests need absent/null `view_hash` and absent/empty `details`.
 Detail requests reject `choice_filter`.
-`details` inspects only requested records and their direct dependency neighbors,
-sharing reads and parsed records across the batch. Ordinary cache membership
-reconciliation may enumerate filenames and inspect newly discovered or pending
-files; it does not reread every existing body. Missing, incompatible, or corrupt
+
+Normal cache membership reconciliation may enumerate filenames and inspect new
+or pending files. It does not reread every existing body.
+
+Missing, incompatible, or corrupt
 caches can require a full rebuild before completing any mode. Rust owns that
 recovery; clients need no recovery handshake or successful-rebuild notice.
 Unrecoverable failures remain errors.
@@ -60,9 +78,12 @@ The top-level fields are `schema_version`, losslessly encoded `root`,
 `first_warning` is independent of the filter and conditional view hash. It is
 null when no retained issue findings exist, otherwise the lowest affected ID as
 `{"type":"issue","issue":SUMMARY}` or `{"type":"problem","problem":PROBLEM}`.
-Summary/problem shapes are the same as below. This field was introduced in
+Summary/problem shapes are the same as below.
+
+This field was introduced in
 schema 3; schema-5 consumers may still treat absence as unavailable warning
 navigation. It is returned even when `view` and `changes` are unchanged.
+
 `warning_targets` contains every affected issue once, ordered by ID, using the
 same summary/problem shapes. It is independent of filtering and conditional
 view hashes and reads only cached metadata; destinations load bodies as needed.
@@ -71,6 +92,8 @@ for single-target navigation. Empty arrays mean no known findings.
 
 Known state is not proof of a whole-ledger check. Detail warnings include retained
 findings that cannot yet be disproved because a related record is unreadable.
+
+### Summaries and changed details
 
 For refresh/view requests, `view_hash` identifies the current view; `view` is
 null when it matches the supplied hash, otherwise an object with:
@@ -104,10 +127,12 @@ do. Targeted lookups report uncertain absence as a problem, not a deletion.
 
 Hashes are XXH3-64 of the compact JSON representation of the complete view or
 of a detail payload including its `type`. Detail identity is the request/map key.
+
 The hash covers content, readiness, reference resolutions, relation warnings,
 and returned target summaries/problems. A dependency changing can therefore
 invalidate detail data while the selected issue's authored bytes stay equal.
 Clients treat hashes as opaque conditional tokens, not authenticated identities.
+
 The accepted negligible accidental collision risk is the same as the disposable
 content cache; these hashes are not security checks.
 
@@ -133,11 +158,12 @@ EOF
 
 `graph` accepts `direction` (`prerequisites` or `dependents`) and an optional
 previous `hash`, with the same 16-lowercase-hex syntax as other conditional tokens.
-It is valid only with `view` or `refresh`. All ordinary filter criteria apply, including issue limits after matching and
-oldest-first selection. Layout orders that selected set by dependencies; it does
-not promise FIFO row order:
-status first, then work state, tag, kind and text selection. Emacs requests a graph only in
-hierarchical mode; flat mode requests summaries without one.
+It is valid only with `view` or `refresh`.
+
+All filter criteria apply before layout, including work state, owner reason,
+tags, kind, text, oldest-first selection and issue limits. Layout then orders
+that selected set by dependencies; it does not promise FIFO row order.
+Emacs requests a graph only in hierarchy mode. Flat mode uses summaries alone.
 
 For a filtered Open graph:
 
@@ -171,7 +197,9 @@ Connected components stay contiguous and are placed by their smallest issue ID;
 independent issues are singleton components in that same order. Inside each
 component, dependency order takes precedence and newly unblocked branches are
 followed first, preferring fewer outgoing edges and then issue ID among nodes
-unblocked together. Lane zero is reserved for roots (`start: null`); incoming tracks
+unblocked together.
+
+Lane zero is reserved for roots (`start: null`); incoming tracks
 and their terminal issues occupy higher lanes. Algorithm changes invalidate the
 graph token; the junction revision uses algorithm version 3.
 
@@ -181,14 +209,19 @@ graph token; the junction revision uses algorithm version 3.
 Ordinary steps derive outgoing destinations from that row's `targets`, mapped
 to step indices; they do not repeat the edge list on the wire.
 
+### Drawing junctions
+
 Sources with identical sets of at least two destinations may instead have
 `join`, the index of a later routing-only step. That junction has `row: null`,
 its own `lane` and `start`, and `targets` containing the shared **semantic row
 indices**. At least two sources must feed it, and its outgoing set must equal
 each source's original outgoing set. Junctions never join other junctions.
+
 This permits a merge followed by a separate split without inventing edges or
 duplicating issues. Clients validate the drawing against the semantic rows;
-no four-way junction is needed. Text geometry may use several horizontal
+no four-way junction is needed.
+
+Text geometry may use several horizontal
 routing lines between issue headings, interrupting vertical strokes at
 non-joining crossings. Routing steps add no selectable issues or loaded bodies.
 
@@ -198,10 +231,14 @@ edge only when both readable endpoints meet the complete filter. Never
 bridge an excluded intermediate node. Readiness retains its actual-ledger meaning.
 Unreadable records and retained warnings use the existing independent fields.
 
+### Graph freshness and bounds
+
 The graph token covers algorithm version, status, direction, selected identities
 and direct edges, plus omitted-connection counts. Title/prose changes do not
 change it unless they change text-filter membership; relevant edge changes do even when
-headings and readiness remain equal. Thus a response can have null `view` and a
+headings and readiness remain equal.
+
+Thus a response can have null `view` and a
 changed graph plan, or changed headings and null `graph.plan`. Validate a retained
 or supplied plan against the current heading membership before displaying it.
 
@@ -210,11 +247,13 @@ additional filters in one indexed pass, and lays out the remaining direct edges.
 Warm metadata-only graph selection does not read issue bodies; refresh, explicit detail requests and text matching retain
 their existing read scopes. Emacs retains the logical plan; ordinary scrolling
 and expansion make no layout request. No persistent Rust layout cache is used.
+
 Transport and retained logical storage grow with nodes plus edges, without a
 dense row-by-lane matrix. A provisional 1,000,000-edge budget retains the measured
 candidate's allocation bound for status-selected edges before additional filters:
 exceeding it rejects the graph request, preserving
 the previous view. No edge is silently omitted, and lane width has no fixed cap.
+
 Cycles are errors. Clients keep their last good view on failure.
 
 Graph view requires the matching CLI and frontend. There is no graph fallback for
@@ -227,7 +266,9 @@ separate schema-5 boundary shared with complete snapshots.
 The optional `filter.text` array adds case-insensitive literal terms. Every term
 must occur somewhere in the candidate's complete Markdown record; terms may match
 across different sections, including relation reasons. A term containing spaces
-is a phrase. Empty or multiline terms are invalid. `filter.kinds` adds conjunctive
+is a phrase. Empty or multiline terms are invalid.
+
+`filter.kinds` adds conjunctive
 kind constraints alongside the existing optional `kind`; incompatible kinds
 produce no matches. Existing request defaults and CLI `search` behavior remain.
 
@@ -241,7 +282,9 @@ boundary.
 Refresh/view responses also contain `choices`, an array of prefixed strings:
 `t:NAME`, `k:NAME`, `s:open`, `s:closed`, `w:STATE` for all four work states, and `r:review`/`r:clarification`. Choices cover the ledger's cached
 metadata, independently of the current filter, and are returned even when `view`
-is null. `s:closed` is a frontend label for stored status `closed`; request
+is null.
+
+`s:closed` is a frontend label for stored status `closed`; request
 `filter.status` still uses `closed`. Detail responses omit choices. Clients
 may ignore this additive field. The human filter grammar belongs to the Emacs
 frontend; this protocol transports its parsed criteria.
@@ -251,24 +294,34 @@ of those criteria, including Unicode text terms and literal phrases. Tags and
 kinds come only from those matching issues. Status choices ignore the supplied
 status constraint, because choosing a status replaces status rather than adding
 another constraint. With no matching issue, that category has no choices;
-an empty ledger yields an empty array. Statuses appear first (`open`, `closed`),
+an empty ledger yields an empty array.
+
+Statuses appear first (`open`, `closed`),
 then work states in `not-queued`, `queued`, `in-progress`, `awaiting-owner`
 order, then owner reasons (`review`, `clarification`), then unique alphabetically
-ordered tags and kinds. Work-state choices
+ordered tags and kinds.
+
+Work-state choices
 ignore the supplied work-state constraint while respecting the other criteria.
 Owner-reason choices similarly ignore the reason constraint. Limits never cap
-completion choices; they describe matching metadata, not just displayed rows. Cached tag and kind values
+completion choices; they describe matching metadata, not just displayed rows.
+
+Cached tag and kind values
 are fully validated in that order before contextual choices return, including
 when no issue matches. Text read failures still fail the complete response.
 
-Work passage alone does not change hashes: completed seconds and the running
+Elapsed time alone does not change hashes: completed seconds and the running
 start are stable; clients calculate elapsed running time when needed.
 
 Clients send the criteria remaining after removing the exact token occurrence
 being edited. For status completion they remove every status token. The full
-`filter` still describes the actual typed query for the preview. A cursor move
+`filter` still describes the actual typed query for the preview.
+
+A cursor move
 or partial token can request `choices` alone; valid text edits can obtain both
 the preview and contextual choices in one `view` request. Both selections share
-the command's retained file reads. There is no persistent completion cache or
+the command's retained file reads.
+
+There is no persistent completion cache or
 text index. Omitting `choice_filter` retains the older ledger-wide choices,
 including both status labels, all four work states and both owner reasons.

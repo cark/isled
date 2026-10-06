@@ -1,209 +1,191 @@
-# User documentation
+# Isled user guide
 
-See [work state and time](work-tracking.md) for optional queues, owner questions
-and resumable clocks.
-See [complete issue drafts](editor.md) for the versioned load/validate/save interface.
-See [installation and updates](installation.md) for shared executable/skill storage,
-stable paths and installation JSON.
+Keep an issue close to the work: describe the concern, follow its dependencies,
+record what you checked, and leave a clear outcome.
 
-## Command surface and storage
+Use the CLI from your project directory, or browse the same ledger in
+[Emacs](../frontends/emacs/README.md). For installation, start with the
+[README](../README.md#installation).
 
-The `isled` command manages a local Markdown issue ledger. Start with
-[installation and a quick example](../README.md#installation). Its help is the
-operational command contract.
+## Start a ledger
 
-The [cache contract](cache.md) owns metadata-query freshness, explicit
-`cache refresh [ISSUE]`, incomplete-result warnings, and recovery. Source files
-remain authoritative; inspection may maintain disposable cache data and correct
-copied relation titles, preserving other bytes.
+```console
+isled init
+isled add 'Resume interrupted downloads' --kind feature 'Keep completed chunks when the connection drops.'
+isled list --with-path
+isled show 1
+```
 
-The repository-built Rust command supports inspection through `list`, `search`,
-`show`, `path`, `work show`, `snapshot`, `frontend --stdin`, `wait show`, and `wait tree` commands, plus `init`,
-`add`, title, tag and priority changes, wait addition/removal/repair, statement
-set/append/replace, evidence addition, outcome setting, work state and clock
-actions, and `close`. Add, list,
-search, and wait inspection accept `--with-path`. These mutation commands use
-the established `.issues/`
-records, directory lock, no-reuse ID allocation, and atomic per-file
-replacement contract. Canonical issue filenames and complete Markdown records
-must be valid UTF-8. Commands read only the records or headers their semantics
-need: allocation uses filename identities; `path`, `list`, `wait show`, and
-`wait tree` use cached metadata; `show`, closure, and local edits use their target; wait changes and
-title edits add cached relations and participating records. Malformed prose in an unrelated
-issue therefore does not block those operations. `search` and `snapshot` still
-read every complete record; snapshot reports unreadable files separately,
-while `check` remains the raw-byte recovery
-interface. Every command fails before mutation if one of its required inputs is
-invalid. Single-ID `show` selects by canonical filename identity and emits valid-UTF-8
-bytes as currently stored after copied-title reconciliation, even when the heading, metadata, or
-sections are malformed. Duplicate filename identities fail even if one matching
-record is malformed. Edits parse the selected record and report its actual
-parsing error before writing; malformed content is not treated as a missing
-issue. `search` is literal and
-case-insensitive with full Unicode folding and does not require Perl.
+The new issue is `0001` in a fresh ledger. Commands find the nearest `.issues/`
+in the current directory or its parents. Use `--root PATH` to choose a ledger.
+`init` adds it to `.gitignore`; your project notes stay local.
 
-For metadata-only selection, use `isled list` and compose its status,
-readiness, work-state, kind, tag, and wait filters; `isled list --ready
---with-path` is the direct ready-work query. `search` requires record text.
-`frontend --stdin` supplies [bounded frontend data](frontend.md); `snapshot`
-remains the complete wire interface and is not needed for routine filter
-queries. Top-level, list, search, and snapshot help all route users accordingly,
-and the common mistaken `isled ready` spelling points directly to
-`isled list --ready` rather than suggesting an unrelated command.
+## Find the next step
 
-For issue creation, use `isled add`; `isled help add` includes single-line
-and multiline Statement examples. `create` is not an alias: `isled create`,
-`isled help create`, and `isled create --help` fail with a hint naming `add`
-and its help. These rejected invocations use stderr and exit 1 before project
-discovery or any ledger change.
+Use `list` when the answer is in an issue's metadata. Use `search` for words
+anywhere in its Markdown, including dependency reasons.
 
-Each record uses the ordered level-two sections `Metadata`, `Statement`,
-`Evidence`, and `Outcome`, with an optional `Work log` between Statement and
-Evidence. Metadata is a Markdown list containing status,
-kind, creation date, optional work state, optional comma-separated tags, and optional nested
-relations. Statement is non-empty Markdown, evidence is a non-empty list, and
-outcome is one non-empty paragraph which may contain ordinary line wraps.
-Semantic outcome mutations still accept one line. The exact grammar is documented in
-[the format contract](record-format.md).
+```console
+isled list --ready
+isled list --kind bug --tags offline --with-path
+isled search --status open 'interrupted download'
+```
 
-Every CLI issue-ID argument accepts one through four ASCII digits, optionally
-prefixed by `#`: `1`, `0001`, `#1`, and `#0001` identify the same issue. Zero,
-longer values, signs, and non-ASCII digits are rejected. Storage and output
-always use the canonical four-digit form. Quote or escape a hash-prefixed ID in
-a shell because an unquoted `#` may begin a comment.
+Filters combine: an issue must match every one. Search is literal and
+case-insensitive, with Unicode case folding. Put search options before the text.
 
-`isled title set ISSUE TITLE` changes the semantic heading title on an
-open or closed issue and refreshes its copied title in directly related
-records. It accepts the same non-empty, single-line, tab-free title as creation.
-Stable IDs, filenames, slugs, relation meaning, and prose remain unchanged, so
-existing path links stay valid. Repeating the current title is a no-op;
-frontends receive the new semantic title on their next snapshot refresh.
+To inspect a dependency and the reason for it:
 
-For complete multiline Statements at creation, whole-Statement updates, additions,
-and targeted edits, see [Statement editing](statement-editing.md): stdin add,
-set, append, and literal replace,
-including deletion with an empty replacement and explicit repeated-match selection.
+```console
+isled wait show 1
+isled wait tree 1
+isled wait tree 1 --dependents
+```
 
-## Inspecting several issues
+## Pick up work
 
-`isled show 46 57 67` prints valid records in requested order. Repeated
-IDs repeat output, with shared setup, reads and parsing. Record titles provide
-the boundaries: there are no decorative separators. A newline is inserted only
-between emitted records when the previous record lacks one; the combined stream
-is a readable overview, not a byte-exact archive.
+Queue an issue, start when you begin, and pause for a break:
 
-With multiple ID arguments, malformed, missing and unreadable records are omitted
-from stdout. Their actual errors go to stderr with the requested canonical ID;
-remaining records still print, and any requested failure gives exit status 1.
-Repeated arguments select this batch behavior even if they name the same issue.
-Use a single-ID `show` to inspect malformed valid-UTF-8 content unchanged.
-Relation warnings retain their codes and participant roles, use the requested ID
-prefix, and neither hide valid records nor cause failure. Invalid ID arguments
-are rejected before processing the batch; unavailable stores and cache failures
-remain command-level errors.
+```console
+isled work queue 1
+isled work start 1 --activity Implementation
+isled work pause 1
+isled work start 1 --activity Testing
+isled work await 1 --reason review
+isled work show 1
+```
 
-Both streams appear in a terminal. Prior stdout is flushed before issue
-diagnostics; independently captured streams have no combined ordering guarantee.
-`isled show 46 57 | less` pages records while diagnostics go directly to
-the terminal. Use `isled show 46 57 2>&1 | less` to page both. There is
-no automatic pager. Inspection retains the existing cache freshness and
-[copied-title reconciliation](cache.md) boundary. The
-[accepted rationale](../agent-docs/decisions.md#batch-issue-inspection) explains
-the distinction between raw single inspection and readable batch output.
+Each resumed session gets a span. Review and questions stop the timer while you
+wait. For states alone, use Start with `--no-clock`.
 
-## Dependency tree inspection
+Find the earliest queued task or pending review:
 
+```console
+isled list --ready --work-state queued --oldest-first --limit 1
+isled list --work-reason review --oldest-first
+```
 
-`isled wait tree ID` shows the transitive dependencies of one issue;
-`--dependents` instead shows issues that transitively depend on it. The human
-tree contains canonical IDs, status/readiness, semantic titles, and a separate
-reason line. `--with-path` adds a separate canonical path line. Shared nodes are
-shown wherever reached but expanded once. Preserved relations that no longer
-block remain visible as terminal historical leaves, so old context does not
-pull an irrelevant subtree into the result.
+Work tracking is optional. See [work state and time](work-tracking.md) for owner
+questions, timer corrections and arrival order. These features require the
+current 0.35 source version until its paired release is published.
 
-`--json` emits deterministic schema-version-2 adjacency data for agents. Its
-top level contains `root`, `direction`, and an ascending-ID `issues` array.
-Each issue contains `id`, `status`, `ready`, `title`, and the `waits_on`
-relations included in the returned directional subgraph; each relation keeps
-the true dependent-to-dependency target ID and reason even for a dependents
-query. With `--with-path`, paths use the same lossless `encoding` and `value`
-representation as snapshots. Tree output deliberately excludes issue prose,
-kind, tags, evidence, and outcome.
+## Keep the issue useful
 
-## Frontend snapshot
+```console
+isled title set 1 'Resume guide downloads after reconnecting'
+isled statement append 1 'Keep the previous saved guide usable until the replacement is complete.'
+isled evidence add 1 'The interrupted download resumed on the same chunk in the offline trial.'
+isled outcome set 1 'Downloads resume without replacing the saved guide with incomplete content.'
+```
 
-The [snapshot wire contract](snapshot.md) owns schema version 5, byte encodings,
-readiness, and inline-reference recognition and coordinates. This is a frontend
-interface, not a replacement for focused CLI queries.
+Title changes keep the ID and filename, so existing links still work. Related
+issues receive the updated copied title. Use [Statement editing](statement-editing.md)
+for multiline text and precise replacements.
 
-## Emacs frontend
+If one issue needs another, use `wait add ISSUE BLOCKER REASON`. Both records
+keep the relation. Closing the blocker satisfies it without erasing the reason.
+Live help explains tag, priority and dependency edits:
 
-The [Emacs getting-started guide](../frontends/emacs/README.md#getting-started)
-explains the default `C-x p i` shortcut and expandable issue views. See
-[issue filtering](../frontends/emacs/user-guide.md#issue-filtering) for query syntax,
-examples, and completion choices, [appearance customization](../frontends/emacs/user-guide.md#theme-and-identity-styling)
-for colors and fonts, or [key binding configuration](../frontends/emacs/user-guide.md#key-binding)
-to change the shortcut. The frontend user guides also cover navigation, refresh
-and installation. Package validation lives in the
-[frontend contributor guide](../frontends/emacs/CONTRIBUTING.md#validation).
+```console
+isled help tag
+isled help wait
+```
 
 ## Issue lifecycle and integrity
 
-Evidence records concrete support for an issue's outcome; outcome records
-the resulting decision or handling. Closure requires both at least one
-concrete evidence entry and a outcome. The pending-evidence marker does
-not count as evidence, and `check` reports `EVIDENCE_PENDING` if a closed
-record still contains it.
-Evidence additions reject mixing the reserved `Pending.` placeholder with
-other entries, leaving the record unchanged.
+Close an issue once you have concrete Evidence and an Outcome:
 
-Closure is terminal. The command has no `reopen` operation. A mistaken
-closure, invalidated conclusion, or new scope receives a new issue that
-references its closed predecessor. Closure removes priority and current work state, stops any running clock, and
-preserves the complete work log. It also preserves
-both directions of every dependency relation. A relation blocks only while its
-target is open; closing the target satisfies the dependency without erasing
-its durable context.
+```console
+isled close 1
+isled check
+```
 
-A title, statement, evidence, or outcome command that actually changes its
-explicitly selected closed issue warns on stderr that it is updating the
-historical record, while preserving normal success output and exit status.
-Open-issue changes, byte-identical no-ops, and rejected operations do not warn.
-Automatic copied-title updates in related closed records add no warnings.
+Closure is permanent. For a mistaken closure, an invalidated conclusion or new
+scope, create a new issue referring to the old one. Closure stops timing, removes
+priority and current work state, and keeps the spans and dependency history.
 
-The Rust `check` command is available and read-only. Clean ledgers produce no
-output and exit successfully. Integrity findings are deterministic
-tab-separated `LOCATOR`, `INVARIANT`, and `DETAIL` rows on stdout with exit 1;
-operational failures use stderr and exit 2. It never repairs findings.
-Invalid issue names and contents produce `FILENAME_UTF8` and `CONTENT_UTF8`
-findings. Invalid filename bytes are escaped, so the report itself remains
-readable UTF-8 and identifies the entry that must be recovered.
+Editing a closed issue is allowed, with a warning that you are changing history.
+No-op edits and automatic copied-title updates in neighboring records do not warn.
+
+`check` inspects the whole ledger and never repairs it. A clean ledger prints
+nothing and exits 0. Findings are tab-separated `LOCATOR`, `INVARIANT`, `DETAIL`
+rows with exit 1; operational failures use stderr and exit 2. Invalid filename
+bytes are escaped so you can identify the file to recover.
+
+## Inspecting several issues
+
+```console
+isled show 1 2 3
+isled show 1 2 3 | less
+```
+
+Records print in request order; repeated IDs repeat the record. A missing,
+malformed or unreadable record reports its error on stderr while the others
+still print. Any requested failure gives exit 1. Use a single-ID `show` to inspect
+malformed content that is still valid UTF-8.
+
+To page diagnostics too, use `isled show 1 2 3 2>&1 | less`. Isled does not start
+a pager itself. Batch output is a readable overview; it may add a separating
+newline and is not a byte-exact archive. Invalid ID arguments fail before the
+batch starts. Relation warnings do not hide valid records or cause failure.
+
+## Dependency tree inspection
+
+`wait tree` follows prerequisites; `--dependents` follows work they unblock.
+Each entry shows its ID, status, readiness, title and reason. Add `--with-path`
+for file paths. Shared nodes appear where reached but expand once. Closed
+prerequisites remain terminal leaves, preserving context.
+
+For agents, `--json` returns schema 2 with `root`, `direction` and an ID-sorted
+`issues` array. Each issue contains `id`, `status`, `ready`, `title` and `waits_on`.
+Relations keep their dependent-to-prerequisite direction and reason even in a
+`--dependents` query. Paths use the [snapshot encoding](snapshot.md).
+
+## Command surface and storage
+
+Issues are ordinary UTF-8 Markdown under `.issues/`. The
+[record format](record-format.md) describes their sections and optional work
+fields. SQLite stores a disposable query cache, not the issue prose.
+
+Commands validate the records their operation needs. A malformed unrelated issue
+does not prevent a local edit. `list` can return partial results with warnings;
+inspect stderr before treating an omission as absence. Single-ID `show` reads the
+current file; `search`, `snapshot` and `check` inspect complete records.
+
+After external edits, use `isled cache refresh ID`, or omit the ID to refresh the
+whole ledger. Isled's own mutations synchronize automatically. See
+[cache freshness and recovery](cache.md), especially when an edit was saved but
+its cache update failed.
+
+IDs accept one to four ASCII digits, with an optional `#`: `1`, `0001` and
+`'#1'` select the same issue. Quote hash-prefixed IDs in the shell. Output uses
+four digits; IDs and filenames remain stable. Use `add` to create an issue.
+
+## Frontend snapshot
+
+Integrations can use [bounded frontend requests](frontend.md),
+[complete snapshots](snapshot.md) or [complete issue drafts](editor.md).
+These are versioned JSON interfaces. Ordinary CLI queries need none of them.
+
+## Emacs frontend
+
+The [Emacs tour](../frontends/emacs/README.md) shows browsing, filtering, editing
+and work tracking. Its [user guide](../frontends/emacs/user-guide.md) covers
+navigation, completion, appearance and key bindings.
 
 ## Help and compatibility
 
-`isled --version` (or `-V`) prints the executable version without looking for a
-ledger. Ordinary contributor builds append `-dev`; versioned packages report the
-shared release version.
+Run `isled help COMMAND [SUBCOMMAND]` for syntax, examples and failure behavior.
+Help works without a ledger. `isled --version` reports the executable version;
+source builds append `-dev`. Scripts should rely on structured data, stream
+routing and exit status, rather than the wording of diagnostics.
 
-Every command and nested operation has detailed repository-built help via
-`isled help COMMAND [SUBCOMMAND]` or direct `-h`/`--help`. Help is
-stable and colorless, works without a project, and documents arguments,
-behavior, output, failures, and important recovery constraints. Its layout and
-diagnostic prose are Rust-native; scripts must rely on command data, stream
-routing, and exit meaning rather than prose formatting.
-
-The repository-built Rust command has passed its historical version 0.1
-differential acceptance. Rust behavior, live help, this user contract, and the
-Rust tests are now authoritative; Bash comparison is optional historical
-diagnosis rather than routine acceptance.
+Keep the CLI, frontend and agent skill compatible. Older tools cannot read
+records with the new work fields. See [installation and updates](installation.md)
+for paired bundles, stable paths and rollback.
 
 ## Distribution and local development
 
-Home Manager selects a stable wrapper to an explicitly promoted Rust binary;
-source edits alone do not change that command. The
-[dogfooding procedure](../agent-docs/dogfooding.md) owns exact-candidate promotion,
-installed-command verification, rollback, and the separate source-loaded Emacs
-workflow. Ordinary promotions do not require a NixOS rebuild. Immutable Nix
-packaging remains available for stable releases; the archived Bash repository
-is historical evidence, not an operational fallback.
+Release installation and daily use need no contributor tooling. To build or
+change Isled, start with [Contributing](../CONTRIBUTING.md). The optional
+[dogfooding guide](../agent-docs/dogfooding.md) covers local candidate promotion.

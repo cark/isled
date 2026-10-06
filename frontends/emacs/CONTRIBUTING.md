@@ -6,7 +6,7 @@ For installation and daily use, start with the [README](README.md). The
 
 - [Validation and isolation](#validation)
 - [Building a package archive](#package-archive)
-- [Package manager recipes and submission](packaging.md)
+- [Package manager recipes](packaging.md) and [release checks](#package-installation-and-release-checks)
 - [Code map](#code-map)
 - [Loading and rendering](#bounded-loading)
 - [Recording README demos](#recording-readme-demos)
@@ -167,8 +167,9 @@ guides and demo GIFs and generates `isled-pkg.el` from the main library headers.
 There is no separately maintained descriptor or Makefile version.
 This does not create an Emacs package flake output.
 
-The [package recipes guide](packaging.md) owns MELPA construction, direct Git
-installation, isolated recipe checks and the later submission handoff.
+The [package recipes guide](packaging.md) covers installation with Emacs package
+managers. The [release checks below](#package-installation-and-release-checks)
+cover construction, acceptance and the archive submission handoff.
 
 Package installation byte-compiles the frontend. Use that compiled package for
 large-ledger work: interpreted source loading remains useful during development
@@ -180,6 +181,133 @@ Then use `M-x package-install-file` on
 the versioned archive in `frontends/emacs/dist/`. The `isled.el` header owns the version;
 the generated `dist/` directory
 is not source and is ignored.
+
+## Package installation and release checks
+
+### Recipe contents
+
+The [MELPA recipe](recipes/melpa/isled) follows `release`, which advances after
+the matching CLI is public. It selects the frontend libraries and root MIT
+license. MELPA generates the descriptor from `isled.el`; no committed
+`isled-pkg.el` or package-specific build command is needed.
+
+The recipe omits tests, demos, contributor tools and Markdown guides, following
+[MELPA's packaging guidance](https://github.com/melpa/melpa/blob/master/CONTRIBUTING.org).
+The standalone source tar retains its guides and images.
+
+### Installer acceptance
+
+Package managers own fetching Lisp, dependencies, autoloads and compilation.
+They need no Isled-specific download or install hooks. Loading and compiling
+the package must not fetch or run its CLI.
+
+The installer runs on the first Isled command that needs the CLI,
+using the frontend's explicit pin. It stores complete executable/skill bundles outside package
+directories and preserves them when a manager rebuilds or replaces the Lisp
+package. It works without inspecting Git state, package-manager metadata
+or archive version numbers. The [release contract](../../agent-docs/decisions.md#public-installation-direction-planned)
+owns automatic download, integrity, upgrade and recovery behavior.
+
+The downloader allows HTTPS only, with redirects limited to GitHub's release
+delivery hosts. Metadata is limited to 256 KiB and archive/executable sizes to
+128 MiB: generous headroom for the current few-megabyte binaries, with finite
+limits for unexpected responses. Each asset gets two minutes to download;
+executable identity checks get ten seconds. Both waits are cancellable. Hashing
+and decompression use Emacs facilities; extraction accepts only the six regular
+members in the [release bundle](../../scripts/releasing.md#artifact-contract).
+The verified CLI then owns platform-directory resolution, immutable version
+storage and `current` activation, with a cancellable one-minute timeout.
+Emacs displays the returned stable paths and executes its exact versioned CLI.
+
+The [user guide](user-guide.md#cli-setup-and-upgrades) explains setup commands,
+cancellation, cache recovery and explicit release/development executables.
+
+To test an installed package against real staged binaries before publication:
+
+```console
+python3 scripts/package-emacs.py --output /path/to/isled-candidate.tar
+python3 scripts/check-cli-installer.py \
+  --package /path/to/isled-candidate.tar --artifacts /path/to/release-candidate \
+  --dependencies /path/to/check-packages --output /path/to/new-installer-check
+```
+
+This verifies the complete staged set and serves it on loopback. Each scenario
+starts a fresh batch editor with an empty tool PATH and replaces its package
+directory. Checks cover automatic first use, canceled setup, missing assets,
+offline cache reuse, explicit executables and unsupported platforms.
+Add `--upgrade /path/to/upgrade-candidate` for two real versioned builds: corrupt
+and interrupted upgrade downloads, retry, upgrade with the old CLI still running,
+frontend rollback and an explicit version mismatch. The
+[native staging workflow](../../scripts/releasing.md#native-staging) builds this
+second candidate strictly for acceptance, with no version change to the release.
+Only the test's request destination changes. Production HTTPS/redirect policy,
+hash checks, extraction, identity checks and activation remain enabled. This
+fixture establishes acceptance only on the native host where it runs; public
+endpoint checks remain part of publication. Logs and the JSON receipt record
+each case, the source and package identities, editor version and platform.
+Use `--live` instead of the upgrade fixture to check public HTTPS delivery with
+no URL substitution. It covers automatic installation, offline package replacement,
+explicit executables and unsupported-platform handling.
+`check-published-cli.py` retrieves and verifies the complete pinned release, builds
+the current frontend package and runs those live cases against the published CLI.
+It then runs the frontend suite against the managed executable;
+native CI uses this alongside the source-built checks.
+
+## Reproduce the packaging checks
+
+The check uses Python 3.9+, Git, Emacs 30.1+ and three external tool checkouts:
+[MELPA](https://github.com/melpa/melpa),
+[Elpaca](https://github.com/progfolio/elpaca) and
+[straight.el](https://github.com/radian-software/straight.el).
+Record their exact revisions; the output receipt does this automatically.
+Git-based managers resolve their normal dependencies over the network. The
+archive and package-vc checks use an explicit isolated directory populated by
+the [contributor dependency setup](../../CONTRIBUTING.md#emacs-checks-without-nix).
+
+Start from a committed or snapshotted Isled candidate, with the complete verified
+artifact set from [release staging](../../scripts/releasing.md):
+
+```console
+python3 -B scripts/check-package-recipes.py \
+  --revision COMMIT --artifacts /path/to/release-candidate \
+  --dependencies /path/to/check-packages \
+  --melpa /path/to/melpa --elpaca /path/to/elpaca \
+  --straight /path/to/straight.el --output /path/to/new-check-directory
+```
+
+Use straight.el's `develop` branch when preparing its checkout. The output
+directory must be new. Each case gets a separate editor configuration and package
+directory; no working daemon or real ledger is used. The check creates local
+release/tag refs and an unreleased frontend revision in a disposable Git
+repository. It neither publishes refs nor changes the source checkout.
+
+Checks cover MELPA package construction, direct Git branch/tag/commit selection,
+all runtime libraries and bytecode, dependency versions, load-time side effects,
+and the CLI pin's mapping to real verified artifacts. They also install an
+unreleased frontend with a different Lisp version and the same CLI pin.
+Add `--published` to check the actual public `release`, tag, commit and `main`
+refs anonymously; omit it to keep using disposable local refs. This is a focused
+package-manager check on one host, not an OS-by-manager matrix or acceptance of
+CLI provisioning. Logs and JSON receipts remain in the
+output directory; `--managers` and `--selectors` allow focused reruns.
+
+## Submission handoff
+
+The initial packaged release uses the direct Git routes above. Once the pinned
+CLI assets and distribution refs are public and verified, users can install
+through their package manager without waiting for MELPA listing.
+
+The [MELPA submission draft](recipes/melpa-submission.md) is prepared locally.
+Before sending it, confirm the public release assets and `release` branch are
+available and that the maintainer has reviewed the package and submission.
+MELPA's [PR template](https://github.com/melpa/melpa/blob/master/.github/PULL_REQUEST_TEMPLATE.md)
+also requires at least one month of public repository history. Keep that
+submission condition separate from local recipe acceptance and the first release.
+
+Runtime files retain their MIT SPDX headers, author credit and `Assisted-by`
+attribution. Attribution identifies current Codex assistance; it is not a complete
+historical model inventory. Recheck MELPA's current requirements and package
+lint when submitting. Archive acceptance remains MELPA's decision.
 
 ## Code map
 
@@ -523,7 +651,10 @@ the CLI in the runner's private HOME: an offline release sequence, a sync sequen
 with two prerequisites, an independent fix and a completed task. Keep the example
 focused on ordinary work sequences with few joins. It uses normal frontend
 commands to browse and filter, then create an eleventh issue, edit it and verify
-the saved text. It exports the displayed Emacs frames as PNGs. The capture uses the built-in Modus
+the saved text. The Work clip queues a task, starts and pauses timing, resumes,
+requests review, and opens both history and the stored Work log. One fictional
+earlier session is seeded through the CLI so completed time is readable; the
+recorded transitions use the real Work menu. It exports the displayed Emacs frames as PNGs. The capture uses the built-in Modus
 Vivendi Tinted theme, hides the mode line, and shows key hints in the echo area.
 Keep the default line spacing so vertical gutter strokes meet between rows.
 It loads no user init and must never
@@ -540,7 +671,7 @@ python3 scripts/private-graphical-emacs.py \
   --script frontends/emacs/demo/record.el \
   --load-path frontends/emacs \
   --env "ISLED_DEMO_PROGRAM=$PWD/target/debug/isled" \
-  --screen 1080x680x24 --timeout 100 \
+  --screen 1080x680x24 --timeout 150 \
   --artifacts /tmp/isled-readme-demo --keep-success
 
 magick -delay 25 /tmp/isled-readme-demo/frames/hierarchy/*.png \
@@ -549,9 +680,11 @@ magick -delay 25 /tmp/isled-readme-demo/frames/filtering/*.png \
   -layers Optimize -loop 0 frontends/emacs/images/filtering.gif
 magick -delay 25 /tmp/isled-readme-demo/frames/editing/*.png \
   -layers Optimize -loop 0 frontends/emacs/images/editing.gif
+magick -delay 25 /tmp/isled-readme-demo/frames/work-tracking/*.png \
+  -layers Optimize -loop 0 frontends/emacs/images/work-tracking.gif
 ```
 
 Check the runner's success and cleanup result, then inspect the opening, expanded,
-filtered, draft and saved frames for legibility and unintended UI. The clips loop at
+filtered, draft, saved, work-menu and history frames for legibility and unintended UI. The clips loop at
 four frames per second. Keep the fixture fictional and the output bounded; only
 the selected GIFs belong in the source tree, not raw frames or runner logs.

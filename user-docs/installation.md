@@ -1,15 +1,20 @@
 # Installation and updates
 
 Release bundles contain the CLI, its matching agent skill and the license.
-The shared installer described here starts with 0.33.0; published 0.32.0
-archives keep their original layout.
+Install the pair once, then use stable paths that follow your chosen version.
 
 ## Install a downloaded release
 
 Download and verify the archive for your platform from
 [GitHub releases](https://github.com/cark/isled/releases), then extract it fully.
-Run `./isled install` from the extracted directory, or `.\isled.exe install`
-in Windows PowerShell. Keep the executable and its adjacent files together.
+From the extracted directory:
+
+```console
+./isled install
+```
+
+In Windows PowerShell, use `.\isled.exe install`. Keep the executable and its
+adjacent files together. The installer needs no administrator access.
 
 The installer verifies the complete bundle, stores it under `versions/VERSION/`,
 then selects it through one `current` directory link. It prints these full paths:
@@ -26,8 +31,7 @@ The installer does not edit your shell or agent configuration. Run
 
 ## Where it lives
 
-The CLI uses the operating system's per-user data location, provided by the
-`dirs` crate:
+The default is the operating system's per-user data directory:
 
 | Platform | Normal installation root |
 | --- | --- |
@@ -35,7 +39,13 @@ The CLI uses the operating system's per-user data location, provided by the
 | macOS | `~/Library/Application Support/isled` |
 | Windows | `%LOCALAPPDATA%\isled` |
 
-Use `--directory PATH` with `install` and `installation` for custom storage.
+To choose another location:
+
+```console
+./isled install --directory /path/to/isled
+isled installation --directory /path/to/isled
+```
+
 Relative paths are relative to your current directory. `--root` selects a ledger
 and cannot be used for these commands. Storage must be local; its root, version
 directories and bundle files must not be links. The managed `current` link is
@@ -62,8 +72,9 @@ directory. Emacs always runs its exact compatible version, so a separate CLI
 upgrade or rollback cannot redirect an already prepared frontend. Explicit
 `M-x isled-setup-cli` selects the frontend's version again.
 
-Updating skill files cannot update instructions already loaded by an agent.
-Reload the skill or start a new conversation after switching versions.
+After switching versions, reload the skill or start a new agent conversation.
+An agent that already loaded the old instructions cannot pick up new ones
+just because the files changed.
 
 ## Failed or interrupted setup
 
@@ -87,6 +98,7 @@ the same source checkout as your executable. Nix packages the skill under
 
 ## Structured output
 
+Integrations can retrieve the same paths without parsing terminal prose.
 `isled install --json` and `isled installation --json` return schema 1:
 
 | Field | Meaning |
@@ -100,3 +112,6 @@ the same source checkout as your executable. Nix packages the skill under
 Inspection without an installation reports the proposed paths without creating
 directories. Invalid existing installation state is an error, not an empty result.
 Both commands exit 0 on success and 1 on failure; errors go to stderr.
+
+The installer described here starts with 0.33.0. Published 0.32.0 archives keep
+their original layout.

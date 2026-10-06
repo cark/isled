@@ -38,7 +38,8 @@ class ReleaseStaging(unittest.TestCase):
                    ';; Version: 1.2.3\n;; Package-Requires: ((emacs "30.1"))\n'
                    ';; URL: https://github.com/example/fixture\n;; Keywords: tools\n'
                    '(defconst isled-required-cli-version "1.2.3")\n')
-        for name in ("README.md", "user-guide.md", "CONTRIBUTING.md", "images/hierarchy.gif", "images/filtering.gif", "images/editing.gif"):
+        for name in ("README.md", "user-guide.md", "CONTRIBUTING.md", "images/hierarchy.gif",
+                     "images/filtering.gif", "images/editing.gif", "images/work-tracking.gif"):
             self.write("frontends/emacs/" + name, "fixture\n")
         self.write("LICENSE", "fixture license\n")
         for name in ("SKILL.md", "references/mutations.md", "references/recovery.md"):

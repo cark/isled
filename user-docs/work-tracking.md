@@ -1,12 +1,15 @@
 # Work state and time
 
-Use work tracking when an issue moves between a queue, a worker and its owner.
-It is optional. Ordinary issues need no extra fields: their work state is
-**Not queued**, with no recorded time.
+See what is queued, what is being worked on, and what needs an answer or review.
+If useful, keep the time spent on each issue too.
 
-Work state answers who needs to act next. Open/Closed still describes the issue's
-lifecycle, and dependency readiness still describes its prerequisites. Queuing
-an issue or starting its clock does not assign a worker or authorize closure.
+Tracking is optional. An ordinary issue is **Not queued**, with no recorded time.
+There is one worker and at most one running timer per issue; different issues
+can be worked on in parallel.
+
+Work tracking and arrival-order queries require the current 0.35 source version
+until its paired release is published. Keep the CLI and frontend together;
+older tools cannot read records with these fields.
 
 ## A small workflow
 
@@ -14,82 +17,99 @@ an issue or starting its clock does not assign a worker or authorize closure.
 isled work queue 42
 isled work start 42 --activity Implementation
 isled work pause 42
-isled work start 42 --activity Review
+isled work start 42 --activity Testing
 isled work await 42 --reason review
 isled work show 42
 ```
 
-Queueing starts no clock. Start selects **In progress** and starts timing;
-Pause stops timing while leaving the issue In progress. Starting again adds
-another span, so breaks and waiting time stay out of the total. Different issues
-can run in parallel, with one worker and one running clock per issue.
+Start a session, pause for a break, then resume. The log keeps both spans and
+adds their time. Waiting and breaks stay out of the total.
 
-For state tracking alone, use `isled work start 42 --no-clock`. This also stops
-an already running clock. `isled work unqueue 42` stops timing and returns the
-issue to Not queued. Queueing a running issue stops its clock too.
+| Action | Work state | Timer |
+| --- | --- | --- |
+| Queue | Queued | Stopped. |
+| Start / resume | In progress | Starts a new span, or keeps the current running span. |
+| Start with `--no-clock` | In progress | Stopped; records no new span. |
+| Pause | In progress | Stops the current span. |
+| Await review or clarification | Awaiting owner | Stopped. |
+| Unqueue | Not queued | Stopped. |
 
-If you need an answer, keep the question with the current state:
+Open/Closed remains the issue's lifecycle. Prerequisites determine readiness.
+Work state records where the work stands; it grants no assignment or permission
+to close an issue.
+
+Repeating Start while the timer is running keeps the existing span. Pause first
+to change its activity. Activity is an optional short label, such as
+Implementation or Testing. `isled work unqueue 42` returns to Not queued while
+keeping the history.
+
+## Leave a question or request review
+
+For review:
+
+```console
+isled work await 42 --reason review
+```
+
+For a decision you need before continuing:
 
 ```console
 isled work await 42 --reason clarification --question 'Should this also run offline?'
 ```
 
-Awaiting owner stops timing. Review needs no question; Clarification requires a
-non-empty question on one line. Start again once work resumes; it clears the old
-owner-wait details. Repeating Start while its clock is running keeps the existing
-span. To change its activity, pause first.
-
-Use `isled list --work-state queued` to find queued issues, or combine work state
-with other filters: `isled list --ready --work-state not-queued`. Search accepts
-the same work-state filter. The spellings are `not-queued`, `queued`, `in-progress`
-and `awaiting-owner`.
+Clarification needs a non-empty question on one line. Review needs no question.
+Starting work again clears the owner-wait details. The completed spans stay in
+the log.
 
 ## Arrival order
 
-Isled records **Since** when an issue enters Queued, In progress or Awaiting
-owner. Repeating Queue preserves its place. Pausing and resuming work preserve
-Since too. Switching between Review and Clarification starts a new wait; editing
-the pending question keeps the existing wait.
+Use queues to choose the next task or review:
 
 ```console
 isled list --ready --work-state queued --oldest-first --limit 1
-isled list --work-state awaiting-owner --work-reason review --oldest-first
+isled list --work-reason review --oldest-first
 isled search --work-reason clarification --oldest-first --limit 5 offline
 ```
 
-Oldest first sorts by Since, breaking ties by issue ID. Older records without
-Since come last, in ID order. Their age stays unknown until a real transition;
-inspection and repeated actions do not backfill it. Ordinary listing keeps ID
-order. Omit `--limit` for all matches; zero returns none. Limits count issues
-after all filtering and ordering, including text matching.
+**Since** records when an issue entered its current state. Oldest first sorts by
+that time, then by issue ID. Older records with no Since come last, in ID order;
+their age stays unknown until a real transition.
 
-Since measures the current stay in a state. The work log measures time spent
-working. **Work history** shows both; headings keep their compact labels.
+Repeating Queue keeps the issue's place. Pausing and resuming also keep Since.
+Changing Review to Clarification starts a new wait; changing only the question
+keeps the wait. Since measures the stay in a state; the work log measures time
+spent working.
+
+Ordinary listing keeps ID order. Omit `--limit` for all matches; zero returns
+none. The limit applies after every filter and text match. State filters use
+`not-queued`, `queued`, `in-progress` and `awaiting-owner`, and combine with
+readiness, status, kind and tags.
 
 ## In Emacs
 
-Press **`w`** on an issue for the Work menu. It offers the same queue, start,
-pause, owner-wait and history actions, including **Start without timing**.
-Use `C-u` with Start to supply an activity. Headings show **Queued**, **In
-progress**, **Question** or **Review**, plus nonzero completed time. **Work
-history** shows clock status, the full spans and the elapsed total at the time
-you open it, including the running span.
+Press **`w`** on the issue for queueing, timers, owner waits and history.
+**Start without timing** records only the state. Use `C-u` with Start to name
+an activity.
 
-Filter with `w:queued`, `w:in-progress` or another state. Combine it with status,
-for example `s:open w:awaiting-owner`. A pending question appears in Work history
-and in the heading's help text. Normal editing preserves all tracking data.
-Add `r:review` or `r:clarification` to distinguish owner waits. Press `S` to
-choose Hierarchy, Issue ID or Oldest first; the same command appears in `?`.
-Oldest first shows the complete matching queue as flat rows in arrival order.
-You can also type `o:oldest-first` or `o:id` to select a flat order in a filter.
-Press `v` to switch between hierarchy and the last chosen flat order. Hierarchy
-follows dependencies and clears the active flat-order term. Emacs shows all
-matches; `--limit` is a CLI option.
+Headings show **Queued**, **In progress**, **Question** or **Review**, plus
+nonzero completed time. **Work history** shows the pending question, Since,
+numbered spans and the total, including any running span at the moment you open
+it. It is a report, not a live stopwatch; reopen it for an updated total.
+
+Filter with `s:open w:queued` or `s:open r:review`. Press **`S`** and choose
+**Oldest first** to see the complete matching queue in arrival order. You can
+also use `o:oldest-first` or `o:id` in the query. **Hierarchy** follows
+prerequisites; `v` switches between it and your last chosen flat order.
+Emacs shows all matches; limits belong to the CLI.
+
+A pending question also appears in the heading's help text. Normal editing
+preserves tracking data. See the [Emacs work guide](../frontends/emacs/user-guide.md#work-state-and-time)
+for the menu and timer corrections.
 
 ## A clock left running
 
-Closing Emacs or ending a CLI invocation does not stop the clock. Isled cannot
-know when you stopped working. Record the actual stop time explicitly:
+Closing Emacs or ending a CLI command does not stop the timer. If you forgot to
+pause, supply the actual stop time:
 
 ```console
 isled work pause 42 --at '2026-10-06 09:30:00'
@@ -97,35 +117,38 @@ isled work show 42
 isled work correct 42 2 --stop '2026-10-06 10:15:00'
 ```
 
-Times are **UTC**, in `YYYY-MM-DD HH:MM:SS` format. Work history numbers spans
-from 1; Correct changes the stop of that numbered span, including a running one.
-It rejects a stop before its start or after the next span's start.
-In Emacs, `C-u` with Pause asks for the actual stop; Correct stop time asks for
-the span number and UTC time.
+Times are **UTC**, in `YYYY-MM-DD HH:MM:SS` format. Spans are numbered from 1.
+Correct changes the stop of that span, including a running one. A stop cannot
+precede its start or overlap the next span.
 
-Closing an issue stops its clock, keeps the complete history and removes its
-current work state. Closed issues still allow explicit stop-time corrections,
-with the usual historical-edit warning. Closure requires its own authorization,
-evidence and outcome.
+In Emacs, use `C-u` with Pause to enter the actual stop. **Correct stop time**
+asks for a span number and UTC time; find the number in Work history.
+
+Closing an issue stops timing, removes the current work state and keeps the
+history. Closed issues allow explicit stop corrections, with a historical-edit
+warning. Closure still requires its own authorization, Evidence and Outcome.
 
 ## Files and agent data
 
-The [record format](record-format.md#optional-work-tracking) stores current state
-in Metadata and spans in an optional Work log table. Activity labels may be empty;
-when present they use one line without pipes or surrounding whitespace.
+The [record format](record-format.md#optional-work-tracking) keeps state in
+Metadata and spans in an optional Work log table. Activity labels may be empty;
+otherwise they use one line without pipes or surrounding whitespace.
 
-`isled work show 42 --json` returns schema 2 with `id`, `state`, `reason`,
-`question`, nullable `since`, `recorded_seconds`, `running_since`, `spans` and `total_seconds`.
-Each span contains `started`, nullable `stopped` and `activity`.
-`recorded_seconds` counts completed spans; `total_seconds` also counts the
-running span at the report time. `--at` selects that report time explicitly.
+`isled work show 42 --json` returns schema 2:
 
-Snapshot/frontend schema 5 and editor schema 4 carry the same stable work data.
-Browsing summaries omit spans; complete issues and editor records include them.
-Their totals contain completed time only, with a separate running start, so
-clock passage alone does not invalidate content hashes. Work is read-only in
-complete editor drafts: use work actions for transitions and corrections.
+| Field | Meaning |
+| --- | --- |
+| `id`, `state` | Issue identity and current work state. |
+| `reason`, `question`, `since` | Owner-wait details and UTC state-entry time; absent values are null. |
+| `recorded_seconds` | Completed work time. |
+| `running_since` | Running span's UTC start, or null. |
+| `total_seconds` | Completed time plus the running span at report time. |
+| `spans` | Ordered entries with `started`, nullable `stopped` and `activity`. |
 
-Existing records need no conversion. Once you use these fields, every tool that
-reads or edits those records must understand the new format. Update the CLI and
-Emacs frontend together; older versions cannot read work-tracked records.
+Use `--at` to choose the report time explicitly. Snapshot/frontend schema 5 and
+editor schema 4 carry the same work data. Browsing summaries omit spans;
+complete issues and editor records include them.
+
+Their totals include completed time only, with a separate running start.
+Elapsed clock time alone does not change content hashes. Complete drafts expose
+work as read-only data: use work actions for transitions and corrections.

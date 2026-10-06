@@ -3,6 +3,9 @@
 Start with the [README](README.md) for installation and a short tour. This guide
 covers everyday use, then the options for making Isled feel at home in your setup.
 
+For a first session: open a project, press `RET` to read an issue, `f` to narrow
+the list, and `w` to pick up work. `?` keeps the commands close at hand.
+
 - [Projects and independent views](#opening-projects-and-directories)
 - [Navigation, folding and source files](#navigation-and-folding)
 - [Adding, editing and closing issues](#add-edit-and-close-issues)
@@ -265,24 +268,49 @@ For the exact validation and save rules, see the [editor contract](../../user-do
 
 ## Work state and time
 
-Press **`w`** on an issue for the Work menu. Queue it, start or resume work,
-pause the clock, or wait for the owner. **Start / resume** times work by default;
-**Start without timing** marks it In progress without recording time.
-Use a prefix with Start to name the activity.
+Press **`w`** on an issue to keep the next step and its work sessions together.
+These actions require the matching 0.35 source version until its release is
+published; see [source setup](CONTRIBUTING.md#source-development-setup).
 
-Awaiting owner can mean **Ready for review** or **Ask a question**. Both stop
-timing. A question stays with the current state until work resumes. Headings
-show **Queued**, **In progress**, **Question** or **Review**, plus completed time
-when it is nonzero. **Work history** shows the question, spans, clock status and
-current elapsed total in a separate buffer.
+### Pick up, pause, resume
 
-The expanded issue keeps work-log columns aligned, including older tables with
-uneven padding. Activity labels appear literally, without Markdown styling.
+| In the Work menu | What happens |
+| --- | --- |
+| Queue | Mark the issue for later; no timer runs. |
+| Start / resume | Mark it In progress and start timing. |
+| Pause clock | End the current session; keep it In progress. |
+| Start without timing | Track the state alone, stopping any running timer. |
+| Not queued | Remove the current work state and stop timing; keep history. |
 
-Work history also shows **Since**, the time the issue entered its current state.
-Pausing and resuming do not reset it. Switching between Review and Question
-does; editing the question does not. Older records may have no known entry time.
-Since stays out of headings.
+Each resumed session adds a span. Breaks stay out of the total. Repeating Start
+while timing keeps the same span; pause first to change its activity. Use `C-u`
+with Start to name an activity such as Implementation or Testing.
+
+### Hand work over
+
+Choose **Ready for review** when the result needs a look, or **Ask a question**
+when a decision is missing. Both stop timing. The question stays with the issue
+until work resumes.
+
+Headings show **Queued**, **In progress**, **Question** or **Review**, with
+nonzero completed time. The heading's help text includes the pending question.
+Use `s:open r:review` to find reviews, then `S` → **Oldest first** for arrival
+order. Hierarchy continues to follow dependencies.
+
+### Read the history
+
+**Work history** opens the question, numbered sessions, clock status and total.
+The total includes a running session at the moment you request it; reopen the
+report for an updated value. Headings show completed time only.
+
+**Since** is the time the issue entered its current state. Pause and resume keep
+it. Switching between Review and Question starts a new wait; editing the
+question keeps it. Older records can have unknown age. Since stays out of titles.
+
+Expand the issue to read the same spans in its Markdown Work log. Columns align
+even in older tables with uneven padding; activity labels stay literal.
+
+### Correct a forgotten timer
 
 The clock survives editor restarts. If you forgot to pause, use a prefix with
 Pause to enter the actual stop time in UTC. **Correct stop time** changes a
@@ -331,8 +359,12 @@ Unquoted `t:`, `k:`, `s:` and `w:` prefixes select a tag, kind, status or work
 state (`not-queued`, `queued`, `in-progress`, `awaiting-owner`). `r:review` and
 `r:clarification` distinguish owner waits. Quote a term to search for its text.
 Empty values and unfinished quotes must be completed before you can accept
-the query. The last status, work-state, reason and order terms win;
+the query.
+
+The last status, work-state, reason and order terms win;
 choosing a status through completion removes other status terms.
+
+### Choose an order
 
 Press `S` to choose **Hierarchy**, **Issue ID**, or **Oldest first**. The same
 command appears in `?`. Hierarchy follows dependencies; the other two choices
@@ -525,7 +557,7 @@ automatic refresh.
 
 ## Known warnings
 
-The header shows **⚠ Known warnings** when Isled has retained a finding, including
+The header shows **Known warnings** when Isled has retained a finding, including
 one on an issue hidden by your filter. Press `!`, click the indicator, or choose
 **Known warning** in Help to visit it.
 
@@ -602,10 +634,10 @@ Isled uses ordinary Emacs faces and keymaps. Browse its options with
 Issue headings show an ID, kind and title, for example:
 
 ```text
-#0007  [maintenance] Review the backup procedure
+#0007  [maintenance] Review the backup procedure  [In progress · 18m 00s]
 ```
 
-The ID's appearance carries the state: ready inherits success colors, waiting
+The ID's appearance carries readiness: ready inherits success colors, waiting
 inherits link colors without an underline, and closed uses struck-through shadow.
 Kinds inherit `font-lock-type-face`, with subdued brackets. Custom kinds appear
 as written; there is no fixed color palette for them.

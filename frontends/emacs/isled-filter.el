@@ -228,7 +228,7 @@ Vertico when enabled.  All interfaces also work with standard Emacs completion."
          accepted)
     (setq isled-filter-active (list t) isled-filter-feedback nil
           isled-filter-help
-          (concat "t: tag · k: kind · s: status · w: work · r: reason · o: order · n: limit · \"…\" phrase · AND · "
+          (concat "t: tag · k: kind · s: status · w: work · r: reason · o: order · \"…\" phrase · AND · "
                   (if (eq interface 'separate-filter-picker)
                       "TAB pick token" "TAB complete")
                   " · RET keep"))

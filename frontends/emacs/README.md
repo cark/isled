@@ -11,7 +11,8 @@ coding agents can work on the same ledger; the view follows changes on disk.
 
 [Install](#installation) · [Open a ledger](#getting-started) ·
 [Browse](#navigation-and-folding) · [Filter](#issue-filtering) ·
-[Edit](#add-edit-and-close-issues) · [Customize](#customization)
+[Edit](#add-edit-and-close-issues) · [Track work](#work-state-and-time) ·
+[Customize](#customization)
 
 **See what is ready and what is waiting.** Expand an issue for its details, follow
 a dependency, and return to where you were.
@@ -28,8 +29,18 @@ save it back to the ledger.
 
 ![Creating a download-size issue, editing its statement and reading the saved result](images/editing.gif)
 
+**Pick up work and keep its history.** Queue an issue, start its timer, pause
+for a break, and hand it over for review. Each work session keeps its own span.
+
+![Queueing an issue, timing work, pausing and resuming, then inspecting its work history](images/work-tracking.gif)
+
 The demos use a fictional project, Trail Notes. The interface shown is the actual
 Emacs package.
+
+The work-tracking demo uses the current 0.35 source version. The published
+0.33.1 package does not include these actions; use the
+[matching source setup](CONTRIBUTING.md#source-development-setup) until the
+paired release is available.
 
 ## Installation
 
@@ -71,6 +82,7 @@ You can also run `M-x isled-setup-cli` to prepare it separately.
 Setup opens a side window with the full executable and agent skill paths through
 `current`. It stays visible while the ledger opens. Copy the paths into your shell
 or agent setup, or follow **Open installation folder** to browse them.
+
 Press **`q`** in that window when you are done; **`M-x isled-show-installation`**
 brings it back. The paths follow upgrades; Emacs keeps using its exact compatible CLI.
 
@@ -114,6 +126,8 @@ explains parent ledgers, view reuse and duplication.
 | `j` | Find an issue by ID or title, including issues outside the filter. |
 | `M-,` / `C-M-,` | Go back / forward through issue navigation. |
 | `C-RET` | Collapse all issues. |
+| `w` | Queue, time or review work; see its history. |
+| `S` | Choose hierarchy, issue ID or oldest first. |
 | `g` | Refresh. |
 | `?` | Show commands and keys. |
 | `q` | Quit the view. |
@@ -140,9 +154,18 @@ open its Markdown source instead. See [file links and source access](user-guide.
 ## Work state and time
 
 Press **`w`** on an issue to queue it, start or pause work, ask the owner a
-question, or mark it ready for review. Start records time by default; Start
-without timing tracks only state. Each pause and resume keeps a separate span.
-Work history shows them and their total.
+question, or mark it ready for review.
+
+**Start / resume** starts a timer. **Pause clock** ends that session; resuming
+starts another. **Work history** shows every span and their total. Use
+**Start without timing** when the state is all you need.
+
+Headings keep it brief: **Queued**, **In progress**, **Question** or **Review**,
+with completed time when there is some. Read the pending question in Work history.
+
+For a queue, filter with `s:open w:queued` or `s:open r:review`, then press
+**`S`** and choose **Oldest first**. The flat list puts the earliest arrivals
+first; hierarchy follows dependencies.
 
 This is optional: ordinary issues need no extra fields. See the
 [work guide](user-guide.md#work-state-and-time) for clocks and corrections.
@@ -158,6 +181,8 @@ Press **`f`** to edit the current query. Results preview while you type;
 | Query | Find |
 | --- | --- |
 | `s:open t:sync` | Open issues tagged `sync`. |
+| `s:open w:queued` | The work queue. |
+| `s:open r:review o:oldest-first` | The review queue, earliest arrivals first. |
 | `k:bug` | Bugs, open or closed. |
 | `s:closed "disk full"` | Closed issues containing the phrase “disk full”. |
 | `t:mobile t:sync downloads` | Issues with both tags and the word “downloads”. |
@@ -170,7 +195,8 @@ or All while keeping the other terms.
 <a id="search-and-preview"></a>
 <a id="filter-memory"></a>
 
-`TAB` completes tags, kinds, statuses and work states. The [filter guide](user-guide.md#issue-filtering)
+`TAB` completes tags, kinds, statuses, work states, owner reasons and ordering.
+The [filter guide](user-guide.md#issue-filtering)
 covers quoting, completion interfaces and previews. Ordinary `C-s` searches text
 already loaded in the buffer; use `f` to search complete issues across the ledger.
 
