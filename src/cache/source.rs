@@ -72,13 +72,42 @@ impl Cache<'_> {
             )?;
             return Ok(());
         }
+        let document = self.inspected[&id]
+            .as_ref()
+            .expect("inspected record")
+            .document()
+            .map_err(|error| CacheError::Invalid(error.to_string()))?;
+        let work = crate::work_wire::WorkSummary::new(issue, &document.work_log);
+        let seconds = i64::try_from(work.recorded_seconds)
+            .map_err(|_| CacheError::Invalid("work time exceeds cache range".into()))?;
         self.connection
             .execute("DELETE FROM issues WHERE id=?1", [id.get()])?;
-        self.connection.execute("INSERT INTO issues(id,filename,title,status,kind,created,size,
-            modified_seconds,modified_nanos,changed_seconds,changed_nanos,content_hash) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12)",
-            params![id.get(), name, std::str::from_utf8(issue.title()).map_err(|e| CacheError::Invalid(e.to_string()))?,
-                issue.status().as_str(),issue.kind().as_str(),issue.created().as_str(),
-                i64::try_from(metadata.len()).ok(),modified.0,modified.1,changed.0,changed.1,fingerprint])?;
+        self.connection.execute(
+            "INSERT INTO issues(id,filename,title,status,kind,created,size,
+            modified_seconds,modified_nanos,changed_seconds,changed_nanos,content_hash,
+            work_state,work_reason,work_question,work_seconds,work_started)
+            VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17)",
+            params![
+                id.get(),
+                name,
+                std::str::from_utf8(issue.title())
+                    .map_err(|e| CacheError::Invalid(e.to_string()))?,
+                issue.status().as_str(),
+                issue.kind().as_str(),
+                issue.created().as_str(),
+                i64::try_from(metadata.len()).ok(),
+                modified.0,
+                modified.1,
+                changed.0,
+                changed.1,
+                fingerprint,
+                work.state,
+                work.reason,
+                work.question,
+                seconds,
+                work.running_since
+            ],
+        )?;
         self.write_tags(issue)?;
         self.write_dependencies(issue)
     }

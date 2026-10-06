@@ -8,6 +8,7 @@ use crate::record::RecordView;
 #[derive(Clone, Debug, Default)]
 pub struct Filters {
     pub status: Option<Status>,
+    pub work_state: Option<crate::issue::WorkStateKind>,
     pub kind: Option<Name>,
     pub tags: Vec<Tag>,
     pub waiting: Option<bool>,
@@ -23,6 +24,9 @@ pub(super) fn matches_filters(
     let kind = view.kind();
     if filters.status.is_some_and(|wanted| wanted != status)
         || filters.kind.as_ref().is_some_and(|wanted| wanted != kind)
+        || filters
+            .work_state
+            .is_some_and(|wanted| wanted != view.work_state_kind())
         || !view.has_tags(&filters.tags)
     {
         return Ok(false);

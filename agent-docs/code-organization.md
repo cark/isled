@@ -20,8 +20,11 @@ src/
 │   ├── current.rs   # symlink/junction selection and interrupted-switch recovery
 │   └── tests.rs     # immutable versions, rollback and failure preservation
 ├── issue.rs         # parsed Issue aggregate and public value-type exports
-├── issue/           # identity, name, status, created_date, tag, and relation values
+├── issue/           # identity, name, status, created_date, tag, relation and work-state values
 ├── record.rs        # strict structured Markdown codec and canonical renderer
+├── work_log.rs      # validated UTC spans, activity and single-clock invariants
+├── work_wire.rs     # stable summary and complete-history projections
+├── record/work.rs   # optional work metadata and Markdown table codec
 ├── record/state.rs  # retained source, fingerprint, and lazy header/document parse results
 ├── ledger.rs        # implemented aggregate identity and allocation rules
 ├── filesystem.rs    # public filesystem exports
@@ -61,6 +64,7 @@ src/
 │   └── schema.sql   # one current disposable schema, no migrations
 ├── query.rs         # public query entry points via declarations and re-exports
 ├── query/
+│   ├── work.rs       # selected issue work report and human/JSON rendering
 │   ├── dependency.rs # typed targeted graph plus human and JSON tree rendering
 │   ├── search.rs    # snippets, Unicode matching, excerpts, and search tests
 │   ├── list.rs      # metadata listing and shared summary rows
@@ -83,7 +87,8 @@ src/
 │   ├── add.rs       # creation and slug derivation
 │   ├── tags.rs      # tag and priority changes
 │   ├── wait.rs      # mirrored wait edits and graph validation
-│   ├── close.rs     # terminal lifecycle transition
+│   ├── work.rs      # work-state transitions and explicit stop corrections
+│   ├── close.rs     # terminal lifecycle transition and clock stop
 │   ├── title.rs     # title input and direct-neighbor updates
 │   ├── completion.rs # validated completion text and shared section framing
 │   ├── evidence.rs  # evidence entries and pending-state check

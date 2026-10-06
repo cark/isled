@@ -1,5 +1,5 @@
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "root": {
     "encoding": "utf-8",
     "value": "/tmp/example"
@@ -57,7 +57,15 @@
           "character_start": 209,
           "character_length": 5
         }
-      ]
+      ],
+      "work": {
+        "state": "not-queued",
+        "reason": null,
+        "question": null,
+        "recorded_seconds": 0,
+        "running_since": null,
+        "spans": []
+      }
     },
     {
       "id": "0002",
@@ -89,7 +97,15 @@
           "character_start": 123,
           "character_length": 5
         }
-      ]
+      ],
+      "work": {
+        "state": "not-queued",
+        "reason": null,
+        "question": null,
+        "recorded_seconds": 0,
+        "running_since": null,
+        "spans": []
+      }
     }
   ]
 }

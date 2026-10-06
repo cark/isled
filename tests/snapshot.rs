@@ -39,7 +39,7 @@ fn empty_snapshot_has_a_stable_versioned_shape() {
     assert!(output.status.success());
     assert!(output.stderr.is_empty());
     let value: Value = serde_json::from_slice(&output.stdout).expect("valid JSON");
-    assert_eq!(value["schema_version"], 3);
+    assert_eq!(value["schema_version"], 4);
     assert_eq!(value["root"]["encoding"], "utf-8");
     let canonical_root = root.path().canonicalize().expect("canonical root");
     assert_eq!(
@@ -94,7 +94,7 @@ fn snapshot_is_ordered_readable_and_lossless() {
     assert!(output.status.success());
     assert!(output.stderr.is_empty());
     let value: Value = serde_json::from_slice(&output.stdout).expect("valid JSON");
-    assert_eq!(value["schema_version"], 3);
+    assert_eq!(value["schema_version"], 4);
     assert_eq!(value["root"]["encoding"], "utf-8");
     assert_eq!(value["issues"][0]["id"], "0001");
     assert_eq!(value["issues"][1]["id"], "0002");

@@ -34,6 +34,7 @@
 (require 'isled-source)
 (require 'isled-filter)
 (require 'isled-graph)
+(require 'isled-work)
 
 (declare-function isled-sections-point-state
                   "isled-sections")
@@ -104,7 +105,7 @@ a position discarded by a later collapse-all.")
 (defvar-local isled--auto-revert-error nil
   "Most recent automatic refresh error, or nil after a successful refresh.")
 
-(defconst isled--layout-version 18
+(defconst isled--layout-version 19
   "Current buffer layout version for upgrading source-loaded views.")
 
 (defvar-local isled--buffer-layout-version 0
@@ -154,7 +155,11 @@ a position discarded by a later collapse-all.")
   (when (< isled--mode-map-version 7)
     (unless (keymap-lookup isled-mode-map "v")
       (keymap-set isled-mode-map "v" #'isled-graph-toggle))
-    (setq isled--mode-map-version 7)))
+    (setq isled--mode-map-version 7))
+  (when (< isled--mode-map-version 8)
+    (unless (keymap-lookup isled-mode-map "w")
+      (keymap-set isled-mode-map "w" #'isled-work))
+    (setq isled--mode-map-version 8)))
 
 (isled--migrate-mode-map)
 
@@ -626,6 +631,7 @@ sections whose complete canonical content is displayed inline."
     ("a" "Add issue" isled-add-issue :transient nil)
     ("e" "Edit issue" isled-edit-issue :transient nil)
     ("c" "Close issue" isled-close-issue :transient nil)
+    ("w" "Work state / time" isled-work :transient nil)
     ""
     "Exit"
     ("q" "Dismiss menu" transient-quit-one)

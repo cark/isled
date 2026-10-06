@@ -62,7 +62,7 @@ fn new_name_preserves_prose_and_closure_semantics() {
     assert!(content.contains("## Outcome\n\nKept disposition prose; see #1."));
     let snapshot: serde_json::Value =
         serde_json::from_slice(&success(root, &["snapshot"])).unwrap();
-    assert_eq!(snapshot["schema_version"], 3);
+    assert_eq!(snapshot["schema_version"], 4);
     let reference = &snapshot["issues"][0]["references"][1];
     assert_eq!(reference["field"], "outcome");
     let byte_start = reference["byte_start"].as_u64().unwrap() as usize;

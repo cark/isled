@@ -20,7 +20,7 @@
 (defun isled-view-test--snapshot ()
   "Return the standard test snapshot."
   (isled-snapshot-decode
-   (isled-test--fixture "snapshot-v3.json")))
+   (isled-test--fixture "snapshot-v4.json")))
 
 (defun isled-view-test--open-snapshot (&rest ids)
   "Return a snapshot containing one open issue for every ID in IDS."

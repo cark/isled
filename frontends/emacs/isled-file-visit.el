@@ -132,7 +132,7 @@
     (add-hook 'post-command-hook #'isled-file-visit--observe)
     (condition-case failure
         (funcall isled-process-function root
-                 (json-serialize `((schema_version . 3) (mode . "details")
+                 (json-serialize `((schema_version . 4) (mode . "details")
                                    (details . [((id . ,id) (hash . :null))])))
                  (lambda (result) (isled-file-visit--receive request result)))
       (error

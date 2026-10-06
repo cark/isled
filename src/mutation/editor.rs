@@ -21,6 +21,7 @@ pub struct Editable {
     pub version: String,
     pub source: String,
     pub draft: Draft,
+    pub work: crate::work_wire::WorkData,
 }
 pub(crate) fn document(records: &Records, id: IssueId) -> Result<&RecordDocument, FieldError> {
     let record = records
@@ -55,6 +56,7 @@ pub(crate) fn editable(records: &Records, id: IssueId) -> Result<Editable, Field
     let source = text(records[&id].bytes());
     let version = serde_json::to_string(&(&source, &blocking)).expect("serializable strings");
     Ok(Editable {
+        work: crate::work_wire::WorkData::new(issue, &document.work_log),
         id: id.to_string(),
         filename: text(records[&id].filename()),
         status: issue.status.as_str().into(),

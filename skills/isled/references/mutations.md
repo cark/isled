@@ -89,9 +89,30 @@ Closure is terminal. A mistaken closure, invalidated conclusion, or new
 scope receives a new issue referencing the closed predecessor. When evidence
 supports closure but authority is absent, recommend it and wait for approval.
 
+## Work state and clocks
+
+Use `work queue`, `unqueue`, `start`, `pause`, `await`, `show` and `correct`.
+Read their live help for options. Start selects In progress and opens a clock;
+`--no-clock` stops any running clock without creating a span. Pause stops timing
+without changing work state. Queue, unqueue and await also stop a running clock.
+Await requires `--reason review` or `clarification`; clarification requires a
+short `--question`. Start clears current owner-wait details.
+
+There is one worker and at most one running span per issue. Ending a process
+or editor session does not stop it. Supply the actual UTC `--at` to Pause, or
+use Correct with a one-based span number and explicit UTC `--stop`. Do not infer
+an interruption time. Repeated Start retains the active span; pause before
+changing its activity. Show reports totals and complete history; `--json`
+provides structured data. Work state remains separate from lifecycle and
+readiness, and grants no workflow authority.
+
+Closure stops timing, removes current state and preserves history. Explicit
+stop corrections may update closed history with the historical-edit warning.
+Normal title, prose, tag, relation and complete-draft edits preserve work data.
+
 ## Complete drafts
 
-`editor --stdin` provides schema-2 load, validate and complete-draft save requests;
+`editor --stdin` provides schema-3 load, validate and complete-draft save requests;
 the consuming project's user documentation owns the exact wire contract. Inspect
 `ok`/`code` in its JSON response even on exit 0. Retain the load version for stale
 save rejection. Validation publishes nothing and consumes no ID. Replacing a

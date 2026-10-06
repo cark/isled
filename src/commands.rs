@@ -26,3 +26,5 @@ pub(crate) mod title;
 pub(crate) mod wait;
 
 pub(crate) mod editor;
+
+pub(crate) mod work;

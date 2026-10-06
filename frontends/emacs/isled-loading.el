@@ -108,7 +108,7 @@ COMPLETION is (CRITERIA CALLBACK) for independently fenced contextual choices."
                  (ids (when (eq mode 'details) (isled-session-nearby)))
                  (generation isled-loading-generation)
                  (buffer (current-buffer))
-                 (request `((schema_version . 3) (mode . ,(symbol-name mode))
+                 (request `((schema_version . 4) (mode . ,(symbol-name mode))
                             (filter . ,criteria)
                             (view_hash . ,(or (and (not (eq mode 'choices))
                                                    (equal filter isled-loading-filter)
@@ -142,7 +142,7 @@ COMPLETION is (CRITERIA CALLBACK) for independently fenced contextual choices."
                  (setq ids (isled-session-nearby))
                  (when ids
                    (json-serialize
-                    `((schema_version . 3) (mode . "details")
+                    `((schema_version . 4) (mode . "details")
                       (details . ,(isled-data-request-details ids)))
                     :null-object :json-null)))))
           (error

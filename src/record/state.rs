@@ -103,7 +103,10 @@ impl RecordState {
             &alternate
         };
         let title = self.heading(sections.heading, id)?;
+        let work_log = work::parse_log(sections.work_log, metadata.work_state.as_ref())?;
         Ok(RecordDocument {
+            work_log,
+            work_log_source: sections.work_log.map(Vec::from),
             issue: Self::issue(id, slug, title, metadata),
             statement: parse_statement(sections.statement)?.to_vec(),
             evidence: parse_evidence(sections.evidence)?,

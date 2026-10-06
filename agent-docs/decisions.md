@@ -295,14 +295,9 @@ while personal global policies remain independently maintained in their own scop
 Raw operational history and private ledgers stay outside tracked source; concrete
 boundary checks supplement human review of public documentation and attribution.
 
-## Future directions
+<a id="optional-issue-work-tracking-planned"></a>
 
-Optional ledger tracking remains an investigation. The motivation is a personal
-ledger becoming useful to another contributor; distributed concurrent allocation,
-conflict resolution and synchronization require a concrete multi-user use case.
-The current local ignored-ledger default is unchanged.
-
-### Optional issue work tracking (planned)
+## Optional issue work tracking
 
 Work state and the work log are optional. An absent Work state means Not queued;
 an absent log means no recorded time. Keep work state independent of Open/Closed
@@ -363,16 +358,24 @@ Closing an issue stops its active span, preserves its complete work log and remo
 its current Work state. Closure remains one action, and the terminal record keeps
 its timing history without claiming that work is still underway.
 
-The new implementation must read existing issues unchanged, without conversion.
+The implementation reads existing issues unchanged, without conversion.
 Once a ledger uses work tracking, its tools must understand the new format; older
 versions cannot read those records. Release the CLI and matching Emacs frontend
 together so users receive a compatible pair. Supported edits must preserve work
 state and span history. This keeps ordinary upgrades simple while avoiding silent
 loss of tracking data through an older tool.
 
-This records the planned direction, not available commands. Finalize command
-syntax and timing presentation during implementation within these decisions and
-the [compatibility contract](parity-contract.md).
+The [work tracking guide](../user-docs/work-tracking.md) owns implemented actions
+and correction syntax. Emacs headings show completed time and clock status; Work
+history calculates the current running total. Snapshot/frontend schema 4 and
+editor schema 3 carry stable projections, without time passage changing hashes.
+
+## Future directions
+
+Optional ledger tracking remains an investigation. The motivation is a personal
+ledger becoming useful to another contributor; distributed concurrent allocation,
+conflict resolution and synchronization require a concrete multi-user use case.
+The current local ignored-ledger default is unchanged.
 
 <a id="public-installation-direction-planned"></a>
 

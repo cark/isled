@@ -5,7 +5,7 @@
 
 ;; Author: Sacha De Vos
 ;; Assisted-by: Codex:GPT-6
-;; Version: 0.33.1
+;; Version: 0.34.0
 ;; Package-Requires: ((emacs "30.1") (markdown-mode "2.6") (transient "0.8.0"))
 ;; Keywords: tools
 ;; URL: https://github.com/cark/isled
@@ -20,7 +20,7 @@
 (require 'project)
 (require 'isled-file-routing)
 
-(defconst isled-required-cli-version "0.33.1"
+(defconst isled-required-cli-version "0.34.0"
   "Exact CLI release compatible with this frontend.
 Independent of the version assigned by an Emacs package archive.")
 
@@ -53,12 +53,13 @@ Independent of the version assigned by an Emacs package archive.")
 (declare-function isled-jump-to-reference "isled-browser")
 (declare-function isled-history-back "isled-browser")
 (declare-function isled-history-forward "isled-browser")
+(declare-function isled-work "isled-work")
 (declare-function isled-help "isled-browser")
 (declare-function isled-jump-to-issue "isled-jump")
 (declare-function isled-jump-to-warning "isled-warnings")
 
 (defvar isled--mode-map-version
-  (if (featurep 'isled-browser) 0 7)
+  (if (featurep 'isled-browser) 0 8)
   "Version of package-owned migrations applied to the issue mode map.")
 
 (defvar-keymap isled-mode-map
@@ -90,6 +91,7 @@ Independent of the version assigned by an Emacs package archive.")
   "C-M-," #'isled-history-forward
   "j" #'isled-jump-to-issue
   "!" #'isled-jump-to-warning
+  "w" #'isled-work
   "?" #'isled-help
   "q" #'quit-window)
 

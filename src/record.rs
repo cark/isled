@@ -5,6 +5,8 @@ use crate::issue::{
 use std::{borrow::Cow, error::Error, fmt};
 
 mod state;
+mod work;
+use crate::work_log::WorkLog;
 pub(crate) use state::RecordState;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -37,6 +39,8 @@ pub(crate) struct RecordDocument {
     pub statement: Vec<u8>,
     pub evidence: Vec<Vec<u8>>,
     pub outcome: Vec<u8>,
+    pub work_log: WorkLog,
+    pub work_log_source: Option<Vec<u8>>,
 }
 
 impl RecordDocument {
@@ -45,7 +49,10 @@ impl RecordDocument {
         let (id, slug) = parse_filename(filename)?;
         let sections = split_document(bytes)?;
         let metadata = parse_metadata(sections.metadata)?;
+        let work_log = work::parse_log(sections.work_log, metadata.work_state.as_ref())?;
         Ok(Self {
+            work_log,
+            work_log_source: sections.work_log.map(Vec::from),
             issue: metadata.into_issue(id, slug, parse_heading(sections.heading, id)?.to_vec()),
             statement: parse_statement(sections.statement)?.to_vec(),
             evidence: parse_evidence(sections.evidence)?,
@@ -64,6 +71,7 @@ impl RecordDocument {
             issue.created.as_str()
         )
         .into_bytes();
+        work::render_state(&mut output, issue.work_state.as_ref());
         if !issue.tags.is_empty() {
             output.extend_from_slice(b"- **Tags:** ");
             for (index, tag) in issue.tags.iter().enumerate() {
@@ -94,6 +102,13 @@ impl RecordDocument {
         }
         output.extend_from_slice(b"\n## Statement\n\n");
         output.extend_from_slice(&self.statement);
+        if !self.work_log.spans().is_empty() {
+            output.extend_from_slice(b"\n\n## Work log\n\n");
+            match &self.work_log_source {
+                Some(source) => output.extend_from_slice(source),
+                None => output.extend_from_slice(&work::render_log(&self.work_log)),
+            }
+        }
         output.extend_from_slice(b"\n\n## Evidence\n\n");
         for entry in &self.evidence {
             output.extend_from_slice(b"- ");
@@ -159,6 +174,9 @@ impl<'a> RecordView<'a> {
     pub fn kind(&self) -> &Name {
         &self.header.kind
     }
+    pub fn work_state_kind(&self) -> crate::issue::WorkStateKind {
+        self.header.work_state_kind()
+    }
     pub fn has_tags(&self, wanted: &[Tag]) -> bool {
         wanted.iter().all(|tag| self.tags().contains(tag))
     }
@@ -178,6 +196,7 @@ struct Sections<'a> {
     heading: &'a [u8],
     metadata: &'a [u8],
     statement: &'a [u8],
+    work_log: Option<&'a [u8]>,
     evidence: &'a [u8],
     outcome: &'a [u8],
 }
@@ -186,13 +205,21 @@ fn split_document(bytes: &[u8]) -> Result<Sections<'_>, RecordError> {
     let (heading, rest) = split_once(bytes, b"\n\n## Metadata\n\n")?;
     let (metadata, rest) = split_once(rest, b"\n\n## Statement\n\n")?;
     let start = bytes.len() - rest.len();
-    let (statement, rest) = split_once(rest, b"\n\n## Evidence\n\n")?;
+    let (body, rest) = split_once(rest, b"\n\n## Evidence\n\n")?;
+    let (statement, work_log) = match find_bytes(body, b"\n\n## Work log\n\n") {
+        Some(index) => (
+            &body[..index],
+            Some(&body[index + b"\n\n## Work log\n\n".len()..]),
+        ),
+        None => (body, None),
+    };
     let (evidence, outcome) = split_once(rest, b"\n\n## Outcome\n\n")?;
     Ok(Sections {
         statement_range: start..start + statement.len(),
         heading,
         metadata,
         statement,
+        work_log,
         evidence,
         outcome,
     })
@@ -238,6 +265,7 @@ struct Metadata {
     status: Status,
     kind: Name,
     created: CreatedDate,
+    work_state: Option<crate::issue::WorkState>,
     tags: Vec<Tag>,
     waits: Vec<WaitRelation>,
     blocking: Vec<IssueRelation>,
@@ -252,6 +280,7 @@ impl Metadata {
             status: self.status,
             kind: self.kind,
             created: self.created,
+            work_state: self.work_state,
             tags: self.tags,
             waits: self.waits,
             blocking: self.blocking,
@@ -274,6 +303,10 @@ fn parse_metadata(bytes: &[u8]) -> Result<Metadata, RecordError> {
     let mut waits = Vec::new();
     let mut blocking = Vec::new();
     let mut index = 3;
+    let work_state = work::parse_state(&lines, &mut index)?;
+    if status == Status::Closed && work_state.is_some() {
+        return Err(RecordError::InvalidWorkState);
+    }
     if lines
         .get(index)
         .is_some_and(|line| line.starts_with(b"- **Tags:**"))
@@ -330,6 +363,7 @@ fn parse_metadata(bytes: &[u8]) -> Result<Metadata, RecordError> {
         status,
         kind,
         created,
+        work_state,
         tags,
         waits,
         blocking,
@@ -457,6 +491,8 @@ pub enum RecordError {
     InvalidKind,
     InvalidCreated,
     InvalidTag,
+    InvalidWorkState,
+    InvalidWorkLog,
     InvalidWait,
     InvalidBlocking,
     InvalidRelation,
@@ -477,6 +513,10 @@ impl fmt::Display for RecordError {
             Self::InvalidStatus => "invalid Status field",
             Self::InvalidKind => "invalid Kind field",
             Self::InvalidCreated => "invalid Created field",
+            Self::InvalidWorkState => "invalid Work state metadata",
+            Self::InvalidWorkLog => {
+                "invalid Work log (check UTC times, span order and running clock state)"
+            }
             Self::InvalidTag => "invalid Tags field",
             Self::InvalidWait => "invalid wait relation",
             Self::InvalidBlocking => "invalid blocking relation",

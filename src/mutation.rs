@@ -14,6 +14,7 @@ mod statement;
 mod tags;
 mod title;
 mod wait;
+mod work;
 pub use add::{add_record_validated, derive_slug};
 pub use close::{CloseOutcome, close_issue};
 pub use completion::{ParseSectionTextError, SectionText};
@@ -33,6 +34,7 @@ pub use statement::{
 pub use tags::{PriorityOutcome, priority_clear, priority_set, tag_add, tag_remove};
 pub use title::{ParseTitleTextError, TitleText, title_set};
 pub use wait::{wait_add_indexed, wait_remove};
+pub use work::{WorkAction, work_update};
 
 #[cfg(test)]
 mod tests {

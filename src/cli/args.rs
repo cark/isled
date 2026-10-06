@@ -45,7 +45,7 @@ pub enum Command {
         #[arg(long, required = true)]
         stdin: bool,
     },
-    /// Load, validate or save one complete issue draft using editor JSON schema 2.
+    /// Load, validate or save one complete issue draft using editor JSON schema 3.
     Editor {
         /// Read the versioned request from stdin; inspect response ok/code for the result.
         #[arg(long, required = true)]
@@ -71,6 +71,8 @@ pub enum Command {
     Close(CloseArgs),
     /// Audit the whole ledger without repairing it.
     Check(CheckArgs),
+    /// Track optional work state and resumable work time.
+    Work(super::WorkArgs),
 }
 
 #[derive(Debug, Args)]
@@ -151,6 +153,9 @@ pub struct FilterArgs {
     /// Append each issue's canonical absolute path.
     #[arg(long)]
     pub with_path: bool,
+    /// Select not-queued, queued, in-progress or awaiting-owner.
+    #[arg(long)]
+    pub work_state: Option<String>,
 }
 
 #[derive(Debug, Args)]

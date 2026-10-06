@@ -89,6 +89,7 @@ fn run(cli: Cli) -> Result<Vec<u8>, AppError> {
         Command::Snapshot => commands::snapshot::run(root),
         Command::Editor { .. } => commands::editor::run(root),
         Command::Frontend { .. } => commands::frontend::run(root),
+        Command::Work(arguments) => commands::work::run(arguments, root),
         Command::Wait(arguments) => commands::wait::run(arguments, root),
         Command::Tag(arguments) => commands::tag::run(arguments.command, root),
         Command::Priority(arguments) => commands::priority::run(arguments.command, root),

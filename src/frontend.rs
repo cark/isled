@@ -65,7 +65,7 @@ pub fn respond(cache: &mut Cache<'_>, request: &Request) -> Result<Vec<u8>, Cach
         (Some(hash), changed.then_some(view))
     };
     let mut output = serde_json::to_vec(&Response {
-        schema_version: 3,
+        schema_version: 4,
         graph,
         root: Bytes(cache.root().path_bytes_lossless()?.to_vec()),
         view_hash,
@@ -148,11 +148,11 @@ fn detail_payload(
             .ok_or_else(|| CacheError::Corrupt("inspected issue missing from cache".into()))?;
         issue.resolve_context(row.ready(), &known);
         Payload::Issue {
-            detail: Detail {
+            detail: Box::new(Detail {
                 issue,
                 targets,
                 unavailable,
-            },
+            }),
         }
     } else if let Some(problem) = problem(cache, id)? {
         Payload::Problem { problem }

@@ -25,7 +25,10 @@
 (defun isled-rows-heading-key (issue)
   "Capture the values used to render ISSUE's heading."
   (vector (isled-issue-title issue) (isled-issue-kind issue)
-          (isled-issue-status issue) (isled-issue-ready issue)))
+          (isled-issue-status issue) (isled-issue-ready issue)
+          (isled-work-data-label (isled-issue-work issue))
+          (and (isled-issue-work issue)
+               (isled-work-data-question (isled-issue-work issue)))))
 
 (defun isled-rows-heading-matches-p (row issue)
   "Return non-nil when ROW already displays ISSUE's heading values."
@@ -33,7 +36,10 @@
     (and (equal (aref key 0) (isled-issue-title issue))
          (equal (aref key 1) (isled-issue-kind issue))
          (equal (aref key 2) (isled-issue-status issue))
-         (eq (aref key 3) (isled-issue-ready issue)))))
+         (eq (aref key 3) (isled-issue-ready issue))
+         (equal (aref key 4) (isled-work-data-label (isled-issue-work issue)))
+         (equal (aref key 5) (and (isled-issue-work issue)
+                                  (isled-work-data-question (isled-issue-work issue)))))))
 
 (defun isled-row-value (row)
   "Return the identity of ROW."

@@ -12,7 +12,7 @@ use serde_json::{Value, json};
 pub fn respond(root: &ProjectRoot, input: &[u8]) -> Value {
     match execute(root, input) {
         Ok(value) => value,
-        Err(error) => json!({"schema_version":2,"ok":false,"code":error.code,"errors":[error]}),
+        Err(error) => json!({"schema_version":3,"ok":false,"code":error.code,"errors":[error]}),
     }
 }
 fn execute(root: &ProjectRoot, input: &[u8]) -> Result<Value, FieldError> {
@@ -35,7 +35,7 @@ fn execute(root: &ProjectRoot, input: &[u8]) -> Result<Value, FieldError> {
     if let Some(current) = &current {
         if request.expected.as_ref() != Some(&current.version) {
             return Ok(
-                json!({"schema_version":2,"ok":false,"code":"conflict","current":current,
+                json!({"schema_version":3,"ok":false,"code":"conflict","current":current,
                 "errors":[{"field":"record","message":"The saved issue or its dependency reasons changed. Compare, reload, or confirm overwrite."}]}),
             );
         }
@@ -61,7 +61,7 @@ fn execute(root: &ProjectRoot, input: &[u8]) -> Result<Value, FieldError> {
         plan
     };
     if request.mode == Mode::Validate {
-        return Ok(json!({"schema_version":2,"ok":true,"validated":true}));
+        return Ok(json!({"schema_version":3,"ok":true,"validated":true}));
     }
     let was_closed = request.id.is_some() && editor::closed(&records, id);
     // Everything above is preflight. Any failure below may follow publication.
@@ -72,7 +72,7 @@ fn execute(root: &ProjectRoot, input: &[u8]) -> Result<Value, FieldError> {
     };
     if let Err(error) = result {
         return Ok(
-            json!({"schema_version":2,"ok":false,"code":"publication", "id":id.to_string(),
+            json!({"schema_version":3,"ok":false,"code":"publication", "id":id.to_string(),
             "errors":[{"field":"record","message":format!("Save may be partially applied: {error}. Inspect the ledger before retrying.")}]}),
         );
     }
@@ -95,5 +95,5 @@ fn execute(root: &ProjectRoot, input: &[u8]) -> Result<Value, FieldError> {
 }
 fn success(record: Editable, root: &ProjectRoot) -> Value {
     let path = root.issues_dir().join(&record.filename);
-    json!({"schema_version":2,"ok":true,"record":record,"path":path.to_string_lossy()})
+    json!({"schema_version":3,"ok":true,"record":record,"path":path.to_string_lossy()})
 }

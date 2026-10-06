@@ -71,6 +71,7 @@ pub struct SnapshotIssue {
     content: Vec<u8>,
     references: Vec<InlineIssueReference>,
     warnings: Vec<crate::diagnostic::RelationWarning>,
+    work: crate::work_wire::WorkData,
 }
 
 impl Snapshot {
@@ -164,6 +165,10 @@ impl Snapshot {
                     .expect("RecordDocument guarantees UTF-8 content");
                 let references = reference::recognize_issue_references(content, &known_targets);
                 SnapshotIssue {
+                    work: crate::work_wire::WorkData::new(
+                        issue,
+                        &record.document().expect("parsed source").work_log,
+                    ),
                     id,
                     status,
                     kind: issue.kind().clone(),
@@ -207,6 +212,9 @@ impl Snapshot {
 }
 
 impl SnapshotIssue {
+    pub fn work(&self) -> &crate::work_wire::WorkData {
+        &self.work
+    }
     pub(crate) fn set_warnings(&mut self, warnings: Vec<crate::diagnostic::RelationWarning>) {
         self.warnings = warnings;
     }

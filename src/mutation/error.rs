@@ -7,6 +7,8 @@ use super::StatementEditError;
 
 #[derive(Debug)]
 pub enum MutationError {
+    WorkLog(crate::work_log::WorkLogError),
+    ClosedWork,
     RepairReasonRequired,
     StatementEdit(StatementEditError),
     Record(RecordError),
@@ -42,6 +44,11 @@ pub enum MutationError {
 impl fmt::Display for MutationError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::WorkLog(error) => error.fmt(formatter),
+            Self::ClosedWork => write!(
+                formatter,
+                "closed issues cannot be queued or worked; add a new issue"
+            ),
             Self::RepairReasonRequired => write!(
                 formatter,
                 "completing a Blocking-only relation requires --reason TEXT"
@@ -110,5 +117,11 @@ impl From<RecordError> for MutationError {
 impl From<StatementEditError> for MutationError {
     fn from(error: StatementEditError) -> Self {
         Self::StatementEdit(error)
+    }
+}
+
+impl From<crate::work_log::WorkLogError> for MutationError {
+    fn from(error: crate::work_log::WorkLogError) -> Self {
+        Self::WorkLog(error)
     }
 }

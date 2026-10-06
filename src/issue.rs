@@ -5,12 +5,14 @@ mod name;
 mod relation;
 mod status;
 mod tag;
+mod work_state;
 pub use created_date::{CreatedDate, ParseCreatedDateError};
 pub use identity::{CanonicalIssueId, IssueId, ParseCanonicalIssueIdError, ParseIssueIdError};
 pub use name::{Name, ParseNameError};
 pub use relation::{IssueRelation, ParseWaitReasonError, WaitReason, WaitRelation};
 pub use status::{ParseStatusError, Status};
 pub use tag::{ParseTagError, Tag};
+pub use work_state::{OwnerQuestion, OwnerWait, WorkState, WorkStateError, WorkStateKind};
 
 /// Parsed issue data, publicly readable but not externally constructible or mutable.
 ///
@@ -27,6 +29,7 @@ pub struct Issue {
     pub(crate) status: Status,
     pub(crate) kind: Name,
     pub(crate) created: CreatedDate,
+    pub(crate) work_state: Option<WorkState>,
     pub(crate) tags: Vec<Tag>,
     pub(crate) waits: Vec<WaitRelation>,
     pub(crate) blocking: Vec<IssueRelation>,
@@ -53,6 +56,14 @@ impl Issue {
     }
     pub fn tags(&self) -> &[Tag] {
         &self.tags
+    }
+    pub fn work_state(&self) -> Option<&WorkState> {
+        self.work_state.as_ref()
+    }
+    pub fn work_state_kind(&self) -> WorkStateKind {
+        self.work_state
+            .as_ref()
+            .map_or(WorkStateKind::NotQueued, WorkState::kind)
     }
     pub fn waits(&self) -> &[WaitRelation] {
         &self.waits

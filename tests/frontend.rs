@@ -36,7 +36,7 @@ fn request(root: &Path, input: Value) -> Value {
 }
 
 fn input(mode: &str, details: Value) -> Value {
-    json!({"schema_version":3,"mode":mode,"details":details})
+    json!({"schema_version":4,"mode":mode,"details":details})
 }
 #[test]
 fn compact_view_and_details_match_full_snapshot_and_unchanged_reply_is_empty() {
@@ -53,7 +53,7 @@ fn compact_view_and_details_match_full_snapshot_and_unchanged_reply_is_empty() {
     assert_eq!(first["changes"][1]["detail"]["issue"], full["issues"][1]);
     let second = request(
         dir.path(),
-        json!({"schema_version":3,"mode":"refresh","view_hash":first["view_hash"],
+        json!({"schema_version":4,"mode":"refresh","view_hash":first["view_hash"],
       "details":[{"id":"0001","hash":first["changes"][0]["hash"]},{"id":"0002","hash":first["changes"][1]["hash"]}]}),
     );
     assert_eq!(second["view"], Value::Null);
@@ -139,7 +139,7 @@ fn filters_are_applied_by_rust_and_invalid_requests_fail_before_discovery() {
     let dir = fixture::fixture();
     let value = request(
         dir.path(),
-        json!({"schema_version":3,"mode":"refresh","filter":{"tags":["rust"]}}),
+        json!({"schema_version":4,"mode":"refresh","filter":{"tags":["rust"]}}),
     );
     assert_eq!(value["view"]["issues"].as_array().unwrap().len(), 1);
     for value in [
@@ -181,7 +181,7 @@ fn text_filters_match_across_sections_with_unicode_and_literal_phrases() {
     .unwrap();
     let response = request(
         dir.path(),
-        json!({"schema_version":3,"mode":"refresh",
+        json!({"schema_version":4,"mode":"refresh",
         "filter":{"status":"all","tags":["rust"],"kinds":["feature"],
         "text":["FIRST","needed","STRASSE","timeout here","t:rust"]}}),
     );
@@ -201,7 +201,7 @@ fn text_filters_match_across_sections_with_unicode_and_literal_phrases() {
     );
     let response = request(
         dir.path(),
-        json!({"schema_version":3,"mode":"view",
+        json!({"schema_version":4,"mode":"view",
         "filter":{"status":"all","kinds":["feature","bug"]}}),
     );
     assert_eq!(response["view"]["issues"], json!([]));
@@ -215,7 +215,7 @@ fn text_selection_reads_only_metadata_candidates_and_reuses_current_run_reads() 
     let lock = root.acquire_lock().unwrap();
     let mut cache = Cache::open(&lock).unwrap();
     let query = Request::parse(
-        br#"{"schema_version":3,"mode":"view","filter":{"tags":["rust"],"text":["Body"]}}"#,
+        br#"{"schema_version":4,"mode":"view","filter":{"tags":["rust"],"text":["Body"]}}"#,
     )
     .unwrap();
     frontend::respond(&mut cache, &query).unwrap();
@@ -233,7 +233,7 @@ fn malformed_filter_fields_fail_before_discovery() {
     ] {
         let output = execute(
             Path::new("/missing-project-for-filter-test"),
-            json!({"schema_version":3,"mode":"view","filter":filter})
+            json!({"schema_version":4,"mode":"view","filter":filter})
                 .to_string()
                 .as_bytes(),
         );
@@ -263,6 +263,10 @@ fn completion_choices_are_sorted_unique_ledger_wide_and_refresh_with_metadata() 
     let expected = json!([
         "s:open",
         "s:closed",
+        "w:not-queued",
+        "w:queued",
+        "w:in-progress",
+        "w:awaiting-owner",
         "t:priority-high",
         "t:rust",
         "t:zebra",
@@ -271,13 +275,13 @@ fn completion_choices_are_sorted_unique_ledger_wide_and_refresh_with_metadata() 
     ]);
     let first = request(
         dir.path(),
-        json!({"schema_version":3,"mode":"refresh","filter":{"tags":["absent"]}}),
+        json!({"schema_version":4,"mode":"refresh","filter":{"tags":["absent"]}}),
     );
     assert_eq!(first["view"]["issues"], json!([]));
     assert_eq!(first["choices"], expected);
     let unchanged = request(
         dir.path(),
-        json!({"schema_version":3,"mode":"view","filter":{"tags":["absent"]},
+        json!({"schema_version":4,"mode":"view","filter":{"tags":["absent"]},
             "view_hash":first["view_hash"]}),
     );
     assert_eq!(unchanged["view"], Value::Null);
@@ -292,7 +296,16 @@ fn completion_choices_are_sorted_unique_ledger_wide_and_refresh_with_metadata() 
     let refreshed = request(dir.path(), input("refresh", json!([])));
     assert_eq!(
         refreshed["choices"],
-        json!(["s:open", "s:closed", "t:rust", "k:feature"])
+        json!([
+            "s:open",
+            "s:closed",
+            "w:not-queued",
+            "w:queued",
+            "w:in-progress",
+            "w:awaiting-owner",
+            "t:rust",
+            "k:feature"
+        ])
     );
     assert_eq!(refreshed["view"]["unavailable"][0]["id"], "0002");
 }
@@ -316,6 +329,7 @@ fn contextual_choices_combine_other_constraints_and_replace_status() {
             json!([
                 "s:open",
                 "s:closed",
+                "w:not-queued",
                 "t:rust",
                 "t:zebra",
                 "k:bug",
@@ -324,11 +338,11 @@ fn contextual_choices_combine_other_constraints_and_replace_status() {
         ),
         (
             json!({"status":"open","tags":["rust"]}),
-            json!(["s:open", "s:closed", "t:rust", "k:feature"]),
+            json!(["s:open", "s:closed", "w:not-queued", "t:rust", "k:feature"]),
         ),
         (
             json!({"status":"all","tags":["rust","rust"],"kinds":["bug"],"text":["STRASSE","timeout here"]}),
-            json!(["s:closed", "t:rust", "t:zebra", "k:bug"]),
+            json!(["s:closed", "w:not-queued", "t:rust", "t:zebra", "k:bug"]),
         ),
         (json!({"status":"all","tags":["missing"]}), json!([])),
         (json!({"status":"all","kinds":["feature","bug"]}), json!([])),
@@ -336,7 +350,7 @@ fn contextual_choices_combine_other_constraints_and_replace_status() {
     ] {
         let value = request(
             dir.path(),
-            json!({"schema_version":3,"mode":"choices","choice_filter":criteria}),
+            json!({"schema_version":4,"mode":"choices","choice_filter":criteria}),
         );
         assert_eq!(value["choices"], expected, "{criteria}");
         assert_eq!(value["view"], Value::Null);
@@ -346,18 +360,21 @@ fn contextual_choices_combine_other_constraints_and_replace_status() {
     fs::write(second, "unreadable record").unwrap();
     let value = request(
         dir.path(),
-        json!({"schema_version":3,"mode":"refresh", "choice_filter":{"status":"all","tags":["rust"]}}),
+        json!({"schema_version":4,"mode":"refresh", "choice_filter":{"status":"all","tags":["rust"]}}),
     );
-    assert_eq!(value["choices"], json!(["s:open", "t:rust", "k:feature"]));
+    assert_eq!(
+        value["choices"],
+        json!(["s:open", "w:not-queued", "t:rust", "k:feature"])
+    );
 }
 
 #[test]
 fn contextual_choice_mode_validates_before_discovery_and_empty_ledger_has_no_choices() {
     for value in [
-        json!({"schema_version":3,"mode":"choices","choice_filter":{"text":[""]}}),
-        json!({"schema_version":3,"mode":"choices","details":[{"id":"0001"}]}),
-        json!({"schema_version":3,"mode":"choices","view_hash":"0123456789abcdef"}),
-        json!({"schema_version":3,"mode":"details","choice_filter":{}}),
+        json!({"schema_version":4,"mode":"choices","choice_filter":{"text":[""]}}),
+        json!({"schema_version":4,"mode":"choices","details":[{"id":"0001"}]}),
+        json!({"schema_version":4,"mode":"choices","view_hash":"0123456789abcdef"}),
+        json!({"schema_version":4,"mode":"details","choice_filter":{}}),
     ] {
         let output = execute(
             Path::new("/missing-choice-test-project"),
@@ -371,7 +388,7 @@ fn contextual_choice_mode_validates_before_discovery_and_empty_ledger_has_no_cho
     isled::filesystem::initialize_ledger(dir.path()).unwrap();
     let value = request(
         dir.path(),
-        json!({"schema_version":3,"mode":"choices","choice_filter":{"status":"all"}}),
+        json!({"schema_version":4,"mode":"choices","choice_filter":{"status":"all"}}),
     );
     assert_eq!(value["choices"], json!([]));
 }
@@ -393,7 +410,7 @@ fn contextual_choices_do_not_read_details_and_share_text_reads_with_view() {
         frontend::respond(
             cache,
             &Request::parse(
-                json!({"schema_version":3,"mode":mode,
+                json!({"schema_version":4,"mode":mode,
             "filter":{"tags":["rust"],"text":["Body"]},"choice_filter":criteria})
                 .to_string()
                 .as_bytes(),
@@ -413,7 +430,7 @@ fn contextual_text_read_failure_produces_no_partial_response() {
     let dir = fixture::fixture();
     request(dir.path(), input("refresh", json!([])));
     fs::write(dir.path().join(".issues/0001-first.md"), [0xff]).unwrap();
-    let output = execute(dir.path(), br#"{"schema_version":3,"mode":"choices","choice_filter":{"tags":["rust"],"text":["Body"]}}"#);
+    let output = execute(dir.path(), br#"{"schema_version":4,"mode":"choices","choice_filter":{"tags":["rust"],"text":["Body"]}}"#);
     assert!(!output.status.success());
     assert!(output.stdout.is_empty());
     assert!(!output.stderr.is_empty());

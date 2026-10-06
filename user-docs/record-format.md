@@ -50,9 +50,11 @@ tools are not part of the supported CLI.
   identity remain unchanged.
 - `## Metadata`, `## Statement`, `## Evidence`, and `## Outcome` are
   mandatory, unique, and ordered. Prose may use headings at level three or
-  below, but no additional level-two headings.
+  below. The only additional level-two section is optional `## Work log`,
+  between Statement and Evidence.
 - Metadata is a Markdown list. `Status`, `Kind`, and `Created` are mandatory,
-  unique, and ordered. `Tags` is one optional comma-and-space-separated line;
+  unique, and ordered. Optional `Work state` follows Created; its nested
+  Reason and Question belong to that entry. `Tags` is one optional comma-and-space-separated line;
   tag order is preserved and an empty collection omits the line. Optional
   unique `Waiting on` and `Blocking` entries follow tags and contain nested
   relation lists. Each relation stores canonical `#NNNN — Title` text so the
@@ -85,4 +87,46 @@ tools are not part of the supported CLI.
   structural but receive typed snapshot annotations so frontends can present
   them without parsing Markdown.
 - Generated records use the exact blank-line structure shown and
-  end with one newline. Free-form prose bytes are preserved by edits outside that prose field.
+  end with one newline. Free-form prose and an unchanged Work log retain their bytes during edits
+  outside those fields.
+
+## Optional work tracking
+
+An absent Work state means Not queued; an absent Work log means no recorded time.
+Existing records remain valid without either field. For the supported actions,
+see [work state and time](work-tracking.md).
+
+```markdown
+- **Work state:** awaiting-owner
+  - **Reason:** clarification
+  - **Question:** Should this also run offline?
+```
+
+Work state accepts `not-queued`, `queued`, `in-progress` and `awaiting-owner`.
+Generated Not queued records omit the entry. Awaiting owner requires exactly one
+nested Reason, `review` or `clarification`. Clarification also requires one
+non-empty, single-line Question. Review has no Question. Other states have
+neither child. Closed issues have no current Work state.
+
+When present, Work log contains exactly this three-column Markdown table, with
+at least one span:
+
+```markdown
+## Work log
+
+| Started (UTC)       | Stopped (UTC)       | Activity       |
+|---------------------|---------------------|----------------|
+| 2026-10-06 09:00:00 | 2026-10-06 09:30:00 | Implementation |
+| 2026-10-06 10:00:00 |                     |                |
+```
+
+Column padding may vary. Each separator cell contains at least three hyphens.
+Start and stop use UTC `YYYY-MM-DD HH:MM:SS`, without fractional seconds or a
+zone suffix. Activity may be empty; it cannot contain a pipe, newline, NUL or
+surrounding whitespace. Cell padding is ignored when reading.
+
+Spans are chronological and cannot overlap. A stop may equal its start or the
+next span's start. Only the last span may have an empty stop, and that running
+span requires In progress. Totals are calculated rather than stored in the file.
+Work metadata and activities are structural data, outside prose-reference
+recognition. Older tools cannot read records containing these new fields.

@@ -45,6 +45,7 @@ struct Input {
 struct Filter {
     status: Option<String>,
     kind: Option<String>,
+    work_state: Option<String>,
     #[serde(default)]
     tags: Vec<String>,
     #[serde(default)]
@@ -66,7 +67,7 @@ impl Request {
 
     pub fn parse(bytes: &[u8]) -> Result<Self, String> {
         let input: Input = serde_json::from_slice(bytes).map_err(|e| e.to_string())?;
-        if input.schema_version != 3 {
+        if input.schema_version != 4 {
             return Err("unsupported frontend request version".into());
         }
         let criteria = Criteria::parse(input.filter)?;
@@ -117,6 +118,14 @@ pub(crate) struct Criteria {
 impl Criteria {
     fn parse(filter: Filter) -> Result<Self, String> {
         let filters = Filters {
+            work_state: filter
+                .work_state
+                .map(|value| {
+                    value
+                        .parse()
+                        .map_err(|e: crate::issue::WorkStateError| e.to_string())
+                })
+                .transpose()?,
             status: match filter.status.as_deref().unwrap_or("open") {
                 "all" => None,
                 text => Some(Status::try_parse(text.as_bytes()).map_err(|e| e.to_string())?),

@@ -6,6 +6,7 @@ covers everyday use, then the options for making Isled feel at home in your setu
 - [Projects and independent views](#opening-projects-and-directories)
 - [Navigation, folding and source files](#navigation-and-folding)
 - [Adding, editing and closing issues](#add-edit-and-close-issues)
+- [Work state and time](#work-state-and-time)
 - [Filtering and completion](#issue-filtering)
 - [Reading dependency graphs](#dependency-graph-view)
 - [Refresh](#automatic-refresh) and [warnings](#known-warnings)
@@ -262,6 +263,28 @@ editor for the closed issue.
 
 For the exact validation and save rules, see the [editor contract](../../user-docs/editor.md).
 
+## Work state and time
+
+Press **`w`** on an issue for the Work menu. Queue it, start or resume work,
+pause the clock, or wait for the owner. **Start / resume** times work by default;
+**Start without timing** marks it In progress without recording time.
+Use a prefix with Start to name the activity.
+
+Awaiting owner can mean **Ready for review** or **Ask a question**. Both stop
+timing. A question stays with the current state until work resumes. Headings
+show state, completed time and whether the clock is running. **Work history**
+shows the question, spans and current elapsed total in a separate buffer.
+
+The clock survives editor restarts. If you forgot to pause, use a prefix with
+Pause to enter the actual stop time in UTC. **Correct stop time** changes a
+numbered span; Work history shows their numbers. See the
+[work guide](../../user-docs/work-tracking.md) for examples and file format.
+
+Tracking is optional. Existing issues stay Not queued with no recorded time.
+Normal editing preserves tracking; closing stops timing, keeps history and
+removes current state. Work state does not change dependency readiness or grant
+permission to close an issue.
+
 ## Issue filtering
 
 Press `f` to edit the current query. Results update as you type. `RET` keeps the
@@ -278,6 +301,8 @@ sections; quotes require a literal phrase.
 
 | Query | Find |
 | --- | --- |
+| `s:open w:queued` | Open issues queued for work. |
+| `s:open w:awaiting-owner` | Open issues needing an owner action. |
 | `s:open t:rust` | Open issues tagged `rust`. |
 | `k:bug` | Bugs with either status. |
 | `s:closed "disk full"` | Closed issues containing the phrase `disk full`. |
@@ -291,9 +316,10 @@ Remove the status term to include both statuses. There is no `s:all`. Remove
 every term for an unfiltered view. Press `f` again to refine a query; it returns
 with a trailing space ready for the next term.
 
-Unquoted `t:`, `k:` and `s:` prefixes select a tag, kind or status. Quote them to
+Unquoted `t:`, `k:`, `s:` and `w:` prefixes select a tag, kind, status or work
+state (`not-queued`, `queued`, `in-progress`, `awaiting-owner`). Quote them to
 search for the text itself. Empty values and unfinished quotes must be completed
-before you can accept the query. If you type several status terms, the last wins;
+before you can accept the query. The last status term and last work-state term win;
 choosing a status through completion replaces them all.
 
 `O`, `C` and `A` change only status, keeping your tag, kind and text terms.
@@ -304,12 +330,14 @@ Following a reference outside the results can temporarily leave the query;
 ### Completion interfaces
 
 A syntax hint appears in the view's header while filtering. Completion offers
-tags after `t:`, kinds after `k:`, statuses after `s:`, and all structured choices
+tags after `t:`, kinds after `k:`, statuses after `s:`, work states after `w:`,
+and all structured choices
 between terms. Quoted terms remain literal.
 
 Choices come from readable cached issues matching the rest of your query. The
 term at point is left out of that calculation; other copies of it still apply.
 Status choices ignore existing status terms because selecting one replaces them.
+Work-state choices ignore the current work-state constraint.
 If nothing matches the remaining constraints, there are no suggestions.
 
 Choose an interface with `M-x customize-option RET isled-filter-interface RET`:
@@ -771,7 +799,8 @@ not need them.
 | `c` | `isled-close-issue` | Prepare closure in the editor. |
 | `s` | `isled-open-source` | Open the Markdown source. |
 | `!` | `isled-jump-to-warning` | Visit the next known warning. |
-| `f` | `isled-filter` | Filter issues by status, tags, kind or text. |
+| `w` | `isled-work` | Work state, clocks, owner questions and history. |
+| `f` | `isled-filter` | Filter issues by status, work state, tags, kind or text. |
 | `v` | `isled-graph-toggle` | Toggle hierarchical/flat presentation. |
 | `d` | `isled-graph-reverse` | Reverse dependency direction in hierarchical mode. |
 | `O`, `C`, `A` | `isled-filter-open`, `isled-filter-closed`, `isled-filter-all` | Select status. |

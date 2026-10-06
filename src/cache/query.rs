@@ -15,8 +15,12 @@ pub struct Summary {
     status: Status,
     kind: Name,
     ready: bool,
+    work: crate::work_wire::WorkSummary,
 }
 impl Summary {
+    pub fn work(&self) -> &crate::work_wire::WorkSummary {
+        &self.work
+    }
     pub fn id(&self) -> IssueId {
         self.id
     }
@@ -61,7 +65,7 @@ const HAS_ACTIVE_WAIT: &str =
 impl Cache<'_> {
     pub fn summaries(&self, filters: &Filters) -> Result<Vec<Summary>, CacheError> {
         let mut sql = format!(
-            "SELECT i.id,i.filename,i.title,i.status,i.kind,(i.status='open' AND NOT {HAS_ACTIVE_WAIT}) FROM issues i WHERE i.error IS NULL"
+            "SELECT i.id,i.filename,i.title,i.status,i.kind,(i.status='open' AND NOT {HAS_ACTIVE_WAIT}),i.work_state,i.work_reason,i.work_question,i.work_seconds,i.work_started FROM issues i WHERE i.error IS NULL"
         );
         let mut values = Vec::<Value>::new();
         if let Some(status) = filters.status {
@@ -71,6 +75,10 @@ impl Cache<'_> {
         if let Some(kind) = &filters.kind {
             sql.push_str(" AND i.kind=?");
             values.push(kind.as_str().to_owned().into());
+        }
+        if let Some(state) = filters.work_state {
+            sql.push_str(" AND i.work_state=?");
+            values.push(state.as_str().to_owned().into());
         }
         for tag in &filters.tags {
             sql.push_str(
@@ -137,7 +145,7 @@ impl Cache<'_> {
 
     pub(super) fn summary(&self, id: IssueId) -> Result<Summary, CacheError> {
         let sql = format!(
-            "SELECT i.id,i.filename,i.title,i.status,i.kind,(i.status='open' AND NOT {HAS_ACTIVE_WAIT}) FROM issues i WHERE i.id=?1 AND i.error IS NULL"
+            "SELECT i.id,i.filename,i.title,i.status,i.kind,(i.status='open' AND NOT {HAS_ACTIVE_WAIT}),i.work_state,i.work_reason,i.work_question,i.work_seconds,i.work_started FROM issues i WHERE i.id=?1 AND i.error IS NULL"
         );
         let mut statement = self.connection.prepare(&sql)?;
         let mut rows = statement.query([id.get()])?;
@@ -168,14 +176,22 @@ fn decode_summary(row: &rusqlite::Row<'_>) -> Result<Summary, CacheError> {
     let title: String = row.get(2)?;
     let status: String = row.get(3)?;
     let kind: String = row.get(4)?;
+    let status =
+        Status::try_parse(status.as_bytes()).map_err(|e| CacheError::Corrupt(e.to_string()))?;
+    let work = decode_work(row)?;
+    if status == Status::Closed && work.state != "not-queued" {
+        return Err(CacheError::Corrupt(
+            "closed issue has a current work state".into(),
+        ));
+    }
     Ok(Summary {
         id,
         filename,
         title: TitleText::parse(&title).map_err(|e| CacheError::Corrupt(e.to_string()))?,
-        status: Status::try_parse(status.as_bytes())
-            .map_err(|e| CacheError::Corrupt(e.to_string()))?,
+        status,
         kind: Name::try_parse(kind.as_bytes()).map_err(|e| CacheError::Corrupt(e.to_string()))?,
         ready: row.get(5)?,
+        work,
     })
 }
 pub(super) fn parse_cached_issue_id(value: i64) -> Result<IssueId, CacheError> {
@@ -187,4 +203,39 @@ pub(super) fn parse_cached_issue_id(value: i64) -> Result<IssueId, CacheError> {
                 "invalid cached issue ID: {value}; run cache refresh"
             ))
         })
+}
+
+fn decode_work(row: &rusqlite::Row<'_>) -> Result<crate::work_wire::WorkSummary, CacheError> {
+    use crate::issue::{OwnerQuestion, WorkStateKind};
+    let state: String = row.get(6)?;
+    let state: WorkStateKind = state
+        .parse()
+        .map_err(|e: crate::issue::WorkStateError| CacheError::Corrupt(e.to_string()))?;
+    let reason: Option<String> = row.get(7)?;
+    let question: Option<String> = row.get(8)?;
+    let reason = match (state, reason.as_deref(), question.as_deref()) {
+        (WorkStateKind::AwaitingOwner, Some("review"), None) => Some("review"),
+        (WorkStateKind::AwaitingOwner, Some("clarification"), Some(question)) => {
+            OwnerQuestion::parse(question).map_err(|e| CacheError::Corrupt(e.to_string()))?;
+            Some("clarification")
+        }
+        (state, None, None) if state != WorkStateKind::AwaitingOwner => None,
+        _ => return Err(CacheError::Corrupt("invalid cached owner wait".into())),
+    };
+    let running: Option<String> = row.get(10)?;
+    let running = running
+        .map(|value| value.parse())
+        .transpose()
+        .map_err(|e: crate::work_log::WorkLogError| CacheError::Corrupt(e.to_string()))?;
+    if running.is_some() && state != WorkStateKind::InProgress {
+        return Err(CacheError::Corrupt("invalid cached running clock".into()));
+    }
+    Ok(crate::work_wire::WorkSummary::from_cached(
+        state,
+        reason,
+        question,
+        u64::try_from(row.get::<_, i64>(9)?)
+            .map_err(|_| CacheError::Corrupt("negative cached work time".into()))?,
+        running,
+    ))
 }

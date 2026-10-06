@@ -53,7 +53,7 @@ Vertico when enabled.  All interfaces also work with standard Emacs completion."
 (defvar isled-filter-history nil "Previously accepted filter strings.")
 
 (defvar-local isled-filter-help
-    "t: tag · k: kind · s: status · \"…\" literal phrase · AND · TAB complete · RET keep"
+    "t: tag · k: kind · s: status · w: work · \"…\" literal phrase · AND · TAB complete · RET keep"
   "Short filter syntax and interaction reminder.")
 
 (defun isled-filter--request (query &optional criteria completion)
@@ -227,7 +227,7 @@ Vertico when enabled.  All interfaces also work with standard Emacs completion."
          accepted)
     (setq isled-filter-active (list t) isled-filter-feedback nil
           isled-filter-help
-          (concat "t: tag · k: kind · s: status · \"…\" literal phrase · AND · "
+          (concat "t: tag · k: kind · s: status · w: work · \"…\" literal phrase · AND · "
                   (if (eq interface 'separate-filter-picker)
                       "TAB pick token" "TAB complete")
                   " · RET keep"))

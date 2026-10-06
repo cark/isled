@@ -39,7 +39,7 @@ four ASCII digits with an optional `#` and normalize to four digits. Quote a
 hash-prefixed ID in shells where `#` begins a comment.
 
 Use `list` with composable filters for metadata-only selection such as ready,
-waiting, status, kind, or tags. Use `search` only when matching record text.
+waiting, status, work state, kind, or tags. Use `search` only when matching record text.
 `snapshot` and `frontend --stdin` are frontend wire interfaces; do not decode them merely to
 reproduce a `list` query.
 
@@ -62,6 +62,13 @@ output adds only necessary inter-record newlines and is not a byte-exact archive
 For focused dependency context, use `wait tree ID`; add `--dependents` only
 when downstream impact is the question. Prefer `--json` for agent consumption:
 it omits full issue prose while preserving reasoned `waits_on` orientation.
+
+Optional work tracking uses `work` actions and `list --work-state STATE`.
+Missing work fields mean Not queued and no recorded time. Start times work by
+default; `--no-clock` selects In progress without timing. Use `work show --json`
+for state, owner questions and spans. Read live `help work` before transitions.
+Work state grants no assignment, execution or closure authority. Older tools
+cannot read work-tracked records; keep the executable and its skill paired.
 
 ## Link issue mentions
 

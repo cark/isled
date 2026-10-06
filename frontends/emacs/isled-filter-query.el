@@ -50,21 +50,24 @@
   "Parse FILTER into bounded-protocol criteria, or signal actionable input errors."
   (when (string-match-p "[\n\r]" (isled-filter-query-text filter))
     (user-error "Filter must be one line"))
-  (let ((status "all") tags kinds text)
+  (let ((status "all") work-state tags kinds text)
     (dolist (token (isled-filter-query-tokens
                     (isled-filter-query-text filter)))
       (let ((value (nth 2 token)))
-        (if (and (not (nth 3 token)) (string-match "\\`\\([tks]\\):\\(.*\\)\\'" value))
+        (if (and (not (nth 3 token)) (string-match "\\`\\([tksw]\\):\\(.*\\)\\'" value))
             (let ((prefix (match-string 1 value)) (name (match-string 2 value)))
               (unless (string-match-p "\\`[a-z0-9]+\\(?:-[a-z0-9]+\\)*\\'" name)
                 (user-error "Complete %s with a lowercase name" value))
               (pcase prefix
                 ("s" (setq status (pcase name ("open" "open") ("closed" "closed")
                                          (_ (user-error "Status is open or closed")))))
+                ("w" (unless (member name '("not-queued" "queued" "in-progress" "awaiting-owner"))
+                       (user-error "Work state is not-queued, queued, in-progress or awaiting-owner"))
+                     (setq work-state name))
                 ("t" (push name tags))
                 ("k" (push name kinds))))
           (unless (string-empty-p value) (push value text)))))
-    `((status . ,status) (tags . ,(vconcat (nreverse tags)))
+    `((status . ,status) ,@(when work-state `((work_state . ,work-state))) (tags . ,(vconcat (nreverse tags)))
       (kinds . ,(vconcat (nreverse kinds))) (text . ,(vconcat (nreverse text))))))
 
 (defun isled-filter-query-status (filter status)

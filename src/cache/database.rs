@@ -3,7 +3,7 @@ use rusqlite::{CachedStatement, Connection, Params, Row};
 use std::{fs, io, path::Path};
 
 // Version 3 fixes the fingerprint interpretation to XXH3-64 on raw source bytes.
-const VERSION: i64 = 5;
+const VERSION: i64 = 6;
 
 /// Owns SQLite lifecycle exceptions; data access always uses bounded statement reuse.
 pub(super) struct Database {

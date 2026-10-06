@@ -29,7 +29,7 @@ pub fn run(root: &Path) {
     );
     for status in ["open", "all"] {
         let input =
-            format!(r#"{{"schema_version":3,"mode":"view","filter":{{"status":"{status}"}}}}"#);
+            format!(r#"{{"schema_version":4,"mode":"view","filter":{{"status":"{status}"}}}}"#);
         let samples: Vec<_> = (0..RUNS)
             .map(|_| {
                 let (ms, bytes) = bench.cli(&["frontend", "--stdin"], Some(input.as_bytes()));

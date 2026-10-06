@@ -49,7 +49,7 @@ Reject quoted literals and ordinary text instead of replacing them."
     (unless (and context
                  (let ((whole (nth 3 context)))
                    (or (string-empty-p whole)
-                       (string-match-p "\\`[tks]\\(?::.*\\)?\\'" whole))))
+                       (string-match-p "\\`[tksw]\\(?::.*\\)?\\'" whole))))
       (user-error "Move to a structured token or between terms to pick a filter"))
     ;; The picker starts from text before point; inline completion instead
     ;; receives the whole token and a separate cursor offset from Emacs.

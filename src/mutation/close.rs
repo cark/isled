@@ -32,6 +32,11 @@ pub fn close_issue(
         _ => {}
     }
     let mut document = parse_record_document(target)?;
+    if document.work_log.active().is_some() {
+        document.work_log.stop(crate::work_log::WorkTime::now())?;
+        document.work_log_source = None;
+    }
+    document.issue.work_state = None;
     document.issue.status = Status::Closed;
     document.issue.tags.retain(|tag| !tag.is_priority());
     if let Some(outcome) = outcome {

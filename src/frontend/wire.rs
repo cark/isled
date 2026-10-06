@@ -22,6 +22,7 @@ pub struct SummaryData {
     kind: String,
     title: Bytes,
     path: Bytes,
+    work: crate::work_wire::WorkSummary,
 }
 impl SummaryData {
     pub fn new(
@@ -29,6 +30,7 @@ impl SummaryData {
         row: &Summary,
     ) -> Result<Self, crate::filesystem::FilesystemError> {
         Ok(Self {
+            work: row.work().clone(),
             id: row.id().to_string(),
             status: row.status().as_str(),
             ready: row.ready(),
@@ -75,7 +77,7 @@ impl Serialize for Detail {
 #[derive(Serialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum Payload {
-    Issue { detail: Detail },
+    Issue { detail: Box<Detail> },
     Deleted,
     Problem { problem: Problem },
 }

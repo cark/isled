@@ -38,7 +38,7 @@
     (isled--migrate-mode-map)
     (dolist (key '("o" "c" "s"))
       (should-not (keymap-lookup isled-mode-map key)))
-    (should (= isled--mode-map-version 7))
+    (should (= isled--mode-map-version 8))
     (keymap-set isled-mode-map "o" #'isled-filter-open)
     (keymap-unset isled-mode-map "f")
     (isled--migrate-mode-map)
@@ -57,9 +57,9 @@
                  (if (eq feature 'isled-browser) nil
                    (funcall original-featurep feature)))))
       (load "isled" nil t))
-    (should (= isled--mode-map-version 7))
+    (should (= isled--mode-map-version 8))
     (load "isled-browser" nil t)
-    (should (= isled--mode-map-version 7))
+    (should (= isled--mode-map-version 8))
     (should (eq (keymap-lookup isled-mode-map "o")
                 #'isled-filter-open))))
 
@@ -71,7 +71,7 @@
     (load "isled" nil t)
     (should (= isled--mode-map-version 0))
     (load "isled-browser" nil t)
-    (should (= isled--mode-map-version 7))
+    (should (= isled--mode-map-version 8))
     (should-not (keymap-lookup isled-mode-map "o"))))
 
 (ert-deftest isled-keymap-warning-jump-installs-once-and-preserves-overrides ()

@@ -1,12 +1,14 @@
 //! CLI parsing and invocation-error adaptation.
 mod args;
 mod help;
+mod work_args;
 pub use args::*;
 use clap::FromArgMatches;
 use clap::builder::StyledStr;
 use clap::error::{ContextKind, ContextValue, ErrorKind};
 use help::build_command;
 pub use help::{missing_command_topic, render_help};
+pub use work_args::*;
 
 /// Product version, with an explicit marker for ordinary contributor builds.
 #[cfg(feature = "release-binary")]

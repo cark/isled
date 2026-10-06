@@ -4,24 +4,28 @@ For compact filtered views and conditional detail batches, use the
 [bounded frontend interface](frontend.md). This complete snapshot remains supported.
 
 `isled snapshot` emits one deterministic JSON object for local
-frontends. The top-level `schema_version` is `3`; `root` identifies
+frontends. The top-level `schema_version` is `4`; `root` identifies
 the canonical ledger root and `issues` is ordered by ascending issue ID. Every
 issue contains `id`, `status`, `ready`, `kind`, `title`, `path`, and complete stored
-`content`. `ready` is true exactly when the issue is open and has no relation
+`content`, plus complete structured `work` data. Work contains `state`, nullable
+`reason` and `question`, completed `recorded_seconds`, nullable `running_since`,
+and `spans` (each with `started`, nullable `stopped` and `activity`). Missing
+tracking in a record projects as Not queued, zero seconds and an empty history.
+Work state never changes readiness. `ready` is true exactly when the issue is open and has no relation
 whose blocker is open, missing, or unreadable, matching `list --ready`. Either
 surviving relation half counts, so removing a mirror does not grant readiness.
 `kind` is the stored classification as a plain string: non-empty lowercase ASCII
 letters, digits, and hyphens, with no leading or trailing hyphen. Custom kinds
-are preserved. This field is required by the current frontend. Snapshot version 3 uses
-`outcome` reference fields and `## Outcome` content; update the executable and
-frontend together after migrating existing ledgers. Earlier versions are not accepted
+are preserved. This field is required by the current frontend. Snapshot version 4 keeps
+`outcome` reference fields and adds work data. Update the executable and frontend
+together. Existing records need no conversion for work tracking. Earlier versions are not accepted
 by the current frontend.
 Each issue also contains a `references` array produced by Rust. Canonical
 targets in Waiting on and Blocking metadata use `waiting_on` or `blocking`
 fields. Statement, evidence, and outcome prose use their corresponding
 fields; canonical prose uses `#NNNN`, while recognition accepts `#` followed by
 one through four digits and normalizes the nonzero target. Escaped hashes,
-longer or embedded forms, URLs, code spans, fenced code blocks, other structural
+longer or embedded forms, URLs, code spans, fenced code blocks, work metadata and activities, other structural
 fields, and text inside Markdown links are not references. A same-ledger target
 is `resolved`; an absent prose target remains a typed `missing` reference rather
 than invalidating the snapshot.

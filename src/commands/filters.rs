@@ -88,6 +88,14 @@ pub(crate) fn parse_filters(
 
     Ok(Filters {
         status,
+        work_state: arguments
+            .work_state
+            .map(|value| {
+                value
+                    .parse()
+                    .map_err(|_| AppError::Invocation(format!("invalid work state: {value}")))
+            })
+            .transpose()?,
         kind,
         tags,
         waiting,

@@ -1,13 +1,14 @@
 # Complete issue drafts
 
 `isled editor --stdin` serves one JSON request and returns one JSON response.
-Editor schema 2 accompanies browsing/snapshot schema 3 and Open/Closed status
-values. Older versions are rejected. A decoded domain response exits 0: consumers must inspect `ok`.
+Editor schema 3 accompanies browsing/snapshot schema 4 and optional work tracking.
+Older versions are rejected. A decoded domain response exits 0: consumers must
+inspect `ok`.
 CLI/root/stream failures use the existing nonzero stderr boundary. Consumers
 must treat missing or undecodable save responses as uncertain, never retry
 creation automatically.
 
-Requests have `schema_version: 2`, `mode` (`load`, `validate` or `save`), optional
+Requests have `schema_version: 3`, `mode` (`load`, `validate` or `save`), optional
 `id`, optional `expected`, optional `draft`, and optional boolean `close` (false
 by default). Load requires an existing ID.
 Validate/save require a complete draft; omit ID/expected for creation. Existing
@@ -23,7 +24,11 @@ creation date, ID and filename are not editable. Successful new saves derive
 a stable filename from the initial title and allocate an ID under the lock.
 
 Success has `ok: true`, `record` and `path`; record contains `id`, `filename`,
-`status`, `version`, `source` and `draft`. Validation success instead contains
+`status`, `version`, `source`, `draft` and read-only `work`.
+Work contains state, owner-wait details and complete span history; it is separate
+from editable draft fields. Existing saves preserve it, and a work action after
+load changes the source version, rejecting a stale save. Validation success
+instead contains
 `validated: true`; validation neither allocates nor publishes. Disposable cache
 reconciliation may run, with copied-title repairs disabled during preflight.
 An optional `warning` identifies changes to closed history.
@@ -43,7 +48,8 @@ publication is not a transaction and may need `check` and deliberate recovery.
 
 `close: true` is valid only for validation/save of an existing issue. Rust plans
 all draft edits and applies the same closure rules as `isled close` before
-publication: concrete Evidence and Outcome are required, priority is removed,
-and dependency relations remain as history. Validation and stale-save failures
+publication: concrete Evidence and Outcome are required, priority and current
+work state are removed, any running span is stopped, and dependency relations
+and the complete work log remain as history. Validation and stale-save failures
 publish nothing. An ordinary save never changes lifecycle status. Closing stays
 subject to the existing uncertain multi-file publication boundary above.

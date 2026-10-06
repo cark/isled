@@ -48,7 +48,7 @@
 (ert-deftest isled-snapshot-decodes-current-version ()
   (let* ((snapshot
           (isled-snapshot-decode
-           (isled-test--fixture "snapshot-v3.json")))
+           (isled-test--fixture "snapshot-v4.json")))
          (issues (isled-snapshot-issues snapshot)))
     (should (equal (isled-snapshot-root snapshot) "/tmp/example"))
     (should (equal (mapcar #'isled-issue-id issues)
@@ -83,9 +83,9 @@
                  202)))))
 
 (ert-deftest isled-snapshot-validates-kind ()
-  (let* ((json (isled-test--fixture "snapshot-v3.json"))
+  (let* ((json (isled-test--fixture "snapshot-v4.json"))
          (wire (json-parse-string json :object-type 'alist :array-type 'list
-                                  :false-object :json-false))
+                                  :false-object :json-false :null-object :json-null))
          (issue (car (alist-get 'issues wire))))
     (dolist (kind '("bug" "custom-kind-2" "x" "a--b"))
       (setf (alist-get 'kind issue) kind)
@@ -126,7 +126,7 @@
 
 (ert-deftest isled-snapshot-decodes-base64-bytes ()
   (let* ((json
-          "{\"schema_version\":3,\"root\":{\"encoding\":\"base64\",\"value\":\"L3RtcC//\"},\"issues\":[]}")
+          "{\"schema_version\":4,\"root\":{\"encoding\":\"base64\",\"value\":\"L3RtcC//\"},\"issues\":[]}")
          (snapshot (isled-snapshot-decode json)))
     (should (equal (string-to-list (isled-snapshot-root snapshot))
                    '(47 116 109 112 47 255)))))
@@ -138,7 +138,7 @@
    :type 'isled-snapshot-error))
 
 (ert-deftest isled-snapshot-rejects-unsorted-identifiers ()
-  (let ((json (isled-test--fixture "snapshot-v3.json")))
+  (let ((json (isled-test--fixture "snapshot-v4.json")))
     (setq json (replace-regexp-in-string
                 "\"0001\"" "\"0003\"" json t t))
     (should-error (isled-snapshot-decode json)
@@ -147,18 +147,18 @@
 (ert-deftest isled-snapshot-rejects-null-issues ()
   (should-error
    (isled-snapshot-decode
-    "{\"schema_version\":3,\"root\":{\"encoding\":\"utf-8\",\"value\":\"/tmp\"},\"issues\":null}")
+    "{\"schema_version\":4,\"root\":{\"encoding\":\"utf-8\",\"value\":\"/tmp\"},\"issues\":null}")
    :type 'isled-snapshot-error))
 
 (ert-deftest isled-snapshot-rejects-incoherent-reference-offsets ()
-  (let ((json (isled-test--fixture "snapshot-v3.json")))
+  (let ((json (isled-test--fixture "snapshot-v4.json")))
     (setq json (replace-regexp-in-string
                 "\"byte_start\": 206" "\"byte_start\": 205" json t t))
     (should-error (isled-snapshot-decode json)
                   :type 'isled-snapshot-error)))
 
 (ert-deftest isled-snapshot-rejects-invalid-readiness ()
-  (let ((json (isled-test--fixture "snapshot-v3.json")))
+  (let ((json (isled-test--fixture "snapshot-v4.json")))
     (setq json (replace-regexp-in-string
                 "\"status\": \"closed\",\n      \"ready\": false"
                 "\"status\": \"closed\",\n      \"ready\": true"
@@ -196,7 +196,7 @@
       (delete-directory root t))))
 
 (ert-deftest isled-snapshot-encodes-content-once-per-reference-batch ()
-  (let* ((json (isled-test--fixture "snapshot-v3.json"))
+  (let* ((json (isled-test--fixture "snapshot-v4.json"))
          (wire (json-parse-string json :object-type 'alist :array-type 'list))
          (issue (car (alist-get 'issues wire)))
          (content (alist-get 'value (alist-get 'content issue)))

@@ -14,6 +14,8 @@ pub fn add_record_validated(
 ) -> Replacement {
     let filename = format!("{id}-{slug}.md").into_bytes();
     let document = RecordDocument {
+        work_log: crate::work_log::WorkLog::default(),
+        work_log_source: None,
         issue: Issue {
             id,
             slug: slug.clone(),
@@ -21,6 +23,7 @@ pub fn add_record_validated(
             status: Status::Open,
             kind: kind.clone(),
             created: created.clone(),
+            work_state: None,
             tags: tags.to_vec(),
             waits: Vec::new(),
             blocking: Vec::new(),

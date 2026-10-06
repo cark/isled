@@ -1,5 +1,7 @@
 # User documentation
 
+See [work state and time](work-tracking.md) for optional queues, owner questions
+and resumable clocks.
 See [complete issue drafts](editor.md) for the versioned load/validate/save interface.
 See [installation and updates](installation.md) for shared executable/skill storage,
 stable paths and installation JSON.
@@ -16,9 +18,10 @@ remain authoritative; inspection may maintain disposable cache data and correct
 copied relation titles, preserving other bytes.
 
 The repository-built Rust command supports inspection through `list`, `search`,
-`show`, `path`, `snapshot`, `frontend --stdin`, `wait show`, and `wait tree` commands, plus `init`,
+`show`, `path`, `work show`, `snapshot`, `frontend --stdin`, `wait show`, and `wait tree` commands, plus `init`,
 `add`, title, tag and priority changes, wait addition/removal/repair, statement
-set/append/replace, evidence addition, outcome setting, and `close`. Add, list,
+set/append/replace, evidence addition, outcome setting, work state and clock
+actions, and `close`. Add, list,
 search, and wait inspection accept `--with-path`. These mutation commands use
 the established `.issues/`
 records, directory lock, no-reuse ID allocation, and atomic per-file
@@ -40,7 +43,7 @@ issue. `search` is literal and
 case-insensitive with full Unicode folding and does not require Perl.
 
 For metadata-only selection, use `isled list` and compose its status,
-readiness, kind, tag, and wait filters; `isled list --ready
+readiness, work-state, kind, tag, and wait filters; `isled list --ready
 --with-path` is the direct ready-work query. `search` requires record text.
 `frontend --stdin` supplies [bounded frontend data](frontend.md); `snapshot`
 remains the complete wire interface and is not needed for routine filter
@@ -55,8 +58,9 @@ and its help. These rejected invocations use stderr and exit 1 before project
 discovery or any ledger change.
 
 Each record uses the ordered level-two sections `Metadata`, `Statement`,
-`Evidence`, and `Outcome`. Metadata is a Markdown list containing status,
-kind, creation date, optional comma-separated tags, and optional nested
+`Evidence`, and `Outcome`, with an optional `Work log` between Statement and
+Evidence. Metadata is a Markdown list containing status,
+kind, creation date, optional work state, optional comma-separated tags, and optional nested
 relations. Statement is non-empty Markdown, evidence is a non-empty list, and
 outcome is one non-empty paragraph which may contain ordinary line wraps.
 Semantic outcome mutations still accept one line. The exact grammar is documented in
@@ -129,7 +133,7 @@ kind, tags, evidence, and outcome.
 
 ## Frontend snapshot
 
-The [snapshot wire contract](snapshot.md) owns schema version 3, byte encodings,
+The [snapshot wire contract](snapshot.md) owns schema version 4, byte encodings,
 readiness, and inline-reference recognition and coordinates. This is a frontend
 interface, not a replacement for focused CLI queries.
 
@@ -156,7 +160,8 @@ other entries, leaving the record unchanged.
 
 Closure is terminal. The command has no `reopen` operation. A mistaken
 closure, invalidated conclusion, or new scope receives a new issue that
-references its closed predecessor. Closure removes priority but preserves
+references its closed predecessor. Closure removes priority and current work state, stops any running clock, and
+preserves the complete work log. It also preserves
 both directions of every dependency relation. A relation blocks only while its
 target is open; closing the target satisfies the dependency without erasing
 its durable context.

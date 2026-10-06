@@ -243,3 +243,21 @@ under one lock; ordinary saves do not close. The existing per-file publication,
 terminal lifecycle, evidence/outcome, ID and relation guarantees remain unchanged.
 Historical status migration requires explicit backups and quiesced old consumers;
 it is not an automatic side effect of normal commands.
+
+## Optional work tracking
+
+Optional work metadata and a Work log table extend the record grammar without
+converting existing records. Missing data means Not queued and no recorded time.
+The [format contract](../user-docs/record-format.md#optional-work-tracking) owns
+ordering, nested owner questions, UTC spans and invariants; the
+[work guide](../user-docs/work-tracking.md) owns transitions and corrections.
+All supported edits preserve work data. Closure stops the clock, removes current
+state and retains history without changing evidence, outcome or authority rules.
+
+This boundary uses snapshot/frontend schema 4, editor schema 3 and disposable
+cache schema 6. Earlier wire versions are rejected. The dependency-tree interface
+remains schema 2. Once records contain tracking, older tools cannot read them.
+Ship the CLI, frontend and skill together with the matching CLI pin. Until the
+compatible release is published, source users must configure the matching build.
+Stable summaries contain completed seconds and the running start, never a
+changing elapsed total; work passage alone therefore leaves hashes unchanged.

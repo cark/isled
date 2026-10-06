@@ -1,4 +1,4 @@
-PRAGMA user_version = 5;
+PRAGMA user_version = 6;
 CREATE TABLE cache_state (
     singleton INTEGER PRIMARY KEY CHECK(singleton = 1),
     directory_seconds INTEGER,
@@ -14,6 +14,10 @@ CREATE TABLE issues (
     changed_seconds INTEGER, changed_nanos INTEGER,
     error TEXT,
     content_hash INTEGER,
+    work_state TEXT NOT NULL DEFAULT 'not-queued' CHECK(work_state IN ('not-queued','queued','in-progress','awaiting-owner')),
+    work_reason TEXT, work_question TEXT,
+    work_seconds INTEGER NOT NULL DEFAULT 0 CHECK(work_seconds >= 0),
+    work_started TEXT,
     CHECK(error IS NOT NULL OR
         (title IS NOT NULL AND status IN ('open','closed') AND kind IS NOT NULL AND created IS NOT NULL))
 );

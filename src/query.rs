@@ -8,6 +8,8 @@ mod lookup;
 mod records;
 mod search;
 mod wait;
+mod work;
+pub use work::{WorkReport, work_report};
 
 pub use error::QueryError;
 pub use filters::Filters;

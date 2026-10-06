@@ -194,6 +194,8 @@ fn next_region(region: Region, line: &str) -> Region {
         Region::Header | Region::Relation(_) if line == "## Statement" => {
             Region::Prose(ReferenceField::Statement)
         }
+        Region::Prose(_) if line == "## Work log" => Region::Header,
+        Region::Header if line == "## Evidence" => Region::Prose(ReferenceField::Evidence),
         Region::Prose(_) if line == "## Evidence" => Region::Prose(ReferenceField::Evidence),
         Region::Prose(_) if line == "## Outcome" => Region::Prose(ReferenceField::Outcome),
         _ => region,
@@ -201,7 +203,10 @@ fn next_region(region: Region, line: &str) -> Region {
 }
 
 fn is_section_heading(line: &str) -> bool {
-    matches!(line, "## Statement" | "## Evidence" | "## Outcome")
+    matches!(
+        line,
+        "## Statement" | "## Work log" | "## Evidence" | "## Outcome"
+    )
 }
 
 fn field_index(field: ReferenceField) -> usize {

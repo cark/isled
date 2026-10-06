@@ -18,5 +18,7 @@ pub mod reference;
 pub mod snapshot;
 pub mod wait_graph;
 pub mod wire;
+pub mod work_log;
+pub mod work_wire;
 
 pub mod editor;

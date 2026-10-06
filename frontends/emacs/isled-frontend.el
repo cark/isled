@@ -36,7 +36,7 @@
          (hash (isled-snapshot--field wire 'view_hash))
          (view (isled-snapshot--field wire 'view))
          (changes (isled-snapshot--field wire 'changes)))
-    (unless (and (eql (isled-snapshot--field wire 'schema_version) 3)
+    (unless (and (eql (isled-snapshot--field wire 'schema_version) 4)
                  (file-name-absolute-p root) (listp changes))
       (isled-snapshot--invalid "invalid bounded response"))
     (unless (eq hash :json-null) (isled-frontend--hash hash))
@@ -88,7 +88,7 @@
   (unless (and (listp choices)
                (seq-every-p (lambda (value)
                               (and (stringp value)
-                                   (string-match-p "\\`[tks]:[a-z0-9-]+\\'" value))) choices))
+                                   (string-match-p "\\`[tksw]:[a-z0-9-]+\\'" value))) choices))
     (isled-snapshot--invalid "invalid filter choices"))
   choices)
 

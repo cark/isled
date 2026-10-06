@@ -183,6 +183,10 @@ is not source and is ignored.
 
 ## Code map
 
+- `isled-work-data.el` validates work summaries and complete spans and formats
+  completed-time labels. `isled-work.el` owns asynchronous work actions and
+  history buffers. Work state and clock invariants remain in Rust.
+
 - `isled-cli.el` owns automatic setup and shared CLI readiness; `isled-executable.el`
   checks identity asynchronously and caches evidence only for unchanged files.
 - `isled-install.el` owns private download staging and invokes the Rust installer.

@@ -53,6 +53,10 @@ Keep font selection frame-local and semantic faces theme-aware.")
            "]" 'isled-issue-kind-bracket-face)
           " " (isled-sections--heading-text
                 (isled-issue-title issue) 'isled-issue-title-face)
+          (propertize (isled-work-data-label (isled-issue-work issue))
+                      'face 'shadow
+                      'help-echo (and (isled-issue-work issue)
+                                      (isled-work-data-question (isled-issue-work issue))))
           "\n"))
 
 (defvar-local isled-sections--filter nil "Filter of the rendered row sequence.")

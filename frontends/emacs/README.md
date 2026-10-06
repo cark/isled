@@ -18,7 +18,7 @@ a dependency, and return to where you were.
 
 ![Browsing a sample project's dependency hierarchy and expanding an issue](images/hierarchy.gif)
 
-**Find the work you need.** Filter by status, tags, kind, or words anywhere in an
+**Find the work you need.** Filter by status, work state, tags, kind, or words anywhere in an
 issue, with results updating as you type.
 
 ![Filtering the sample project's issues by tag and text](images/filtering.gif)
@@ -137,6 +137,16 @@ See [reading the graph](user-guide.md#dependency-graph-view).
 Opening a local issue file normally reveals it in the issue view. Press `s` to
 open its Markdown source instead. See [file links and source access](user-guide.md#opening-issue-files).
 
+## Work state and time
+
+Press **`w`** on an issue to queue it, start or pause work, ask the owner a
+question, or mark it ready for review. Start records time by default; Start
+without timing tracks only state. Each pause and resume keeps a separate span.
+Work history shows them and their total.
+
+This is optional: ordinary issues need no extra fields. See the
+[work guide](user-guide.md#work-state-and-time) for clocks and corrections.
+
 ## Issue filtering
 
 Press **`f`** to edit the current query. Results preview while you type;
@@ -160,7 +170,7 @@ or All while keeping the other terms.
 <a id="search-and-preview"></a>
 <a id="filter-memory"></a>
 
-`TAB` completes tags, kinds and statuses. The [filter guide](user-guide.md#issue-filtering)
+`TAB` completes tags, kinds, statuses and work states. The [filter guide](user-guide.md#issue-filtering)
 covers quoting, completion interfaces and previews. Ordinary `C-s` searches text
 already loaded in the buffer; use `f` to search complete issues across the ledger.
 

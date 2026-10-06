@@ -14,7 +14,7 @@
 
 (defun isled-filter-completion-choices (part choices)
   "Narrow CHOICES to the structured prefix in PART, if present."
-  (if (string-match "\\`[tks]:" part)
+  (if (string-match "\\`[tksw]:" part)
       (let ((prefix (match-string 0 part)))
         (seq-filter (lambda (choice) (string-prefix-p prefix choice)) choices))
     choices))

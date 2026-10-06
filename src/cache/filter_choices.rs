@@ -9,6 +9,10 @@ use std::collections::BTreeSet;
 impl Cache<'_> {
     pub(crate) fn frontend_choices(&self) -> Result<Vec<String>, CacheError> {
         let mut choices = vec!["s:open".into(), "s:closed".into()];
+        choices.extend(
+            ["not-queued", "queued", "in-progress", "awaiting-owner"]
+                .map(|state| format!("w:{state}")),
+        );
         self.append_tag_choices(&mut choices)?;
         self.append_kind_choices(&mut choices)?;
         Ok(choices)
@@ -34,6 +38,31 @@ impl Cache<'_> {
         for (status, choice) in [(Status::Open, "s:open"), (Status::Closed, "s:closed")] {
             if rows.iter().any(|row| row.status() == status) {
                 choices.push(choice.into());
+            }
+        }
+        let work_rows = if filters.work_state.is_some() {
+            self.filter_summaries(
+                &Filters {
+                    work_state: None,
+                    ..filters.clone()
+                },
+                kinds,
+                text,
+            )?
+        } else {
+            Vec::new()
+        };
+        let work_rows = if filters.work_state.is_some() {
+            &work_rows
+        } else {
+            &rows
+        };
+        for state in ["not-queued", "queued", "in-progress", "awaiting-owner"] {
+            if work_rows.iter().any(|row| {
+                row.work().state == state
+                    && filters.status.is_none_or(|status| row.status() == status)
+            }) {
+                choices.push(format!("w:{state}"));
             }
         }
         let selected = rows

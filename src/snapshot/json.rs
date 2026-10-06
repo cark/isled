@@ -5,7 +5,7 @@ use crate::reference::InlineIssueReference;
 use crate::wire::EncodedBytes;
 use serde::Serialize;
 
-pub const SCHEMA_VERSION: u32 = 3;
+pub const SCHEMA_VERSION: u32 = 4;
 
 pub fn render(snapshot: &Snapshot) -> Result<Vec<u8>, serde_json::Error> {
     let issues = snapshot.issues().iter().map(WireIssue::new).collect();
@@ -52,12 +52,14 @@ pub(crate) struct WireIssue<'a> {
     path: EncodedBytes<'a>,
     content: EncodedBytes<'a>,
     references: Vec<WireReference<'a>>,
+    work: &'a crate::work_wire::WorkData,
     warnings: Vec<WireWarning<'a>>,
 }
 
 impl<'a> WireIssue<'a> {
     pub(crate) fn new(issue: &'a super::SnapshotIssue) -> Self {
         Self {
+            work: issue.work(),
             id: issue.id().to_string(),
             status: issue.status().as_str(),
             ready: issue.is_ready(),
@@ -141,7 +143,7 @@ mod tests {
         let output = render(&snapshot).expect("serializable snapshot");
         let value: serde_json::Value = serde_json::from_slice(&output).expect("valid JSON");
 
-        assert_eq!(value["schema_version"], 3);
+        assert_eq!(value["schema_version"], 4);
         assert_eq!(value["root"]["encoding"], "base64");
         assert_eq!(value["issues"][0]["id"], "0001");
         assert_eq!(value["issues"][0]["status"], "open");

@@ -20,6 +20,7 @@
 (require 'subr-x)
 
 (require 'isled-cli)
+(require 'isled-work-data)
 
 (define-error 'isled-snapshot-error
               "Invalid isled snapshot")
@@ -42,7 +43,8 @@
   path
   content
   references
-  warnings)
+  warnings
+  work)
 
 (cl-defstruct (isled-warning
                (:constructor isled-warning-create))
@@ -94,7 +96,7 @@ runner.")
      (isled-command-result-stdout result))))
 
 (defun isled-snapshot-decode (json)
-  "Decode and validate a version 3 snapshot from JSON."
+  "Decode and validate a version 4 snapshot from JSON."
   (condition-case error-data
       (let* ((wire (json-parse-string json
                                       :object-type 'alist
@@ -106,7 +108,7 @@ runner.")
                     (isled-snapshot--bytes
                      (isled-snapshot--field wire 'root) "root")))
              (wire-issues (isled-snapshot--field wire 'issues)))
-        (unless (eql version 3)
+        (unless (eql version 4)
           (isled-snapshot--invalid
            "unsupported schema version: %S" version))
         (unless (and (stringp root) (file-name-absolute-p root))
@@ -206,7 +208,8 @@ runner.")
      :ready ready
      :kind kind
      :title title
-     :path path)))
+     :path path
+     :work (isled-work-data-decode (isled-snapshot--field wire 'work)))))
 
 (defun isled-snapshot--issue (wire)
   "Convert one complete WIRE issue into a validated issue."
@@ -215,7 +218,8 @@ runner.")
          (content (isled-snapshot--bytes
                    (isled-snapshot--field wire 'content)
                    (format "content for issue %s" id))))
-    (setf (isled-issue-content issue) content
+    (setf (isled-issue-work issue) (isled-work-data-decode (isled-snapshot--field wire 'work) t)
+          (isled-issue-content issue) content
           (isled-issue-warnings issue) (isled-snapshot--warnings
                                                  (isled-snapshot--field wire 'warnings))
           (isled-issue-references issue)

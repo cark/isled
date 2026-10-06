@@ -11,7 +11,10 @@ CLI pin. To test an unpublished CLI change, use the
 
 All managers install the same Lisp libraries and declared dependencies. The
 frontend's `isled-required-cli-version` selects its compatible CLI; a package
-manager's version number does not. An unreleased frontend can retain that pin.
+manager's version number does not. An unreleased frontend can retain that pin only while its required CLI behavior
+remains compatible. A wire change requires a new compatible CLI pin and a paired
+release. Until that release is published, use the matching source build described
+in [source development setup](CONTRIBUTING.md#source-development-setup).
 
 ## MELPA
 
