@@ -115,8 +115,8 @@ Find the oldest ready task with
 The [work guide](user-docs/work-tracking.md) covers questions, review queues
 and forgotten timers.
 
-Work tracking and queue ordering are in the current 0.35 source version. Until
-its paired release is published, use a matching [source build](CONTRIBUTING.md#build).
+Work tracking and queue ordering are available from 0.35.0. Update the CLI and
+Emacs frontend together.
 
 ## Requirements
 

@@ -269,8 +269,6 @@ For the exact validation and save rules, see the [editor contract](../../user-do
 ## Work state and time
 
 Press **`w`** on an issue to keep the next step and its work sessions together.
-These actions require the matching 0.35 source version until its release is
-published; see [source setup](CONTRIBUTING.md#source-development-setup).
 
 ### Pick up, pause, resume
 

@@ -66,8 +66,7 @@ isled list --work-reason review --oldest-first
 ```
 
 Work tracking is optional. See [work state and time](work-tracking.md) for owner
-questions, timer corrections and arrival order. These features require the
-current 0.35 source version until its paired release is published.
+questions, timer corrections and arrival order.
 
 ## Keep the issue useful
 

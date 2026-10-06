@@ -7,9 +7,8 @@ Tracking is optional. An ordinary issue is **Not queued**, with no recorded time
 There is one worker and at most one running timer per issue; different issues
 can be worked on in parallel.
 
-Work tracking and arrival-order queries require the current 0.35 source version
-until its paired release is published. Keep the CLI and frontend together;
-older tools cannot read records with these fields.
+Use 0.35.0 or newer for work tracking and arrival-order queries. Keep the CLI
+and frontend together; older tools cannot read records with these fields.
 
 ## A small workflow
 

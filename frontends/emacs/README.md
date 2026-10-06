@@ -37,11 +37,6 @@ for a break, and hand it over for review. Each work session keeps its own span.
 The demos use a fictional project, Trail Notes. The interface shown is the actual
 Emacs package.
 
-The work-tracking demo uses the current 0.35 source version. The published
-0.33.1 package does not include these actions; use the
-[matching source setup](CONTRIBUTING.md#source-development-setup) until the
-paired release is available.
-
 ## Installation
 
 You need **Emacs 30.1+** with built-in TLS and zlib support. Your package
@@ -59,7 +54,7 @@ They support the `release` branch, a fixed tag or commit, and development on
 
 ### From the release archive
 
-Download **`isled-0.33.1.tar`** from the [release page](https://github.com/cark/isled/releases).
+Download **`isled-0.35.0.tar`** from the [release page](https://github.com/cark/isled/releases).
 Make the dependencies available through your configured GNU/NonGNU ELPA or
 MELPA archives, and allow upgrades to bundled packages:
 
