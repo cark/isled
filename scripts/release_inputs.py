@@ -62,6 +62,7 @@ def inputs(root, check_nix=False):
     frontend_tests = dict(emacs=emacs, tests=files(root, ["frontends/emacs/test/**/*"]), rust=rust_tests)
     groups = {"rust": rust_tests, "optimized": rust, "debug": rust_tests,
               "emacs-static": emacs, "emacs-tests": frontend_tests,
+              "skill": files(root, ["skills/isled/**/*"]),
               "helpers": dict(source=files(root, ["scripts/**/*"]), tools=tools(["bash", "shellcheck", "python3", "make", "jj"]), env=environment(["PATH", "PYTHON", "SHELLCHECK", "MAKE"]))}
     if check_nix:
         groups["nix"] = dict(source=files(root, ["flake.nix", "flake.lock", "Cargo.toml", "Cargo.lock", "src/**/*", "tests/**/*", "scripts/nix-source.sh"]), tools=tools(["nix"]), env=environment(["NIX", "PATH"]))

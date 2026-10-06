@@ -153,6 +153,7 @@ promote() {
     mkdir -p "$staging_directory/bin"
     install -m 0755 "$candidate_binary" \
         "$staging_directory/bin/isled"
+    cp -R "${candidate_binary%/bin/isled}/skill" "$staging_directory/skill"
     printf '%s\n' "$candidate_revision" >"$staging_directory/revision"
     cp "${candidate_binary%/bin/isled}/validation.json" "$staging_directory/validation.json"
     python3 -B "$repository_root/scripts/release_validation.py" verify \
@@ -164,6 +165,10 @@ promote() {
     flock -x 9
     if [[ -e $release ]]; then
         verify_release "$candidate_revision"
+        [[ -d $release/skill ]] || {
+            printf 'existing binary-only release is retained for rollback; promote a newer revision\n' >&2
+            exit 2
+        }
         cmp "$release/bin/isled" "$candidate_binary" || {
             printf 'existing release has a different artifact; selection unchanged\n' >&2
             exit 2

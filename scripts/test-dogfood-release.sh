@@ -69,10 +69,28 @@ folder = root / "validated" / revision
 source = root / "releases" / revision / "bin/isled"
 (folder / "bin/isled").write_bytes(source.read_bytes())
 (folder / "bin/isled").chmod(0o755)
+(folder / "skill/references").mkdir(parents=True)
+skill = {}
+for name in ["SKILL.md", "references/mutations.md", "references/recovery.md"]:
+    content = (revision + " " + name).encode()
+    (folder / "skill" / name).write_bytes(content)
+    skill[name] = hashlib.sha256(content).hexdigest()
 (folder / "validation.json").write_text(json.dumps(dict(schema=1, success=True,
-    revision=revision, artifact_sha256=hashlib.sha256(source.read_bytes()).hexdigest())))
+    revision=revision, artifact_sha256=hashlib.sha256(source.read_bytes()).hexdigest(), skill_sha256=skill)))
 PYTEST
+# The first fixture was a legacy binary-only selection. Remove it so the
+# validated complete candidate can become a new selection.
+rm -r -- "$test_root/releases/$first_revision"
 ISLED_DOGFOOD_ROOT=$test_root "$dogfood_script" promote "$first_revision" >"$test_root/promotion.stdout"
+[[ $(readlink "$test_root/current") == "releases/$first_revision" ]]
+cmp "$test_root/current/skill/references/mutations.md" \
+    "$test_root/validated/$first_revision/skill/references/mutations.md"
+printf 'corrupted skill\n' >>"$test_root/validated/$first_revision/skill/SKILL.md"
+if ISLED_DOGFOOD_ROOT=$test_root "$dogfood_script" promote "$first_revision" \
+    >"$test_root/promotion.stdout" 2>"$test_root/promotion.stderr"; then
+    printf 'promotion accepted a corrupted skill\n' >&2
+    exit 1
+fi
 [[ $(readlink "$test_root/current") == "releases/$first_revision" ]]
 printf '# corrupt\n' >>"$test_root/validated/$first_revision/bin/isled"
 if ISLED_DOGFOOD_ROOT=$test_root "$dogfood_script" promote "$first_revision" \

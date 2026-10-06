@@ -18,8 +18,8 @@ scripts/dogfood-release.sh status
 ```
 
 Validation requires the exact working tree, runs missing or invalidated checks,
-retains the optimized binary and writes a revision-bound receipt. Promotion verifies
-the receipt and binary hash, installs that exact artifact into `.dogfood/releases/`,
+retains the optimized binary and complete agent skill and writes a revision-bound receipt. Promotion verifies
+the receipt and payload hashes, installs those exact artifacts into `.dogfood/releases/`,
 and atomically updates `.dogfood/current`, retaining the prior selection as
 `previous`. Promotion does not build or test. It requires explicit installation
 authority; arbitrary source edits do not authorize replacing installed tools.
@@ -29,6 +29,12 @@ inputs change. This selects a check, not a push. `rollback` swaps current and
 previous validated selections without rebuilding. Verify both selected identity
 and installed behavior after an authorized installation or rollback. Configure any
 stable launcher locally; no workstation path is part of the public procedure.
+
+Point the agent's skill registration at `.dogfood/current/skill/` so promotion
+and rollback select matching instructions with the executable. A mutable source
+skill can describe commands that the selected binary does not provide. Reload
+the skill after switching selections. Older binary-only selections remain
+rollback targets; new promotions require a validated complete payload.
 
 Emacs checks compile into temporary directories. Loading or installing an accepted
 frontend is separate from CLI promotion; follow the [source-loading guide](../frontends/emacs/user-guide.md#local-configuration)
@@ -48,6 +54,7 @@ release compilation locally, without changing normal package profiles.
 | Rust production source or dependencies | Also optimized executable |
 | Validation engine or pinned environment | All affected groups conservatively |
 | Release helpers | Helper checks |
+| Agent skill | Retained skill payload; existing build/test evidence stays reusable |
 
 Fingerprints include source bytes/modes, dependencies, relevant tools/environment
 and checker code. Commit identity binds the final receipt rather than every

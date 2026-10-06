@@ -29,10 +29,23 @@ def exact_tree(root, revision):
 def artifact(store, revision):
     if not re.fullmatch(r"[0-9a-f]{40}", revision):
         raise RuntimeError("Candidate must be a full exact commit ID")
-    return verify_directory(store / "validated" / revision, revision)
+    directory = store / "validated" / revision
+    return verify_directory(directory, revision, require_skill=True)
 
 
-def verify_directory(directory, revision):
+def skill_hashes(directory):
+    result = {}
+    for path in sorted(directory.rglob("*")):
+        if path.is_symlink():
+            raise ValueError("Skill payload must not contain links")
+        if path.is_file() and "__pycache__" not in path.parts:
+            result[str(path.relative_to(directory))] = file_hash(path)
+    if not {"SKILL.md", "references/mutations.md", "references/recovery.md"} <= result.keys():
+        raise ValueError("Skill payload is incomplete")
+    return result
+
+
+def verify_directory(directory, revision, require_skill=False):
     try:
         receipt = json.loads((directory / "validation.json").read_text())
         binary = directory / "bin/isled"
@@ -40,6 +53,12 @@ def verify_directory(directory, revision):
                 or receipt["success"] is not True or not os.access(binary, os.X_OK)
                 or file_hash(binary) != receipt["artifact_sha256"]):
             raise ValueError("artifact does not match its receipt")
+        # Older selections remain valid rollback targets. New receipts bind
+        # the complete skill as well as the executable.
+        if require_skill and "skill_sha256" not in receipt:
+            raise ValueError("Candidate has no matching skill")
+        if "skill_sha256" in receipt and skill_hashes(directory / "skill") != receipt["skill_sha256"]:
+            raise ValueError("skill does not match its receipt")
     except (OSError, ValueError, KeyError, TypeError) as error:
         raise RuntimeError(f"No verified artifact for {revision}; run validate first: {error}") from error
     return binary
@@ -50,6 +69,7 @@ def validate(root, store, revision, check_nix):
     if not os.environ.get("ISLED_PACKAGE_LINT_ROOT"):
         raise RuntimeError("Run validation inside the pinned development environment")
     keys = inputs(root, check_nix)
+    skill = skill_hashes(root / "skills/isled")
     evidence = Evidence(root, store, keys)
     started = time.monotonic()
     ready = threading.Event()
@@ -103,7 +123,7 @@ def validate(root, store, revision, check_nix):
             raise RuntimeError("Validation inputs changed during the run; no receipt published")
         evidence.commit()
         receipt = dict(schema=1, revision=revision, success=True, inputs=keys,
-                       artifact_sha256=file_hash(binary), stages=evidence.results,
+                       artifact_sha256=file_hash(binary), skill_sha256=skill, stages=evidence.results,
                        seconds=time.monotonic() - started, nix_requested=check_nix)
         directory = store / "validated" / revision
         directory.parent.mkdir(parents=True, exist_ok=True)
@@ -111,10 +131,16 @@ def validate(root, store, revision, check_nix):
             prepared = Path(temp)
             (prepared / "bin").mkdir()
             shutil.copy2(binary, prepared / "bin/isled")
+            shutil.copytree(root / "skills/isled", prepared / "skill", ignore=shutil.ignore_patterns("__pycache__"))
+            if skill_hashes(prepared / "skill") != skill:
+                raise RuntimeError("Skill changed during validation; no receipt published")
             write_json(prepared / "validation.json", receipt)
             if directory.exists():
                 # Same exact revision may be validated again with an additional Nix gate.
                 (prepared / "bin/isled").replace(directory / "bin/isled")
+                if (directory / "skill").exists():
+                    shutil.rmtree(directory / "skill")
+                (prepared / "skill").rename(directory / "skill")
                 write_json(directory / "validation.json", receipt)
             else:
                 prepared.rename(directory)

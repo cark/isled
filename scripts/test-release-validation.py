@@ -22,7 +22,8 @@ class ValidationTests(unittest.TestCase):
         self.store = self.root / "store"
         self.revision = "1" * 40
         for name in ["src/main.rs", "tests/example.rs", "Cargo.toml", "Cargo.lock",
-                     "frontends/emacs/isled.el", "frontends/emacs/test/check.el", "scripts/helper.sh", "README.md"]:
+                     "frontends/emacs/isled.el", "frontends/emacs/test/check.el", "scripts/helper.sh", "README.md",
+                     "skills/isled/SKILL.md", "skills/isled/references/mutations.md", "skills/isled/references/recovery.md"]:
             path = self.root / name
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text("original\n")
@@ -139,6 +140,26 @@ class ValidationTests(unittest.TestCase):
         self.assertTrue(result["stages"]["debug"]["reused"])
         self.assertTrue(result["stages"]["emacs-tests"]["reused"])
         self.assertFalse(result["stages"]["rust"]["reused"])
+
+    def test_skill_is_retained_and_changes_reuse_build_evidence(self):
+        self.perform()
+        skill = artifact(self.store, self.revision).parent.parent / "skill"
+        (self.root / "skills/isled/SKILL.md").write_text("new instructions")
+        self.assertEqual((skill / "SKILL.md").read_text(), "original\n")
+        changed = self.perform("2" * 40)
+        self.assertTrue(all(stage["reused"] for stage in changed["stages"].values()))
+        next_skill = artifact(self.store, "2" * 40).parent.parent / "skill"
+        self.assertEqual((next_skill / "SKILL.md").read_text(), "new instructions")
+
+    def test_corrupt_or_incomplete_skill_is_rejected(self):
+        self.perform()
+        reference = artifact(self.store, self.revision).parent.parent / "skill/references/mutations.md"
+        reference.write_text("corrupted")
+        with self.assertRaisesRegex(RuntimeError, "skill does not match"):
+            artifact(self.store, self.revision)
+        reference.unlink()
+        with self.assertRaisesRegex(RuntimeError, "Skill payload is incomplete"):
+            artifact(self.store, self.revision)
 
     def test_cargo_output_selects_actual_binary(self):
         target = self.root / "custom-output/isled"
