@@ -5,6 +5,7 @@ use std::{
     process::{Command, Output},
 };
 use tempfile::TempDir;
+use unicode_width::UnicodeWidthStr;
 
 fn command(root: &TempDir, args: &[&str]) -> Command {
     let mut command = Command::new(env!("CARGO_BIN_EXE_isled"));
@@ -469,4 +470,68 @@ fn unrelated_mutations_preserve_authored_table_padding_and_contextual_choices() 
         "choice_filter":{"work_state":"queued","tags":["rust"]}}),
     );
     assert_eq!(choices["choices"], json!(["w:in-progress"]));
+}
+
+#[test]
+fn generated_work_tables_align_long_unicode_and_empty_cells_without_changing_spans() {
+    let root = fixture();
+    for (start, stop, activity) in [
+        (
+            "2026-10-06 07:11:02",
+            "2026-10-06 07:36:15",
+            "Implementation",
+        ),
+        (
+            "2026-10-06 07:59:03",
+            "2026-10-06 08:16:14",
+            "Emacs interaction fixes",
+        ),
+        (
+            "2026-10-06 09:00:00",
+            "2026-10-06 09:10:00",
+            "界".repeat(12).as_str(),
+        ),
+        (
+            "2026-10-06 09:20:00",
+            "2026-10-06 09:30:00",
+            "Cafe\u{301} review",
+        ),
+    ] {
+        run(
+            &root,
+            &["work", "start", "1", "--at", start, "--activity", activity],
+        );
+        run(&root, &["work", "pause", "1", "--at", stop]);
+    }
+    let completed = report(&root);
+    run(
+        &root,
+        &["work", "start", "1", "--at", "2026-10-06 10:00:00"],
+    );
+    let running = report(&root);
+    assert_eq!(
+        &running["spans"].as_array().unwrap()[..4],
+        completed["spans"].as_array().unwrap()
+    );
+    assert_eq!(running["recorded_seconds"], 3744);
+    assert_eq!(running["spans"][4]["activity"], "");
+    assert!(running["spans"][4]["stopped"].is_null());
+
+    let source = source(&root);
+    let table: Vec<_> = source
+        .lines()
+        .filter(|line| line.starts_with('|'))
+        .collect();
+    assert_eq!(table.len(), 7);
+    let columns = |line: &str| {
+        line.match_indices('|')
+            .map(|(index, _)| line[..index].width())
+            .collect::<Vec<_>>()
+    };
+    for row in &table {
+        assert_eq!(columns(row), vec![0, 22, 44, 71], "{row}");
+    }
+    assert!(source.contains("A human-readable concern.\n\n## Work log"));
+    assert!(run(&root, &["check"]).stdout.is_empty());
+    assert_eq!(report(&root), running);
 }

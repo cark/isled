@@ -17,6 +17,7 @@
 (require 'isled-snapshot)
 (require 'isled-view)
 (require 'seq)
+(require 'subr-x)
 (declare-function isled-activate-mouse "isled-browser")
 
 (defface isled-header-filter-face
@@ -388,8 +389,40 @@ Changes take effect on the next redraw or section toggle."
     (insert content)
     (delay-mode-hooks (markdown-view-mode))
     (font-lock-ensure)
+    (let ((inhibit-read-only t))
+      (isled-sections--present-work-table))
     (isled-sections--copy-presentation
      (point-min) (point-max))))
+
+(defun isled-sections--present-work-table ()
+  "Align the structural work table visually, preserving source positions.
+Use cell display strings so Markdown's absolute spacing cannot ignore the
+issue panel or dependency gutter.  Activity labels remain literal data."
+  (save-excursion
+    (goto-char (point-min))
+    (when (re-search-forward "^## Work log\n\n" nil t)
+      (let* ((start (point))
+             (end (save-excursion
+                    (while (looking-at-p "|") (forward-line))
+                    (point)))
+             (table (buffer-substring-no-properties start end))
+             (aligned
+              (with-temp-buffer
+                (insert table)
+                (goto-char (point-min))
+                (markdown-table-align)
+                (split-string (buffer-string) "\n" t))))
+        (dolist (line aligned)
+          (let ((line-end (line-end-position)))
+            (remove-text-properties (point) line-end '(display nil invisible nil))
+            (put-text-property (point) line-end 'face 'markdown-table-face)
+            (dolist (cell (butlast (split-string line "|")))
+              (unless (string-empty-p cell)
+                (when (re-search-forward "|[^|\n]*" line-end t)
+                  (put-text-property
+                   (match-beginning 0) (match-end 0) 'display
+                   (concat "|" cell))))))
+          (forward-line))))))
 
 (defun isled-sections--copy-presentation (start end)
   "Copy text from START to END, retaining presentation properties."

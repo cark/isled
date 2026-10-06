@@ -250,7 +250,8 @@ is not source and is ignored.
   counts preserve the circle marker when filters hide every neighbor; filters use
   the ordinary loading queue.
 - [`isled-presentation.el`](isled-presentation.el) owns semantic
-  faces, Markdown presentation, typed reference properties and diagnostic text.
+  faces, Markdown presentation, literal work-table cell alignment, typed
+  reference properties and diagnostic text.
 - [`isled-rows.el`](isled-rows.el) owns identity indexes, complete
   heading/routing text and separate integer heading and body boundaries.
 - [`isled-fold.el`](isled-fold.el) owns standard search-reveal

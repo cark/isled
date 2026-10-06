@@ -4,6 +4,7 @@ use crate::{
     issue::{OwnerQuestion, OwnerWait, WorkState, WorkStateKind},
     work_log::{WorkActivity, WorkLog, WorkSpan},
 };
+use unicode_width::UnicodeWidthStr;
 
 pub(super) fn parse_state(
     lines: &[&[u8]],
@@ -146,15 +147,28 @@ fn cells(line: &str) -> Result<[&str; 3], RecordError> {
 }
 
 pub(super) fn render_log(log: &WorkLog) -> Vec<u8> {
-    let mut text = "| Started (UTC)       | Stopped (UTC)       | Activity       |\n|---------------------|---------------------|----------------|".to_owned();
+    let activity_width = log
+        .spans()
+        .iter()
+        .map(|span| span.activity().as_str().width())
+        .max()
+        .unwrap_or(0)
+        .max(14);
+    let mut text = format!(
+        "| Started (UTC)       | Stopped (UTC)       | {:<activity_width$} |\n|---------------------|---------------------|{}|",
+        "Activity",
+        "-".repeat(activity_width + 2)
+    );
     for span in log.spans() {
+        let activity = span.activity().as_str();
+        let padding = activity_width - activity.width();
         text.push_str(&format!(
-            "\n| {:<19} | {:<19} | {:<14} |",
+            "\n| {:<19} | {:<19} | {activity}{:padding$} |",
             span.started().to_string(),
             span.stopped()
                 .map(|time| time.to_string())
                 .unwrap_or_default(),
-            span.activity().as_str()
+            ""
         ));
     }
     text.into_bytes()

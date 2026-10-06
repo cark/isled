@@ -370,6 +370,39 @@
     (should (equal (substring-no-properties presented)
                    (isled-issue-content issue)))))
 
+(ert-deftest isled-sections-align-work-tables-without-changing-source-or-labels ()
+  (let* ((content (concat "# 0117 — Work\n\n## Work log\n\n"
+                          "| Started (UTC)       | Stopped (UTC)       | Activity       |\n"
+                          "|---------------------|---------------------|----------------|\n"
+                          "| 2026-10-06 07:11:02 | 2026-10-06 07:36:15 | Implementation |\n"
+                          "| 2026-10-06 07:59:03 | 2026-10-06 08:16:14 | Emacs interaction fixes |\n"
+                          "| 2026-10-06 09:00:00 | 2026-10-06 09:10:00 | *Review* |\n"
+                          "| 2026-10-06 10:00:00 |||\n\n## Evidence\n\n- Checked.\n"))
+         (presented (isled-sections--markdown-view content)))
+    (should (equal (substring-no-properties presented) content))
+    (with-temp-buffer
+      (insert presented)
+      (goto-char (point-min))
+      (search-forward "## Work log\n\n")
+      (let (columns)
+        (while (looking-at-p "|")
+          (let ((end (line-end-position)) (visible ""))
+            (while (< (point) end)
+              (let* ((next (next-single-property-change (point) 'display nil end))
+                     (display (get-text-property (point) 'display)))
+                (should (or (null display) (stringp display)))
+                (should-not (get-text-property (point) 'invisible))
+                (setq visible (concat visible (or display (buffer-substring (point) next))))
+                (goto-char next)))
+            (let ((positions (cl-loop for i from 0 below (length visible)
+                                      when (eq (aref visible i) ?|)
+                                      collect (string-width (substring visible 0 i)))))
+              (if columns (should (equal positions columns)) (setq columns positions)))
+            (when (string-match-p "Review" visible)
+              (should (string-match-p (regexp-quote "*Review*") visible))))
+          (forward-line))
+        (should (equal columns '(0 22 44 70)))))))
+
 (ert-deftest isled-sections-select-semantic-reference-faces ()
   (let ((ready (isled-issue-create
                 :id "0001" :status "open" :ready t))

@@ -276,6 +276,9 @@ show **Queued**, **In progress**, **Question** or **Review**, plus completed tim
 when it is nonzero. **Work history** shows the question, spans, clock status and
 current elapsed total in a separate buffer.
 
+The expanded issue keeps work-log columns aligned, including older tables with
+uneven padding. Activity labels appear literally, without Markdown styling.
+
 Work history also shows **Since**, the time the issue entered its current state.
 Pausing and resuming do not reset it. Switching between Review and Question
 does; editing the question does not. Older records may have no known entry time.

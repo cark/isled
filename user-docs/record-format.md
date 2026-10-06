@@ -130,7 +130,10 @@ at least one span:
 | 2026-10-06 10:00:00 |                     |                |
 ```
 
-Column padding may vary. Each separator cell contains at least three hyphens.
+Column padding may vary. Generated tables widen Activity to fit the longest
+label and align the header, separator and rows, including empty cells.
+Unchanged logs keep their existing padding during unrelated edits.
+Each separator cell contains at least three hyphens.
 Start and stop use UTC `YYYY-MM-DD HH:MM:SS`, without fractional seconds or a
 zone suffix. Activity may be empty; it cannot contain a pipe, newline, NUL or
 surrounding whitespace. Cell padding is ignored when reading.
