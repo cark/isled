@@ -351,8 +351,8 @@ where appropriate. Humans can invoke them directly; coordinators can invoke the
 same operations at worker handoffs. Start selects In progress and starts the clock
 by default. Both interfaces also offer Start without timing, which selects
 In progress without opening a span. This makes timed work one action while keeping
-state tracking usable on its own. Task assignments and queue ordering belong to
-the coordinating workflow. Work state grants no execution or closure authority.
+state tracking usable on its own. Task assignments and priority exceptions belong
+to the coordinating workflow. Work state grants no execution or closure authority.
 
 Closing an issue stops its active span, preserves its complete work log and removes
 its current Work state. Closure remains one action, and the terminal record keeps
@@ -369,6 +369,61 @@ The [work tracking guide](../user-docs/work-tracking.md) owns implemented action
 and correction syntax. Emacs headings show completed time and clock status; Work
 history calculates the current running total. Snapshot/frontend schema 4 and
 editor schema 3 carry stable projections, without time passage changing hashes.
+
+## Work-state entry times and oldest-first listing (planned)
+
+Persisting when an issue entered its current work state makes waiting visible
+and lets humans and agents retrieve issues in arrival order without maintaining
+a second record. This extends optional work tracking; it adds no assignment or
+execution authority. Waiting time remains separate from recorded work spans.
+
+Store one optional **Since** child under Work state, using UTC in the existing
+`YYYY-MM-DD HH:MM:SS` format. Work actions set it automatically on entry to
+Queued, In progress or Awaiting owner. Default Not queued has no entry. Keep
+timestamps out of issue titles and heading labels; expose them through focused
+inspection and structured data.
+
+```markdown
+- **Work state:** awaiting-owner
+  - **Reason:** review
+  - **Since:** 2026-10-06 10:30:00
+```
+
+Since describes the current uninterrupted stay in a state and its owner-wait
+reason. Repeated Queue and pause/resume while In progress retain it. Leaving
+and returning sets a new timestamp. Switching between Review and Clarification
+also sets a new timestamp; editing a clarification question retains it. Closure
+removes current work metadata while preserving work-span history.
+
+Existing records without Since remain valid and unchanged. Their age stays
+unknown until a genuine state or owner-wait-reason transition; inspection and
+repeated actions never infer or backfill it. Oldest-first results sort dated
+issues by ascending Since, break equal timestamps by issue ID, then append
+undated issues in issue-ID order. This gives deterministic results without
+inventing arrival times.
+
+Offer explicit `--oldest-first`, `--work-reason review|clarification` and
+`--limit N` listing options. Filters compose with existing work-state, readiness
+and tag selection. Apply the issue limit after all filtering and ordering;
+omitting it returns all matching issues. Preserve ordinary listing order and
+output when the new options are absent. For example:
+
+```console
+isled list --ready --work-state queued --oldest-first --limit 1
+isled list --work-state awaiting-owner --work-reason review --oldest-first
+```
+
+Emacs offers corresponding filtering, ordering and limit choices. Choosing
+Oldest first switches to the flat list so rows follow the exact queue order.
+The hierarchy continues to group and order by dependencies; users can return
+to it with `v`. Coordinating workflows and humans retain their choices about
+priority and blocked-task exceptions.
+
+Use the same upgrade boundary as work tracking: updated tools read existing
+records unchanged, while records containing Since require the updated CLI and
+frontend. Ship both with their matching complete skill. Update the record
+contract and versioned wire interfaces together, preserve supported editing,
+and document the implemented syntax in the user guides and live help.
 
 ## Future directions
 
