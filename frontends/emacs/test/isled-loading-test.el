@@ -10,6 +10,7 @@
 (require 'isled-browser)
 (require 'isled-snapshot-test)
 (require 'isled-loading-fixture)
+(require 'isled-test-display)
 
 (defun isled-loading-test--wire (mode &optional details graph)
   "Return compact fixture wire for MODE, optional DETAILS and requested GRAPH."
@@ -65,7 +66,8 @@
   (declare (indent 0) (debug t))
   `(let ((buffer (generate-new-buffer " *loading-test*")))
      (unwind-protect
-         (with-current-buffer buffer ,@body)
+         (with-current-buffer buffer
+           (isled-test-display-call (lambda () ,@body)))
        (when (buffer-live-p buffer) (kill-buffer buffer)))))
 
 (defmacro isled-loading-test--with-displayed-buffer (&rest body)
@@ -199,7 +201,7 @@
         (should (string-match-p "Unrequested" isled--auto-revert-error))
         (should (eq snapshot isled--snapshot))))))
 
-(ert-deftest isled-loading-range-ignores-expanded-body-height ()
+(ert-deftest isled-loading-range-covers-visible-long-body-and-distant-point ()
   (isled-loading-test--with-displayed-buffer
     (isled-mode)
     (setq isled--snapshot
@@ -213,7 +215,8 @@
     (let ((isled-windows-chunk-size 8)
           (isled-windows-screen-margin 1))
      (cl-letf (((symbol-function 'window-body-height) (lambda (&rest _) 10)))
-      (should (equal (isled-windows-nearby) '("0049" "0050" "0051")))))))
+      ;; Keep the currently displayed body while preparing the jump destination.
+      (should (equal (isled-windows-nearby) '("0001" "0049" "0050" "0051")))))))
 
 (ert-deftest isled-loading-real-process-preserves-lock-cleanup ()
   (skip-unless isled-test-program)

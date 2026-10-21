@@ -16,6 +16,8 @@
 (require 'isled-presentation)
 (require 'isled-rows)
 (declare-function isled-windows-visible "isled-windows" ())
+(declare-function isled-windows-text-ranges "isled-windows" (window &optional screens))
+(declare-function isled-windows-row-range "isled-windows" (bounds))
 
 (defface isled-graph-gutter-face
   '((t :inherit (shadow fixed-pitch) :strike-through nil))
@@ -140,25 +142,14 @@ Each line owns one placeholder character; bounded painting supplies its glyphs."
         (add-face-text-property 0 (length string) 'isled-graph-gutter-face nil string)))
     glyphs))
 
-(defun isled-graph-gutter--collect (needed index direction height)
-  "Add rows to NEEDED from INDEX in DIRECTION, covering HEIGHT display lines."
-  (let ((distance 0))
-    (while (and (<= 0 index) (< index (length isled-rows)) (< distance height))
-      (puthash (aref isled-rows index) t needed)
-      (setq distance (+ distance 1 (isled-graph-glyphs-line-count isled-graph-layout index))
-            index (+ index direction)))))
-
 (defun isled-graph-gutter-nearby-rows ()
-  "Collect bounded heading ranges around every visible window's start and point."
+  "Collect visible graph rows and one screen of preparation on either side."
   (let ((needed (make-hash-table :test #'eq)))
     (dolist (window (isled-windows-visible))
-      (dolist (position (list (window-start window) (window-point window)))
-        (let* ((row (isled-row-at position))
-               (index (if row (isled-row-index row) 0))
-               (height (window-body-height window)))
-          ;; Account for routing height so dense joins do not multiply painting.
-          (isled-graph-gutter--collect needed index 1 (* 2 height))
-          (isled-graph-gutter--collect needed (1- index) -1 height))))
+      (dolist (bounds (isled-windows-text-ranges window 1))
+        (let ((range (isled-windows-row-range bounds)))
+          (cl-loop for index from (car range) below (cdr range)
+                   do (puthash (aref isled-rows index) t needed)))))
     needed))
 
 (defun isled-graph-gutter-update ()

@@ -460,8 +460,12 @@ states retain identities and offsets, not immutable snapshot versions. `isled-lo
 coalesced per-view pending work and generation fences. The ledger session owns
 shared details, serialized transport, one incremental-formatting timer and a private notification
 owner; view buffers retain independent indexed projections. `isled-windows.el` owns
-display-change observation, conservative heading bounds, and the union of
-two-screen loading margins rounded outward to chunks across windows. Chunk ranges are recalculated from the current row
+display-change observation, native visible bounds, row-range conversion and
+prefetch ranges. `window-start`, updating `window-end` and
+`pos-visible-in-window-p` own visibility; `window-screen-lines` sizes only the
+extra preparation margins. Visible text and an offscreen jump destination remain
+separate ranges, avoiding traversal of the intervening issues. Two-screen loading
+margins are rounded outward to chunks across windows. Chunk ranges are recalculated from the current row
 vector; they neither own cached content nor evict it.
 One shared pre-redisplay observer compares window signatures; it is removed when
 the last participating buffer unregisters, preserving other redisplay functions.
@@ -473,8 +477,8 @@ and the expanded-row index belong to `isled-rows.el`; sections keeps
 index membership synchronized with logical folds. Retained heading values let row updates avoid rebuilding unchanged text. Standard search-reveal folding belongs to
 `isled-fold.el`, with temporary visibility distinct from expansion.
 `isled-work-display.el` owns live clock overlays and scheduling for visible
-headings, measuring each window's current pixel layout to include scaled text
-and partial screen lines. Loading and window notifications reconcile their presence; ticks only
+headings, using shared native window bounds for scaled text and partial lines.
+Loading and window notifications reconcile their presence; ticks only
 update display strings from typed work data, preserving static heading keys and
 row boundaries. See the [clock rationale](decisions.md#optional-issue-work-tracking)
 and [frontend code map](../frontends/emacs/CONTRIBUTING.md#code-map).

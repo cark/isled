@@ -49,23 +49,10 @@
 
 (defun isled-viewport--collect (window needed &optional ahead)
   "Add visible rows of WINDOW to NEEDED, with extra margins when AHEAD."
-  (let* ((height (window-body-height window))
-         ;; Redisplay can recenter an off-screen point after this notification.
-         ;; Prepare its destination, not the window start left by the old view.
-         (visible (pos-visible-in-window-p (window-point window) window))
-         (origin (if visible (window-start window) (window-point window)))
-         (above (+ (if ahead isled-windows-screen-margin 0) (if visible 0 1)))
-         (first (save-excursion
-                  (goto-char origin)
-                  (vertical-motion (- (ceiling (* above height))) window)
-                  (isled-row-at)))
-         (last (save-excursion
-                 (goto-char origin)
-                 (vertical-motion (ceiling (* (if ahead (1+ isled-windows-screen-margin) 1) height)) window)
-                 (isled-row-at))))
-    (when last
-      (cl-loop for index from (if first (isled-row-index first) 0)
-               to (isled-row-index last)
+  (dolist (bounds (isled-windows-text-ranges
+                  window (if ahead isled-windows-screen-margin 0)))
+    (let ((range (isled-windows-row-range bounds)))
+      (cl-loop for index from (car range) below (cdr range)
                for row = (aref isled-rows index)
                when (and (isled-row-materialized row)
                          (or (not (isled-row-hidden row))

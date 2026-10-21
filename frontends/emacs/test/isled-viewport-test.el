@@ -71,7 +71,7 @@
         (isled-fold-preview (isled-row-fold row) t)
         (should (invisible-p (1+ (isled-row-content row))))))))
 
-(ert-deftest isled-viewport-prepares-point-outside-old-window-start ()
+(ert-deftest isled-viewport-prepares-visible-text-and-distant-point-without-the-gap ()
   (save-window-excursion
     (delete-other-windows)
     (isled-loading-test--with-displayed-buffer
@@ -80,10 +80,12 @@
        (isled-sections-insert
         (apply #'isled-view-test--open-snapshot
                (mapcar (lambda (n) (format "%04d" n)) (number-sequence 1 100)))
-        'all '("0098" "0099" "0100")))
+        'all '("0001" "0050" "0098" "0099" "0100")))
      (set-window-start (selected-window) (point-min))
      (isled-sections-goto-id "0099")
      (isled-viewport-update)
+     (should (isled-row-rich (gethash "0001" isled-rows-index)))
+     (should-not (isled-row-rich (gethash "0050" isled-rows-index)))
      (should (isled-row-rich (gethash "0099" isled-rows-index)))
      (should (isled-row-rich (gethash "0100" isled-rows-index))))))
 
@@ -112,24 +114,24 @@
    (should (< (isled-viewport--priority (aref isled-rows 44))
               (isled-viewport--priority (aref isled-rows 54))))))
 
-(ert-deftest isled-viewport-collapsed-scrolling-does-no-layout-work ()
+(ert-deftest isled-viewport-collapsed-scrolling-does-no-preparation ()
   (isled-windows-test--with-view
    (isled-collapse-all)
-   (cl-letf (((symbol-function 'vertical-motion)
-              (lambda (&rest _) (ert-fail "Collapsed scrolling traversed layout"))))
+   (cl-letf (((symbol-function 'isled-windows-text-ranges)
+              (lambda (&rest _) (ert-fail "Collapsed scrolling prepared text"))))
      (should-not (isled-windows-nearby))
      (isled-viewport-update)
      (should-not (isled-viewport-prefetch))
      (should-not (isled-viewport-work-p)))))
 
-(ert-deftest isled-viewport-distant-expansions-do-no-layout-work ()
+(ert-deftest isled-viewport-distant-expansions-do-no-preparation ()
   (isled-windows-test--with-view
    (isled-collapse-all)
    (isled-sections-show (aref isled-rows 0))
    (isled-sections-show (aref isled-rows 249))
    (isled-windows-test--point (selected-window) "0125")
-   (cl-letf (((symbol-function 'vertical-motion)
-              (lambda (&rest _) (ert-fail "Distant bodies traversed layout"))))
+   (cl-letf (((symbol-function 'isled-windows-text-ranges)
+              (lambda (&rest _) (ert-fail "Distant bodies prepared text"))))
      (should-not (isled-windows-nearby))
      (isled-viewport-update)
      (should-not (isled-viewport-prefetch)))))

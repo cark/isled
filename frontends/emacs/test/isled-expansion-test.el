@@ -9,15 +9,9 @@
 
 
 (defun isled-expansion-test--visible-p (position &optional window)
-  "Check POSITION against WINDOW's text-screen bounds in headless tests."
-  (let ((window (or window (selected-window))))
-    (if (display-graphic-p)
-        (progn (redisplay t) (pos-visible-in-window-p position window))
-      (with-current-buffer (window-buffer window)
-      (save-excursion
-        (goto-char (window-start window))
-        (vertical-motion (window-body-height window) window)
-        (and (>= position (window-start window)) (< position (point))))))))
+  "Check POSITION in WINDOW using native display or the batch fixture."
+  (when (display-graphic-p) (redisplay t))
+  (pos-visible-in-window-p position window))
 
 (defmacro isled-expansion-test--with-row (body-text &rest body)
   "Run BODY with one collapsed row containing BODY-TEXT near the window bottom."

@@ -44,10 +44,10 @@
    (let ((other (split-window-below)))
      (isled-windows-test--point other "0200")
      (should (equal (isled-windows-nearby)
-                    '("0029" "0030" "0031" "0199" "0200" "0201")))
+                    '("0001" "0029" "0030" "0031" "0199" "0200" "0201")))
      (should (equal (isled-sections-id-at-point) "0030"))
      (isled-windows-test--point other "0030")
-     (should (equal (isled-windows-nearby) '("0029" "0030" "0031"))))))
+     (should (equal (isled-windows-nearby) '("0001" "0029" "0030" "0031"))))))
 
 (ert-deftest isled-windows-hidden-view-has-no-demand ()
   (isled-windows-test--with-view
@@ -55,6 +55,15 @@
    (unwind-protect
        (should-not (isled-windows-nearby))
      (kill-buffer " *window-test-other*"))))
+
+(ert-deftest isled-windows-row-ranges-handle-trailing-unowned-text ()
+  (isled-windows-test--with-view
+    (let ((tail (point-max)) (inhibit-read-only t))
+      (goto-char tail)
+      (insert (make-string 100 ?\n))
+      (should (equal (isled-windows-row-range (cons (point-min) (point-max))) '(0 . 250)))
+      (should (equal (isled-windows-row-range (cons (1+ tail) (point-max))) '(250 . 250)))
+      (should (equal (isled-windows-row-range (cons (point-min) (point-min))) '(0 . 0))))))
 
 (ert-deftest isled-windows-union-produces-one-deduplicated-batch ()
   (isled-windows-test--with-view
@@ -67,7 +76,7 @@
      (should (equal (mapcar (lambda (entry) (alist-get 'id entry))
                             (append (alist-get 'details
                                                (json-parse-string (car calls) :object-type 'alist)) nil))
-                    '("0029" "0030" "0031" "0199" "0200" "0201")))
+                    '("0001" "0029" "0030" "0031" "0199" "0200" "0201")))
      ;; Movement while Rust is running stays coalesced into the existing queue.
      (isled-windows-test--point other "0030")
       (isled-loading-test--idle (current-buffer))
@@ -90,18 +99,18 @@
      (isled-collapse-all)
      (isled-windows-test--point first "0030")
      (isled-windows-test--point other "0200")
-     (let ((range (isled-windows--chunk-range first)))
+     (let ((range (car (isled-windows--chunk-ranges first))))
        (window-resize first 2)
-       (should (> (cdr (isled-windows--chunk-range first)) (cdr range)))))))
+       (should (> (cdr (car (isled-windows--chunk-ranges first))) (cdr range)))))))
 
 (ert-deftest isled-windows-chunks-stay-stable-within-boundaries ()
   (isled-windows-test--with-view
    (let ((window (selected-window))
          (isled-windows-chunk-size 64))
      (isled-windows-test--point window "0100")
-     (let ((range (isled-windows--chunk-range window)))
+     (let ((range (car (isled-windows--chunk-ranges window))))
        (isled-windows-test--point window "0101")
-       (should (equal range (isled-windows--chunk-range window)))))))
+       (should (equal range (car (isled-windows--chunk-ranges window))))))))
 
 (ert-deftest isled-windows-chunks-rebuild-membership-and-ignore-collapsed ()
   (isled-windows-test--with-view
@@ -115,7 +124,7 @@
      (isled--render)
      (isled-windows-test--point window "0200")
      (should (equal (isled-windows-nearby) '("0199" "0200")))
-     (should (equal (isled-windows--chunk-range window) '(0 . 2)))
+     (should (equal (car (isled-windows--chunk-ranges window)) '(0 . 2)))
      (setq isled--snapshot (isled-view-test--open-snapshot))
      (isled--render)
      (should-not (isled-windows-nearby)))))
@@ -289,7 +298,7 @@
                     (goto-char (window-start window))
                     (vertical-motion (* 3 height) window)
                     (isled-row-index (isled-row-at))))
-            (range (isled-windows--chunk-range window)))
+            (range (car (isled-windows--chunk-ranges window))))
        (should (<= (car range) first))
        (should (> (cdr range) last))
        (should (< (- first (car range)) 32))

@@ -86,16 +86,6 @@
        (= (window-body-height window t) (isled-expansion--origin-height origin))
        (= (window-body-width window t) (isled-expansion--origin-width origin))))
 
-(defun isled-expansion--point-visible-p (window)
-  "Return whether WINDOW's point is within its text-screen bounds."
-  (with-current-buffer (window-buffer window)
-    (save-excursion
-      (let ((position (window-point window))
-            (start (window-start window)))
-        (goto-char start)
-        (vertical-motion (window-body-height window) window)
-        (and (>= position start) (< position (point)))))))
-
 (defun isled-expansion--discard (window)
   "Release WINDOW's pending intent and its markers."
   (when-let* ((origin (alist-get window isled-expansion--pending)))
@@ -195,7 +185,7 @@ Prune intents before presentation changes text positions."
       (set-window-hscroll window (nth 1 restore))
       (set-window-vscroll window (nth 2 restore) t)
       (set-window-start window (car restore) t)
-      (unless (isled-expansion--point-visible-p window)
+      (unless (pos-visible-in-window-p (window-point window) window)
         (with-selected-window window
           (goto-char (window-point window))
           (recenter))))))

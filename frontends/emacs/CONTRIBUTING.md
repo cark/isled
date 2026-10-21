@@ -81,6 +81,10 @@ no user init is loaded and no bytecode is installed beside source. The
 proportionality and evidence reuse. Add a second compiled/source pass only for a
 concrete loading or macro-expansion risk.
 
+Batch windows have no real redisplay. `test/isled-test-display.el` supplies a
+uniform-line visibility fixture for loading and interaction tests. It is enabled
+only in batch fixtures; graphical checks use the unmodified Emacs display APIs.
+
 Automated checks never contact a working Emacs daemon. A separately authorized
 live review must preserve windows, buffers and unsaved work; a test failure never
 authorizes restarting or terminating that daemon.
@@ -152,6 +156,16 @@ text, split windows, partial lines, and timers waking or stopping after scaling:
 ```sh
 python3 scripts/private-graphical-emacs.py \
   --script frontends/emacs/test/work-clock-geometry-graphical.el \
+  --load-path frontends/emacs --load-path frontends/emacs/test \
+  --screen 1080x680x24 --keep-success
+```
+
+Shared viewport checks cover scaled body formatting, loading and gutter ranges,
+distant jumps, split windows and native expansion fitting:
+
+```sh
+python3 scripts/private-graphical-emacs.py \
+  --script frontends/emacs/test/viewport-graphical.el \
   --load-path frontends/emacs --load-path frontends/emacs/test \
   --screen 1080x680x24 --keep-success
 ```
@@ -345,7 +359,7 @@ lint when submitting. Archive acceptance remains MELPA's decision.
   stable and live elapsed-time labels. `isled-work-display.el` owns visible-heading
   clock overlays and their one-second timer; it never changes row text or requests
   data. Loading presentation and window notifications reconcile its visible set;
-  pixel-based layout includes scaled text and partial lines. Font and scrolling
+  shared native window bounds include scaled text and partial lines. Font and scrolling
   changes update visibility even while the timer is stopped; hiding or closing a
   view releases the timer. `isled-work.el` owns asynchronous
   work actions and history buffers. Work state and clock invariants remain in Rust.
@@ -490,14 +504,22 @@ expanded issues are nearby; it then requests details separately. Filter changes
 use cached summary selection, and scrolling uses targeted detail batches, with
 no second full reconciliation.
 
-Each displaying window contributes its visible screen plus two full text screens
-on either side, rounded outward to intersecting 32-heading chunks. Chunk boundaries count issue headings, not body
-lines; visible coverage counts actual displayed text. An off-screen point also
-prepares its prospective destination before recentering. Only expanded issues
+Emacs supplies the visible range through `window-start` and `window-end` with
+updating enabled; `pos-visible-in-window-p` checks point visibility. Clocks, body
+formatting, loading and gutters share these bounds. Expansion fitting also uses
+Emacs's visibility check directly.
+
+Loading adds approximately two screens on either side, rounded outward to
+intersecting 32-heading chunks. These extra margins use Emacs's
+`window-screen-lines`, which accounts for the buffer's default font and line
+spacing; the estimate never defines actual visibility. Chunk boundaries count
+issue headings, not body lines. An offscreen point also prepares its prospective
+destination before recentering, as a separate range so distant jumps do not
+traverse the intervening issues. Only expanded issues
 in these ranges request bodies. Boundaries are derived from the current row
 vector after filtering or membership changes, not retained as cache identities.
 An index of expanded rows rules out distant bodies using conservative heading
-bounds before doing screen-layout work. Already formatted bodies do not schedule
+bounds before traversing prefetch text. Already formatted bodies do not schedule
 background preparation. The shared ledger session requests the union of expanded IDs across its views
 and those windows, once per ID, with
 their retained live hashes. Windows on other visible frames contribute too;

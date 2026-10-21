@@ -37,6 +37,61 @@
   (seq-filter (lambda (window) (eq t (frame-visible-p (window-frame window))))
               (get-buffer-window-list (current-buffer) 'never t)))
 
+(defun isled-windows-bounds (window)
+  "Return WINDOW's visible buffer range, with an exclusive end.
+Ask Emacs to update its display bounds after text or layout changes."
+  (let ((start (window-start window)))
+    (cons start (max start (or (window-end window t) start)))))
+
+(defun isled-windows-screen-lines (window)
+  "Return an approximate screen size for WINDOW's prefetch margins.
+Emacs accounts for the buffer's default font and line spacing.  Actual
+visibility comes from `isled-windows-bounds', not this estimate."
+  (with-selected-window window (max 1 (ceiling (window-screen-lines)))))
+
+(defun isled-windows--extend (window bounds lines)
+  "Extend BOUNDS by LINES screen lines on either side in WINDOW."
+  (if (zerop lines) bounds
+    (save-excursion
+      (goto-char (car bounds))
+      (vertical-motion (- lines) window)
+      (let ((start (point)))
+        (goto-char (cdr bounds))
+        (vertical-motion lines window)
+        (cons start (point))))))
+
+(defun isled-windows-text-ranges (window &optional screens)
+  "Return WINDOW's visible range plus SCREENS of preparation on either side.
+Also prepare an offscreen point's impending recenter destination.  Keep these
+ranges separate to avoid traversing the gap after a distant jump."
+  (let* ((bounds (isled-windows-bounds window))
+         (margin (or screens 0))
+         (position (window-point window))
+         (visible (pos-visible-in-window-p position window))
+         (lines (if (or (> margin 0) (not visible))
+                    (isled-windows-screen-lines window) 0)))
+    (cons (isled-windows--extend window bounds (* margin lines))
+          (unless visible
+            (list (isled-windows--extend window (cons position position)
+                                         (* (1+ margin) lines)))))))
+
+(defun isled-windows-row-range (bounds)
+  "Convert buffer BOUNDS to a half-open interval in the current row vector.
+Unowned text before or after the issue list contributes no rows."
+  (let* ((count (length isled-rows))
+         (first (isled-row-at (car bounds)))
+         (last (isled-row-at (max (car bounds) (1- (cdr bounds)))))
+         (first-index (if first (isled-row-index first)
+                        (if (and (> count 0)
+                                 (< (car bounds) (isled-row-start (aref isled-rows 0))))
+                            0 count))))
+    (cons first-index
+          (if (<= (cdr bounds) (car bounds)) first-index
+            (if last (1+ (isled-row-index last))
+              (if (and (> count 0)
+                       (<= (cdr bounds) (isled-row-start (aref isled-rows 0))))
+                  0 count))))))
+
 (defun isled-windows-nearby ()
   "Return expanded IDs in visible heading chunks and their neighbours."
   (when-let ((windows (isled-windows-visible)))
@@ -45,44 +100,33 @@
         (isled-windows--collect window ids))
       (sort (hash-table-keys ids) #'string<))))
 
-(defun isled-windows--chunk-range (window)
-  "Return WINDOW's demanded row interval, with an exclusive upper bound.
-Round its visible screen and surrounding text screens outward to heading chunks."
-  (save-excursion
-    (let* ((height (window-body-height window))
-           (visible (pos-visible-in-window-p (window-point window) window))
-           (origin (if visible (window-start window) (window-point window)))
-           (margin isled-windows-screen-margin)
-           ;; Before recentering, allow a full screen above point as well as
-           ;; the margin, covering all possible positions of point in its window.
-           (first (progn
-                    (goto-char origin)
-                    (vertical-motion (- (* (+ margin (if visible 0 1)) height)) window)
-                    (isled-row-at)))
-           (last (progn
-                   (goto-char origin)
-                   (vertical-motion (* (1+ margin) height) window)
-                   (isled-row-at)))
+(defun isled-windows--chunk-ranges (window)
+  "Return WINDOW's demanded half-open row intervals.
+Round visible text, prefetch and jump destination outward to heading chunks."
+  (mapcar
+   (lambda (bounds)
+     (let ((range (isled-windows-row-range bounds))
            (size isled-windows-chunk-size))
-      (cons (* size (/ (if first (isled-row-index first) 0) size))
-            (min (length isled-rows)
-                 (* size (1+ (/ (if last (isled-row-index last)
-                                  (max 0 (1- (length isled-rows)))) size))))))))
+       (if (= (car range) (cdr range)) range
+         (cons (* size (/ (car range) size))
+               (min (length isled-rows) (* size (ceiling (cdr range) size)))))))
+   (isled-windows-text-ranges window isled-windows-screen-margin)))
 
 (defun isled-windows-envelope (window)
-  "Return a conservative heading interval around WINDOW without text layout.
-Every heading occupies at least one screen line.  Include both the current
-start and point so a destination outside the old window is never excluded."
-  (let* ((start (isled-row-at (window-start window)))
+  "Return a conservative row interval for WINDOW's display and prefetch.
+Include the native visible bounds and point before adding a cheap row margin.
+This rejects distant bodies before traversing the prefetch text."
+  (let* ((range (isled-windows-row-range (isled-windows-bounds window)))
          (point-row (isled-row-at (window-point window)))
-         (first (if start (isled-row-index start) 0))
+         (first (car range))
+         (last (max first (1- (cdr range))))
          (point-index (if point-row (isled-row-index point-row) first))
          (margin (* (1+ isled-windows-screen-margin)
-                    (window-body-height window)))
+                    (isled-windows-screen-lines window)))
          (size isled-windows-chunk-size))
     (cons (* size (/ (max 0 (- (min first point-index) margin)) size))
           (min (length isled-rows)
-               (* size (1+ (/ (+ (max first point-index) margin) size)))))))
+               (* size (1+ (/ (+ (max last point-index) margin) size)))))))
 
 (defun isled-windows-in-range-p (row range)
   "Return non-nil when ROW belongs to the half-open heading RANGE."
@@ -91,13 +135,13 @@ start and point so a destination outside the old window is never excluded."
 
 (defun isled-windows--collect (window ids)
   "Add expanded IDs from WINDOW's current loading chunks to IDS."
-  (let ((envelope (isled-windows-envelope window)) range)
+  (let ((envelope (isled-windows-envelope window)) ranges)
     (when isled-rows-expanded
       (maphash
        (lambda (row _)
          (when (isled-windows-in-range-p row envelope)
-           (unless range (setq range (isled-windows--chunk-range window)))
-           (when (isled-windows-in-range-p row range)
+           (unless ranges (setq ranges (isled-windows--chunk-ranges window)))
+           (when (seq-some (lambda (range) (isled-windows-in-range-p row range)) ranges)
              (puthash (isled-row-value row) t ids))))
        isled-rows-expanded))))
 
