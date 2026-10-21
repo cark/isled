@@ -371,6 +371,54 @@ history shows clock status and calculates the current running total.
 Snapshot/frontend schema 5 and editor schema 4 carry stable projections, without
 time passage changing hashes.
 
+## Preparation stages (planned)
+
+Add **Planning** and **Prepared** to the existing Work state field so advance
+discussion and planning are visible in the Emacs issue list and queryable from
+the CLI. These additions are agreed but not implemented. Keep one current state:
+queueing replaces the preparation stage because its separate status is no longer
+needed once the issue enters the execution pipeline. Stages remain optional;
+issues may skip them or return to planning. This adds two built-in states, without
+a second phase field or a configurable state system.
+
+**Planning** means discussing and developing the approach. **Prepared** means
+the approach is settled enough to implement. Any required approval belongs to
+the consuming project's workflow. Prepared does not imply dependency readiness
+or grant execution authority. The distinct labels make these stages easier to
+recognize than Planning and Planned.
+
+| Action | CLI | Result |
+| --- | --- | --- |
+| Plan | `isled work plan ID` | Planning (`planning`). |
+| Mark prepared | `isled work prepare ID` | Prepared (`prepared`). |
+
+Both stages are untimed. Entering either stops an active work span and preserves
+the history; neither starts or resumes a clock. Do not add planning timer options
+in this scope. Start continues to select In progress with its existing timing
+behavior. Review and Question use the existing Awaiting owner state and reasons
+during preparation or implementation. After a handoff, explicitly choose Plan to
+continue planning or Start to begin implementation; Start does not infer a prior
+stage.
+
+The new states follow the existing state-entry-time and oldest-first rules:
+Since changes on a real transition, repeated actions retain it, and waiting age
+stays separate from recorded work time. Expose both states through CLI filters,
+structured data, Emacs work actions, filter completion and concise heading
+labels. Keep existing work-state behavior and work-log history intact.
+
+The new CLI must read currently valid records without conversion. Once a record
+uses either new state, older tools that do not recognize it are unsupported for
+that record; do not silently map or discard the state. Version affected wire
+interfaces and rebuild disposable caches as needed. Release the CLI, matching
+frontend and updated skill together, with clear failures for incompatible wire
+versions. A deliberate downgrade first uses the new CLI to select an older
+supported state; there is no automatic ledger migration or rewrite.
+
+Update user documentation, help and the skill with implementation. Acceptance
+covers state transitions, absence of planning clocks, preservation of existing
+spans and prose, record and wire round trips, filtering, ordering and isolated
+Emacs behavior. Review the labels and controls in a disposable graphical preview.
+
 <a id="work-state-entry-times-and-oldest-first-listing-planned"></a>
 
 ## Work-state entry times and oldest-first listing
