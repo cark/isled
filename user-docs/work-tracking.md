@@ -1,14 +1,33 @@
 # Work state and time
 
-See what is queued, what is being worked on, and what needs an answer or review.
+See what is being planned, what is prepared or queued, and what needs an answer
+or review.
 If useful, keep the time spent on each issue too.
 
 Tracking is optional. An ordinary issue is **Not queued**, with no recorded time.
 There is one worker and at most one running timer per issue; different issues
 can be worked on in parallel.
 
-Use 0.35.0 or newer for work tracking and arrival-order queries. Keep the CLI
-and frontend together; older tools cannot read records with these fields.
+Planning and Prepared require the 0.36.0 CLI and matching frontend; until that
+release is published, use a matching source build. Older work tracking and
+arrival-order queries are available from 0.35.0. Older tools cannot read records
+using the new states. Before downgrading, use the new CLI to select an older
+supported state, such as Queued or Not queued. No conversion is needed on upgrade.
+
+## Prepare an issue
+
+```console
+isled work plan 42
+isled work prepare 42
+```
+
+**Planning** means discussing and developing the approach. **Prepared** means
+the approach is settled enough to implement. Neither starts a timer; entering
+either stops an active timer and keeps its history.
+
+Queueing replaces the preparation stage. Skip stages or revisit them as needed.
+Prepared does not mean prerequisites are complete or that implementation has
+been authorized. Those decisions belong to your workflow.
 
 ## A small workflow
 
@@ -26,10 +45,12 @@ adds their time. Waiting and breaks stay out of the total.
 
 | Action | Work state | Timer |
 | --- | --- | --- |
+| Plan | Planning | Stopped. |
+| Mark prepared | Prepared | Stopped. |
 | Queue | Queued | Stopped. |
 | Start / resume | In progress | Starts a new span, or keeps the current running span. |
 | Start with `--no-clock` | In progress | Stopped; records no new span. |
-| Pause | In progress | Stops the current span. |
+| Pause | Unchanged | Stops the current span. |
 | Await review or clarification | Awaiting owner | Stopped. |
 | Unqueue | Not queued | Stopped. |
 
@@ -57,8 +78,10 @@ isled work await 42 --reason clarification --question 'Should this also run offl
 ```
 
 Clarification needs a non-empty question on one line. Review needs no question.
-Starting work again clears the owner-wait details. The completed spans stay in
-the log.
+Use the same handoff while planning or implementing. After an answer or review,
+choose `work plan` to continue planning, `work prepare` when the approach is
+settled, or `work start` to implement. These actions clear the owner-wait details
+and keep completed spans.
 
 ## Arrival order
 
@@ -74,29 +97,30 @@ isled search --work-reason clarification --oldest-first --limit 5 offline
 that time, then by issue ID. Older records with no Since come last, in ID order;
 their age stays unknown until a real transition.
 
-Repeating Queue keeps the issue's place. Pausing and resuming also keep Since.
+Repeating Plan, Mark prepared or Queue keeps the issue's place. Pausing and
+resuming also keep Since.
 Changing Review to Clarification starts a new wait; changing only the question
 keeps the wait. Since measures the stay in a state; the work log measures time
 spent working.
 
 Ordinary listing keeps ID order. Omit `--limit` for all matches; zero returns
 none. The limit applies after every filter and text match. State filters use
-`not-queued`, `queued`, `in-progress` and `awaiting-owner`, and combine with
-readiness, status, kind and tags.
+`not-queued`, `planning`, `prepared`, `queued`, `in-progress` and `awaiting-owner`.
+They combine with readiness, status, kind and tags.
 
 ## In Emacs
 
-Press **`w`** on the issue for queueing, timers, owner waits and history.
+Press **`w`** on the issue for preparation, queueing, timers, owner waits and history.
 **Start without timing** records only the state. Use `C-u` with Start to name
 an activity.
 
-Headings show **Queued**, **In progress**, **Question** or **Review**, plus
-nonzero completed time. **Work history** shows the pending question, Since,
+Headings show **Planning**, **Prepared**, **Queued**, **In progress**, **Question**
+or **Review**, plus nonzero completed time. **Work history** shows the pending question, Since,
 numbered spans and the total, including any running span at the moment you open
 it. It is a report, not a live stopwatch; reopen it for an updated total.
 
-Filter with `s:open w:queued` or `s:open r:review`. Press **`S`** and choose
-**Oldest first** to see the complete matching queue in arrival order. You can
+Filter with `s:open w:planning`, `s:open w:prepared`, `s:open w:queued` or
+`s:open r:review`. Press **`S`** and choose **Oldest first** to see the complete matching queue in arrival order. You can
 also use `o:oldest-first` or `o:id` in the query. **Hierarchy** follows
 prerequisites; `v` switches between it and your last chosen flat order.
 Emacs shows all matches; limits belong to the CLI.
@@ -133,7 +157,7 @@ The [record format](record-format.md#optional-work-tracking) keeps state in
 Metadata and spans in an optional Work log table. Activity labels may be empty;
 otherwise they use one line without pipes or surrounding whitespace.
 
-`isled work show 42 --json` returns schema 2:
+`isled work show 42 --json` returns schema 3:
 
 | Field | Meaning |
 | --- | --- |
@@ -144,8 +168,8 @@ otherwise they use one line without pipes or surrounding whitespace.
 | `total_seconds` | Completed time plus the running span at report time. |
 | `spans` | Ordered entries with `started`, nullable `stopped` and `activity`. |
 
-Use `--at` to choose the report time explicitly. Snapshot/frontend schema 5 and
-editor schema 4 carry the same work data. Browsing summaries omit spans;
+Use `--at` to choose the report time explicitly. Snapshot/frontend schema 6 and
+editor schema 5 carry the same work data. Browsing summaries omit spans;
 complete issues and editor records include them.
 
 Their totals include completed time only, with a separate running start.

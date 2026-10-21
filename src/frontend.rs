@@ -68,7 +68,7 @@ pub fn respond(cache: &mut Cache<'_>, request: &Request) -> Result<Vec<u8>, Cach
         (Some(hash), changed.then_some(view))
     };
     let mut output = serde_json::to_vec(&Response {
-        schema_version: 5,
+        schema_version: 6,
         graph,
         root: Bytes(cache.root().path_bytes_lossless()?.to_vec()),
         view_hash,

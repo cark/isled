@@ -52,7 +52,7 @@
          (since (isled-work-data--field wire 'since))
          (seconds (isled-work-data--field wire 'recorded_seconds))
          (running (isled-work-data--field wire 'running_since)))
-    (unless (and (member state '("not-queued" "queued" "in-progress" "awaiting-owner"))
+    (unless (and (member state '("not-queued" "planning" "prepared" "queued" "in-progress" "awaiting-owner"))
                  (natnump seconds)
                  (if (equal state "awaiting-owner")
                      (or (and (equal reason "review") (null question))
@@ -117,6 +117,7 @@ Running elapsed time is available in Work history without a presentation timer."
     (let* ((state (isled-work-data-state work))
            (label (pcase state
                     ("not-queued" "") ("queued" "Queued")
+                    ("planning" "Planning") ("prepared" "Prepared")
                     ("in-progress" "In progress")
                     ("awaiting-owner" (if (equal (isled-work-data-reason work) "review")
                                           "Review" "Question"))))

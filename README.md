@@ -115,8 +115,11 @@ Find the oldest ready task with
 The [work guide](user-docs/work-tracking.md) covers questions, review queues
 and forgotten timers.
 
-Work tracking and queue ordering are available from 0.35.0. Update the CLI and
-Emacs frontend together.
+Use `isled work plan 1` while discussing an approach and `isled work prepare 1`
+when it is settled. Both are untimed; queueing replaces the preparation stage.
+Planning and Prepared need the upcoming 0.36.0 release or a matching source build.
+Earlier work tracking and queue ordering are available from 0.35.0. Keep the CLI
+and Emacs frontend together.
 
 ## Requirements
 

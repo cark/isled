@@ -50,6 +50,14 @@
       (special-mode))
     (display-buffer buffer)))
 
+(defun isled-work-plan ()
+  "Mark the issue at point as Planning, stopping any clock."
+  (interactive) (isled-work--run '("plan")))
+
+(defun isled-work-prepare ()
+  "Mark the issue at point as Prepared, stopping any clock."
+  (interactive) (isled-work--run '("prepare")))
+
 (defun isled-work-queue ()
   "Queue the issue at point without timing."
   (interactive) (isled-work--run '("queue")))
@@ -100,7 +108,10 @@ With a prefix argument, prompt for the actual stop time of a forgotten clock."
 
 (transient-define-prefix isled-work ()
   "Show work actions for the issue at point."
-  [["Work"
+  [["Preparation"
+    ("P" "Plan" isled-work-plan)
+    ("m" "Mark prepared" isled-work-prepare)]
+   ["Work"
     ("q" "Queue" isled-work-queue)
     ("u" "Not queued" isled-work-unqueue)
     ("s" "Start / resume" isled-work-start)

@@ -254,8 +254,8 @@ ordering, nested owner questions, UTC spans and invariants; the
 All supported edits preserve work data. Closure stops the clock, removes current
 state and retains history without changing evidence, outcome or authority rules.
 
-This boundary uses snapshot/frontend schema 5, editor schema 4 and disposable
-cache schema 7. Earlier wire versions are rejected. The dependency-tree interface
+This boundary uses snapshot/frontend schema 6, editor schema 5 and disposable
+cache schema 8. Earlier wire versions are rejected. The dependency-tree interface
 remains schema 2. Once records contain tracking, older tools cannot read them.
 Ship the CLI, frontend and skill together with the matching CLI pin. Until the
 compatible release is published, source users must configure the matching build.
@@ -271,3 +271,17 @@ Default listing order and output remain unchanged. Emacs offers mutually
 exclusive hierarchy, issue-ID and oldest-first orders and shows all matches.
 Switching to hierarchy clears active flat ordering; returning to a flat list
 restores the last chosen flat order. See the [work guide](../user-docs/work-tracking.md#arrival-order).
+
+## Preparation stages
+
+Planning and Prepared extend the existing work-state field. The accepted
+[design](decisions.md#preparation-stages) keeps both untimed and preserves all
+completed spans and unrelated prose. Existing valid records need no conversion.
+New-state records require 0.36.0-compatible tools; older clients must not map or
+discard these states. Snapshot/frontend schema 6, editor schema 5 and work-report
+schema 3 expose them. Earlier wire versions are rejected, and disposable cache
+schema 8 rebuilds the fixed-state projection. Dependency-tree schema 2 is unchanged.
+
+Publish the CLI, matching frontend pin and skill together. Before deliberately
+downgrading, use the new CLI to select an older supported state on affected
+records. There is no automatic ledger rewrite or migration.

@@ -10,6 +10,8 @@ use crate::{
 
 #[derive(Clone, Debug)]
 pub enum WorkAction {
+    Plan,
+    Prepare,
     Queue,
     Unqueue,
     Start {
@@ -38,13 +40,14 @@ pub fn work_update(
     }
     let old_log = document.work_log.clone();
     match action {
-        WorkAction::Queue => {
+        WorkAction::Plan | WorkAction::Prepare | WorkAction::Queue => {
             document.work_log.stop(at)?;
-            transition(
-                &mut document.issue.work_state,
-                WorkState::Queued { since: None },
-                at,
-            );
+            let state = match action {
+                WorkAction::Plan => WorkState::Planning { since: None },
+                WorkAction::Prepare => WorkState::Prepared { since: None },
+                _ => WorkState::Queued { since: None },
+            };
+            transition(&mut document.issue.work_state, state, at);
         }
         WorkAction::Unqueue => {
             document.work_log.stop(at)?;

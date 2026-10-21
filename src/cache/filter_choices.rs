@@ -10,8 +10,15 @@ impl Cache<'_> {
     pub(crate) fn frontend_choices(&self) -> Result<Vec<String>, CacheError> {
         let mut choices = vec!["s:open".into(), "s:closed".into()];
         choices.extend(
-            ["not-queued", "queued", "in-progress", "awaiting-owner"]
-                .map(|state| format!("w:{state}")),
+            [
+                "not-queued",
+                "planning",
+                "prepared",
+                "queued",
+                "in-progress",
+                "awaiting-owner",
+            ]
+            .map(|state| format!("w:{state}")),
         );
         choices.extend(["r:review".into(), "r:clarification".into()]);
         self.append_tag_choices(&mut choices)?;
@@ -58,7 +65,14 @@ impl Cache<'_> {
         } else {
             &rows
         };
-        for state in ["not-queued", "queued", "in-progress", "awaiting-owner"] {
+        for state in [
+            "not-queued",
+            "planning",
+            "prepared",
+            "queued",
+            "in-progress",
+            "awaiting-owner",
+        ] {
             if work_rows.iter().any(|row| {
                 row.work().state == state
                     && filters.status.is_none_or(|status| row.status() == status)

@@ -71,8 +71,8 @@
               (pcase prefix
                 ("s" (setq status (pcase name ("open" "open") ("closed" "closed")
                                          (_ (user-error "Status is open or closed")))))
-                ("w" (unless (member name '("not-queued" "queued" "in-progress" "awaiting-owner"))
-                       (user-error "Work state is not-queued, queued, in-progress or awaiting-owner"))
+                ("w" (unless (member name '("not-queued" "planning" "prepared" "queued" "in-progress" "awaiting-owner"))
+                       (user-error "Work state is not-queued, planning, prepared, queued, in-progress or awaiting-owner"))
                      (setq work-state name))
                 ("r" (unless (member name '("review" "clarification"))
                        (user-error "Work reason is review or clarification"))

@@ -270,6 +270,16 @@ For the exact validation and save rules, see the [editor contract](../../user-do
 
 Press **`w`** on an issue to keep the next step and its work sessions together.
 
+### Prepare the approach
+
+Choose **Plan** (`P`) while discussing the approach, then **Mark prepared** (`m`)
+when it is settled enough to implement. Both stop any active timer and preserve
+history. Planning itself is untimed.
+
+Filter with `s:open w:planning` or `s:open w:prepared` to see these issues together.
+Queueing replaces the preparation stage. You can skip stages or return to them;
+Prepared does not imply dependency readiness or permission to begin.
+
 ### Pick up, pause, resume
 
 | In the Work menu | What happens |
@@ -288,10 +298,11 @@ with Start to name an activity such as Implementation or Testing.
 
 Choose **Ready for review** when the result needs a look, or **Ask a question**
 when a decision is missing. Both stop timing. The question stays with the issue
-until work resumes.
+until you choose the next stage. Use Plan to continue planning, Mark prepared
+when the approach is settled, or Start to begin implementation.
 
-Headings show **Queued**, **In progress**, **Question** or **Review**, with
-nonzero completed time. The heading's help text includes the pending question.
+Headings show **Planning**, **Prepared**, **Queued**, **In progress**, **Question**
+or **Review**, with nonzero completed time. The heading's help text includes the pending question.
 Use `s:open r:review` to find reviews, then `S` → **Oldest first** for arrival
 order. Hierarchy continues to follow dependencies.
 
@@ -354,7 +365,8 @@ every term for an unfiltered view. Press `f` again to refine a query; it returns
 with a trailing space ready for the next term.
 
 Unquoted `t:`, `k:`, `s:` and `w:` prefixes select a tag, kind, status or work
-state (`not-queued`, `queued`, `in-progress`, `awaiting-owner`). `r:review` and
+state (`not-queued`, `planning`, `prepared`, `queued`, `in-progress`,
+`awaiting-owner`). `r:review` and
 `r:clarification` distinguish owner waits. Quote a term to search for its text.
 Empty values and unfinished quotes must be completed before you can accept
 the query.

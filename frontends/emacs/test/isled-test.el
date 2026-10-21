@@ -651,7 +651,7 @@
             :stderr ""
             :stdout
             (json-serialize
-             `((schema_version . 5)
+             `((schema_version . 6)
                (root . ((encoding . "utf-8") (value . ,directory)))
                (issues . []))))))
         first second first-again)

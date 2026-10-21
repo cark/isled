@@ -55,13 +55,17 @@
                    (push args commands)
                    (funcall callback (isled-command-result-create :status 0 :stdout "Updated" :stderr ""))))
                 ((symbol-function 'isled-refresh) (lambda () (cl-incf refreshes))))
+        (isled-work-plan)
+        (isled-work-prepare)
         (isled-work-queue)
         (isled-work-start "Implementation")
         (isled-work-pause "2026-10-06 09:30:00")
         (isled-work-start-without-timing)
         (isled-work-await-clarification "Which target?")
         (isled-work-await-review)
-        (should (= refreshes 6))
+        (should (= refreshes 8))
+        (should (member '("--root" "/project" "work" "plan" "0042") commands))
+        (should (member '("--root" "/project" "work" "prepare" "0042") commands))
         (should (member '("--root" "/project" "work" "start" "0042" "--no-clock") commands))
         (should (member '("--root" "/project" "work" "await" "0042" "--reason" "clarification"
                           "--question" "Which target?") commands))
@@ -115,7 +119,8 @@
                   (refreshes 0))
               (cl-letf (((symbol-function 'isled-row-at) (lambda (&rest _) row))
                         ((symbol-function 'isled-refresh) (lambda () (cl-incf refreshes))))
-                (dolist (action (list #'isled-work-queue #'isled-work-start
+                (dolist (action (list #'isled-work-plan #'isled-work-prepare
+                                     #'isled-work-queue #'isled-work-start
                                      (lambda () (isled-work-await-clarification "Which target?"))))
                   (let ((expected (1+ refreshes)) (deadline (+ (float-time) 5)))
                     (funcall action)
@@ -174,6 +179,37 @@
     (setf (alist-get 'issues view) (vector (aref (alist-get 'issues view) 0)
                                          (aref (alist-get 'issues view) 0)))
     (should-error (isled-frontend-decode (json-serialize wire :null-object :json-null :false-object :json-false))
+                  :type 'isled-snapshot-error)))
+
+(ert-deftest isled-work-preparation-decodes-filters-and-labels-without-a-clock ()
+  (dolist (state '("planning" "prepared"))
+    (let ((wire (copy-tree (isled-work-test--wire))))
+      (setf (alist-get 'state wire) state)
+      (should-error (isled-work-data-decode wire) :type 'isled-work-data-error)
+      (setf (alist-get 'running_since wire) :json-null
+            (alist-get 'spans wire) (list (car (alist-get 'spans wire))))
+      (let* ((work (isled-work-data-decode wire t))
+             (issue (isled-issue-create :id "0042" :status "open" :ready t
+                                       :kind "feature" :title "Offline notes" :work work))
+             (heading (isled-sections--heading issue))
+             (position (string-match (capitalize state) heading)))
+        (should position)
+        (should (eq (get-text-property position 'face heading) 'isled-issue-work-face))
+        (should (equal (isled-work-data-label work)
+                       (format "  [%s · 30m 00s]" (capitalize state))))
+        (should-not (isled-work-data-running-since work))
+        (should (= (length (isled-work-data-spans work)) 1)))
+      (should (equal (alist-get 'work_state
+                               (isled-filter-query-criteria (concat "s:open w:" state)))
+                     state)))))
+
+(ert-deftest isled-work-rejects-previous-browsing-wire-version ()
+  (let* ((wire (json-parse-string (isled-loading-test--wire 'view)
+                                 :object-type 'alist :array-type 'array
+                                 :null-object :json-null :false-object :json-false)))
+    (setf (alist-get 'schema_version wire) 5)
+    (should-error (isled-frontend-decode
+                   (json-serialize wire :null-object :json-null :false-object :json-false))
                   :type 'isled-snapshot-error)))
 
 (provide 'isled-work-test)

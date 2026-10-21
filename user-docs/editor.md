@@ -5,13 +5,13 @@ editor uses it; ordinary CLI edits can use the [Statement commands](statement-ed
 instead.
 
 `isled editor --stdin` reads one JSON request and returns one JSON response.
-It uses **schema 4**, alongside browsing/snapshot schema 5. Older requests are
+It uses **schema 5**, alongside browsing/snapshot schema 6. Older requests are
 rejected. Keep the CLI and frontend compatible.
 
 ## Load a record
 
 ```json
-{"schema_version":4,"mode":"load","id":"0042"}
+{"schema_version":5,"mode":"load","id":"0042"}
 ```
 
 A successful load returns the record, its editable draft and an opaque `version`.
@@ -22,7 +22,7 @@ the exact source and incoming dependency reasons.
 
 | Field | Meaning |
 | --- | --- |
-| `schema_version` | Required: `4`. |
+| `schema_version` | Required: `5`. |
 | `mode` | `load`, `validate` or `save`. |
 | `id` | Existing issue ID; omit for creation. Load requires it. |
 | `expected` | Version returned by load; required for an existing draft. Omit for creation. |

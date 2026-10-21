@@ -37,6 +37,8 @@ pub(crate) fn run(
                 Ok(report.render())
             };
         }
+        WorkCommand::Plan(args) => (args, WorkAction::Plan),
+        WorkCommand::Prepare(args) => (args, WorkAction::Prepare),
         WorkCommand::Queue(args) => (args, WorkAction::Queue),
         WorkCommand::Unqueue(args) => (args, WorkAction::Unqueue),
         WorkCommand::Pause(args) => (args, WorkAction::Pause),

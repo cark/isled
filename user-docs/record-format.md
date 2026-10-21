@@ -108,13 +108,14 @@ for transitions, timers and corrections.
 | State | Children |
 | --- | --- |
 | `not-queued` | None; generated records omit the Work state entry. |
-| `queued`, `in-progress` | Optional Since. |
+| `planning`, `prepared`, `queued`, `in-progress` | Optional Since. |
 | `awaiting-owner` with `review` | Required Reason; optional Since; no Question. |
 | `awaiting-owner` with `clarification` | Required Reason and non-empty single-line Question; optional Since. |
 
 Since follows Reason and Question when present. It uses UTC
 `YYYY-MM-DD HH:MM:SS`; missing Since means unknown age. Closed issues have no
-current Work state. Not queued cannot have Since.
+current Work state. Not queued cannot have Since. Planning and Prepared never
+have a running span; completed history remains valid.
 
 Since changes on a real state or owner-wait-reason transition. Repeating an
 action or editing the question keeps it, including an unknown value. Leaving

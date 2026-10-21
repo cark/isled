@@ -53,7 +53,7 @@ CLOSE requests closure with validation/save.
 The callback receives a decoded response or an operational-error response."
   (isled-process-command
    root (list "--root" root "editor" "--stdin")
-   (json-encode `((schema_version . 4) (mode . ,mode)
+   (json-encode `((schema_version . 5) (mode . ,mode)
                   (id . ,(and record (isled-editor-record-id record)))
                   (expected . ,(and record (isled-editor-record-version record)))
                   (draft . ,draft) (close . ,(if close t :json-false))))
@@ -67,8 +67,10 @@ The callback receives a decoded response or an operational-error response."
                                      (isled-command-result-stdout result)
                                      :object-type 'alist :array-type 'array
                                      :null-object nil :false-object :false)))
-                      (unless (and (= (or (alist-get 'schema_version response) 0) 4)
-                                   (memq (alist-get 'ok response) '(t :false)))
+                      (unless (eql (alist-get 'schema_version response) 5)
+                        (error "Unsupported editor schema version: %S (expected 5)"
+                               (alist-get 'schema_version response)))
+                      (unless (memq (alist-get 'ok response) '(t :false))
                         (error "Invalid editor response"))
                       (when (alist-get 'record response)
                         (setf (alist-get 'record response)

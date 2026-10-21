@@ -71,7 +71,7 @@ impl Request {
 
     pub fn parse(bytes: &[u8]) -> Result<Self, String> {
         let input: Input = serde_json::from_slice(bytes).map_err(|e| e.to_string())?;
-        if input.schema_version != 5 {
+        if input.schema_version != 6 {
             return Err("unsupported frontend request version".into());
         }
         let criteria = Criteria::parse(input.filter)?;

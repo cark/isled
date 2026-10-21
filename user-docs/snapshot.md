@@ -4,7 +4,7 @@
 For compact filtered views and conditional body requests, use the
 [bounded frontend interface](frontend.md).
 
-The current **schema version is 5**. Update the executable and frontend together;
+The current **schema version is 6**. Update the executable and frontend together;
 the current frontend rejects earlier versions. Work tracking needs no conversion
 of existing records.
 
@@ -12,7 +12,7 @@ of existing records.
 
 | Field | Meaning |
 | --- | --- |
-| `schema_version` | `5`. |
+| `schema_version` | `6`. |
 | `root` | Losslessly encoded canonical ledger root. |
 | `issues` | Readable issues, sorted by ascending ID. |
 | `unavailable` | Malformed or unreadable records, sorted by ID. |

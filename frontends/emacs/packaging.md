@@ -103,7 +103,8 @@ them again with `M-x isled-show-installation`.
 
 A frontend update reuses its CLI offline while the pin is unchanged. A new pin
 needs its published release, or an explicit matching source build. Work state,
-timers and queue ordering are available from 0.35.0.
+timers and queue ordering are available from 0.35.0. Planning and Prepared require
+0.36.0; until it is published, use a matching source build.
 
 See [setup and recovery](user-guide.md#cli-setup-and-upgrades) for cancellation,
 upgrades and separately installed executables.

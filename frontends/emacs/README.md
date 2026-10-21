@@ -148,14 +148,20 @@ open its Markdown source instead. See [file links and source access](user-guide.
 
 ## Work state and time
 
-Press **`w`** on an issue to queue it, start or pause work, ask the owner a
-question, or mark it ready for review.
+Press **`w`** on an issue to plan it, queue it, start or pause work, ask a
+question, or request review.
+
+**Plan** marks an approach being discussed. **Mark prepared** means it is settled
+enough to implement. Both are untimed. Find them with `w:planning` or `w:prepared`;
+queueing replaces the preparation stage. These actions require the upcoming
+0.36.0 release or a matching source build.
 
 **Start / resume** starts a timer. **Pause clock** ends that session; resuming
 starts another. **Work history** shows every span and their total. Use
 **Start without timing** when the state is all you need.
 
-Headings keep it brief: **Queued**, **In progress**, **Question** or **Review**,
+Headings keep it brief: **Planning**, **Prepared**, **Queued**, **In progress**,
+**Question** or **Review**,
 with completed time when there is some. Read the pending question in Work history.
 
 For a queue, filter with `s:open w:queued` or `s:open r:review`, then press

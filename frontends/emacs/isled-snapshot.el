@@ -96,7 +96,7 @@ runner.")
      (isled-command-result-stdout result))))
 
 (defun isled-snapshot-decode (json)
-  "Decode and validate a version 5 snapshot from JSON."
+  "Decode and validate a version 6 snapshot from JSON."
   (condition-case error-data
       (let* ((wire (json-parse-string json
                                       :object-type 'alist
@@ -108,7 +108,7 @@ runner.")
                     (isled-snapshot--bytes
                      (isled-snapshot--field wire 'root) "root")))
              (wire-issues (isled-snapshot--field wire 'issues)))
-        (unless (eql version 5)
+        (unless (eql version 6)
           (isled-snapshot--invalid
            "unsupported schema version: %S" version))
         (unless (and (stringp root) (file-name-absolute-p root))

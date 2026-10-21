@@ -45,7 +45,7 @@ pub enum Command {
         #[arg(long, required = true)]
         stdin: bool,
     },
-    /// Load, validate or save one complete issue draft using editor JSON schema 4.
+    /// Load, validate or save one complete issue draft using editor JSON schema 5.
     Editor {
         /// Read the versioned request from stdin; inspect response ok/code for the result.
         #[arg(long, required = true)]
@@ -153,7 +153,7 @@ pub struct FilterArgs {
     /// Append each issue's canonical absolute path.
     #[arg(long)]
     pub with_path: bool,
-    /// Select not-queued, queued, in-progress or awaiting-owner.
+    /// Select not-queued, planning, prepared, queued, in-progress or awaiting-owner.
     #[arg(long)]
     pub work_state: Option<String>,
     /// Select owner waits for review or clarification.

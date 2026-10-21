@@ -44,6 +44,9 @@ then issue ID. Callers apply limits after any additional kind/text matching;
 completion choices remain uncapped. [Work tracking](../user-docs/work-tracking.md#arrival-order)
 owns the user-visible rules.
 
+Schema 8 adds Planning and Prepared to the fixed work-state constraint. Rebuilding
+the projection reads existing Markdown without rewriting it or inventing times.
+
 ## Prepared-statement execution boundary
 
 All runtime data queries and writes use rusqlite's cached prepared statements

@@ -72,13 +72,13 @@ fn default_reads_do_not_convert_existing_records() {
     let root = fixture();
     let original = source(&root);
     let work = report(&root);
-    assert_eq!(work["schema_version"], 2);
+    assert_eq!(work["schema_version"], 3);
     assert_eq!(work["state"], "not-queued");
     assert_eq!(work["total_seconds"], 0);
     assert_eq!(work["spans"], json!([]));
     assert_eq!(source(&root), original);
     let snapshot: Value = serde_json::from_slice(&run(&root, &["snapshot"]).stdout).unwrap();
-    assert_eq!(snapshot["schema_version"], 5);
+    assert_eq!(snapshot["schema_version"], 6);
     assert_eq!(snapshot["issues"][0]["work"]["state"], "not-queued");
     assert_eq!(source(&root), original);
 }
@@ -228,7 +228,7 @@ fn metadata_and_complete_draft_edits_preserve_work_data_and_prose() {
     let loaded = request(
         &root,
         "editor",
-        json!({"schema_version":4,"mode":"load","id":"0001"}),
+        json!({"schema_version":5,"mode":"load","id":"0001"}),
     );
     assert_eq!(loaded["record"]["work"]["spans"], before["spans"]);
     let mut draft = loaded["record"]["draft"].clone();
@@ -236,7 +236,7 @@ fn metadata_and_complete_draft_edits_preserve_work_data_and_prose() {
     let saved = request(
         &root,
         "editor",
-        json!({"schema_version":4,"mode":"save","id":"0001","expected":loaded["record"]["version"],"draft":draft}),
+        json!({"schema_version":5,"mode":"save","id":"0001","expected":loaded["record"]["version"],"draft":draft}),
     );
     assert_eq!(saved["ok"], true);
     assert_eq!(report(&root)["spans"], before["spans"]);
@@ -312,7 +312,7 @@ fn filters_and_bounded_views_use_work_state_without_changing_readiness() {
     let view = request(
         &root,
         "frontend",
-        json!({"schema_version":5,"mode":"view","filter":{"work_state":"awaiting-owner"}}),
+        json!({"schema_version":6,"mode":"view","filter":{"work_state":"awaiting-owner"}}),
     );
     assert_eq!(
         view["view"]["issues"][0]["work"]["question"],
@@ -411,7 +411,7 @@ fn a_work_action_rejects_a_stale_draft_and_editor_closure_stops_timing() {
     let loaded = request(
         &root,
         "editor",
-        json!({"schema_version":4,"mode":"load","id":"0001"}),
+        json!({"schema_version":5,"mode":"load","id":"0001"}),
     );
     run(
         &root,
@@ -421,7 +421,7 @@ fn a_work_action_rejects_a_stale_draft_and_editor_closure_stops_timing() {
     let stale = request(
         &root,
         "editor",
-        json!({"schema_version":4,"mode":"save","id":"0001",
+        json!({"schema_version":5,"mode":"save","id":"0001",
         "expected":loaded["record"]["version"],"draft":loaded["record"]["draft"]}),
     );
     assert_eq!(stale["code"], "conflict");
@@ -433,7 +433,7 @@ fn a_work_action_rejects_a_stale_draft_and_editor_closure_stops_timing() {
     let closed = request(
         &root,
         "editor",
-        json!({"schema_version":4,"mode":"save","id":"0001",
+        json!({"schema_version":5,"mode":"save","id":"0001",
         "expected":stale["current"]["version"],"draft":draft,"close":true}),
     );
     assert_eq!(closed["ok"], true);
@@ -466,7 +466,7 @@ fn unrelated_mutations_preserve_authored_table_padding_and_contextual_choices() 
     let choices = request(
         &root,
         "frontend",
-        json!({"schema_version":5,"mode":"choices",
+        json!({"schema_version":6,"mode":"choices",
         "choice_filter":{"work_state":"queued","tags":["rust"]}}),
     );
     assert_eq!(choices["choices"], json!(["w:in-progress"]));
@@ -534,4 +534,286 @@ fn generated_work_tables_align_long_unicode_and_empty_cells_without_changing_spa
     assert!(source.contains("A human-readable concern.\n\n## Work log"));
     assert!(run(&root, &["check"]).stdout.is_empty());
     assert_eq!(report(&root), running);
+}
+
+#[test]
+fn preparation_is_untimed_idempotent_and_preserves_authored_data() {
+    for (action, state) in [("plan", "planning"), ("prepare", "prepared")] {
+        let root = fixture();
+        run(
+            &root,
+            &[
+                "statement",
+                "set",
+                "1",
+                "First paragraph with **authored** text.",
+            ],
+        );
+        run(
+            &root,
+            &[
+                "statement",
+                "append",
+                "1",
+                "Another paragraph with  internal spacing.",
+            ],
+        );
+        run(&root, &["work", action, "1", "--at", "2026-10-06 08:00:00"]);
+        assert_eq!(report(&root)["spans"], json!([]));
+        run(
+            &root,
+            &[
+                "work",
+                "start",
+                "1",
+                "--at",
+                "2026-10-06 09:00:00",
+                "--activity",
+                "Implementation",
+            ],
+        );
+        let before = source(&root);
+        // A bad stop must not publish even the requested state change.
+        assert!(
+            !command(&root, &["work", action, "1", "--at", "2026-10-06 08:59:59"])
+                .output()
+                .unwrap()
+                .status
+                .success()
+        );
+        assert_eq!(source(&root), before);
+        run(&root, &["work", action, "1", "--at", "2026-10-06 09:30:00"]);
+        let work = report(&root);
+        assert_eq!(work["state"], state);
+        assert_eq!(work["since"], "2026-10-06 09:30:00");
+        assert_eq!(work["recorded_seconds"], 1800);
+        assert_eq!(work["total_seconds"], 1800);
+        assert!(work["running_since"].is_null());
+        assert_eq!(work["spans"][0]["activity"], "Implementation");
+        assert_eq!(work["spans"][0]["stopped"], "2026-10-06 09:30:00");
+        let after = source(&root);
+        let statement = |text: &str| {
+            text.split("## Statement\n")
+                .nth(1)
+                .unwrap()
+                .split("## Work log")
+                .next()
+                .unwrap()
+                .to_owned()
+        };
+        assert_eq!(statement(&after), statement(&before));
+        run(&root, &["work", action, "1", "--at", "2026-10-06 10:00:00"]);
+        assert_eq!(source(&root), after);
+        run(&root, &["work", "pause", "1"]);
+        assert_eq!(source(&root), after);
+        for option in ["--no-clock", "--activity"] {
+            assert!(
+                !command(&root, &["work", action, "1", option])
+                    .output()
+                    .unwrap()
+                    .status
+                    .success()
+            );
+            assert_eq!(source(&root), after);
+        }
+        // Complete-draft saves and snapshots carry the new state without losing history.
+        let snapshot: Value = serde_json::from_slice(&run(&root, &["snapshot"]).stdout).unwrap();
+        let loaded = request(
+            &root,
+            "editor",
+            json!({"schema_version":5,"mode":"load","id":"0001"}),
+        );
+        assert_eq!(loaded["record"]["work"], snapshot["issues"][0]["work"]);
+        let saved = request(
+            &root,
+            "editor",
+            json!({"schema_version":5,"mode":"save","id":"0001","expected":loaded["record"]["version"],"draft":loaded["record"]["draft"]}),
+        );
+        assert_eq!(saved["ok"], true);
+        assert_eq!(source(&root), after);
+        run(&root, &["check"]);
+    }
+}
+
+#[test]
+fn preparation_handoffs_require_an_explicit_next_stage() {
+    let root = fixture();
+    run(&root, &["work", "plan", "1"]);
+    run(
+        &root,
+        &[
+            "work",
+            "await",
+            "1",
+            "--reason",
+            "clarification",
+            "--question",
+            "Which format?",
+        ],
+    );
+    assert_eq!(report(&root)["question"], "Which format?");
+    run(&root, &["work", "plan", "1"]);
+    assert!(report(&root)["question"].is_null());
+    run(&root, &["work", "prepare", "1"]);
+    run(&root, &["work", "await", "1", "--reason", "review"]);
+    assert_eq!(report(&root)["reason"], "review");
+    assert_eq!(report(&root)["spans"], json!([]));
+    run(&root, &["work", "prepare", "1"]);
+    run(&root, &["work", "queue", "1"]);
+    assert_eq!(report(&root)["state"], "queued");
+    assert_eq!(report(&root)["spans"], json!([]));
+    run(&root, &["work", "plan", "1"]);
+    run(
+        &root,
+        &["work", "start", "1", "--at", "2026-10-06 11:00:00"],
+    );
+    assert_eq!(report(&root)["state"], "in-progress");
+    assert_eq!(report(&root)["running_since"], "2026-10-06 11:00:00");
+    run(
+        &root,
+        &["work", "prepare", "1", "--at", "2026-10-06 11:30:00"],
+    );
+    run(&root, &["evidence", "add", "1", "Checked preparation."]);
+    run(&root, &["close", "1", "--outcome", "Complete."]);
+    assert_eq!(report(&root)["state"], "not-queued");
+    assert_eq!(report(&root)["recorded_seconds"], 1800);
+    for action in ["plan", "prepare"] {
+        assert!(
+            !command(&root, &["work", action, "1"])
+                .output()
+                .unwrap()
+                .status
+                .success()
+        );
+    }
+}
+
+#[test]
+fn preparation_filters_completion_and_fifo_survive_cache_rebuild() {
+    let root = fixture();
+    run(
+        &root,
+        &[
+            "add",
+            "Second task",
+            "Another concern.",
+            "--kind",
+            "feature",
+        ],
+    );
+    for (action, state) in [("plan", "planning"), ("prepare", "prepared")] {
+        run(&root, &["work", action, "1", "--at", "2026-10-06 10:00:00"]);
+        run(&root, &["work", action, "2", "--at", "2026-10-06 09:00:00"]);
+        run(&root, &["work", action, "2", "--at", "2026-10-06 11:00:00"]);
+        let rows = run(
+            &root,
+            &[
+                "list",
+                "--work-state",
+                state,
+                "--oldest-first",
+                "--limit",
+                "1",
+            ],
+        );
+        assert!(rows.stdout.starts_with(b"0002\t"));
+        let searched = run(
+            &root,
+            &[
+                "search",
+                "--work-state",
+                state,
+                "--oldest-first",
+                "--limit",
+                "1",
+                "concern",
+            ],
+        );
+        assert!(searched.stdout.starts_with(b"0002\t"));
+        let view = request(
+            &root,
+            "frontend",
+            json!({"schema_version":6,"mode":"view","filter":{"work_state":state,"oldest_first":true}}),
+        );
+        assert_eq!(view["view"]["issues"][0]["id"], "0002");
+        assert_eq!(view["view"]["issues"][0]["work"]["state"], state);
+        let choices = request(
+            &root,
+            "frontend",
+            json!({"schema_version":6,"mode":"choices","choice_filter":{"work_state":state}}),
+        );
+        assert!(
+            choices["choices"]
+                .as_array()
+                .unwrap()
+                .contains(&json!(format!("w:{state}")))
+        );
+        let before = source(&root);
+        // Version 7's fixed-state CHECK cannot store the new values; rebuild it.
+        let db =
+            rusqlite::Connection::open(root.path().join(".issues/.cache/ledger.sqlite")).unwrap();
+        db.execute_batch("PRAGMA user_version=7").unwrap();
+        drop(db);
+        assert_eq!(
+            run(
+                &root,
+                &[
+                    "list",
+                    "--work-state",
+                    state,
+                    "--oldest-first",
+                    "--limit",
+                    "1"
+                ]
+            )
+            .stdout,
+            rows.stdout
+        );
+        assert_eq!(source(&root), before);
+        let db =
+            rusqlite::Connection::open(root.path().join(".issues/.cache/ledger.sqlite")).unwrap();
+        let version: i64 = db
+            .pragma_query_value(None, "user_version", |row| row.get(0))
+            .unwrap();
+        assert_eq!(version, 8);
+    }
+}
+
+#[test]
+fn preparation_records_reject_running_clocks_and_owner_wait_children() {
+    let root = fixture();
+    run(
+        &root,
+        &["work", "start", "1", "--at", "2026-10-06 09:00:00"],
+    );
+    let original = source(&root);
+    let path = root.path().join(".issues/0001-track-work.md");
+    for state in ["planning", "prepared"] {
+        fs::write(&path, original.replace("in-progress", state)).unwrap();
+        assert!(
+            !command(&root, &["check"])
+                .output()
+                .unwrap()
+                .status
+                .success()
+        );
+    }
+    fs::write(&path, original).unwrap();
+    run(&root, &["work", "plan", "1", "--at", "2026-10-06 09:30:00"]);
+    let original = source(&root);
+    fs::write(
+        &path,
+        original.replace(
+            "- **Work state:** planning",
+            "- **Work state:** prepared\n  - **Reason:** review",
+        ),
+    )
+    .unwrap();
+    assert!(
+        !command(&root, &["check"])
+            .output()
+            .unwrap()
+            .status
+            .success()
+    );
 }

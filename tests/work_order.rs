@@ -195,6 +195,8 @@ fn timestamps_follow_real_transitions_and_survive_clock_pauses() {
 fn legacy_states_keep_unknown_age_until_a_state_or_reason_change() {
     let root = fixture(1);
     for (state, action) in [
+        ("planning", vec!["work", "plan", "1"]),
+        ("prepared", vec!["work", "prepare", "1"]),
         ("queued", vec!["work", "queue", "1"]),
         ("in-progress", vec!["work", "start", "1", "--no-clock"]),
         (
@@ -281,13 +283,13 @@ fn fifo_breaks_ties_by_id_and_puts_unknowns_last_across_query_paths() {
     );
     let value = request(
         &root,
-        json!({"schema_version":5,"mode":"view","filter":{"oldest_first":true}}),
+        json!({"schema_version":6,"mode":"view","filter":{"oldest_first":true}}),
     );
     assert_eq!(view_ids(&value), expected);
     assert!(value["view"]["issues"][3]["work"]["since"].is_null());
     let unchanged = request(
         &root,
-        json!({"schema_version":5,"mode":"view","filter":{"oldest_first":true},"view_hash":value["view_hash"]}),
+        json!({"schema_version":6,"mode":"view","filter":{"oldest_first":true},"view_hash":value["view_hash"]}),
     );
     assert!(unchanged["view"].is_null());
 }
@@ -324,7 +326,7 @@ fn limits_follow_readiness_tags_and_every_text_match_and_count_issues() {
     );
     let value = request(
         &root,
-        json!({"schema_version":5,"mode":"view","filter":{"oldest_first":true,"limit":1,"text":["Unique phrase"]}}),
+        json!({"schema_version":6,"mode":"view","filter":{"oldest_first":true,"limit":1,"text":["Unique phrase"]}}),
     );
     assert_eq!(view_ids(&value), ["0001"]);
     let searched = run(
@@ -436,12 +438,12 @@ fn review_and_question_queues_are_distinct_and_completion_ignores_caps() {
     );
     let value = request(
         &root,
-        json!({"schema_version":5,"mode":"view","filter":{"work_reason":"review","oldest_first":true,"limit":1}}),
+        json!({"schema_version":6,"mode":"view","filter":{"work_reason":"review","oldest_first":true,"limit":1}}),
     );
     assert_eq!(view_ids(&value), ["0003"]);
     let choices = request(
         &root,
-        json!({"schema_version":5,"mode":"choices","choice_filter":{"work_reason":"review","limit":0}}),
+        json!({"schema_version":6,"mode":"choices","choice_filter":{"work_reason":"review","limit":0}}),
     );
     assert!(
         choices["choices"]
@@ -449,7 +451,7 @@ fn review_and_question_queues_are_distinct_and_completion_ignores_caps() {
             .unwrap()
             .contains(&json!("r:clarification"))
     );
-    assert!(request(&root, json!({"schema_version":5,"mode":"view","filter":{"work_state":"queued","work_reason":"review"}}))["view"]["issues"].as_array().unwrap().is_empty());
+    assert!(request(&root, json!({"schema_version":6,"mode":"view","filter":{"work_state":"queued","work_reason":"review"}}))["view"]["issues"].as_array().unwrap().is_empty());
 }
 
 #[test]
@@ -458,7 +460,7 @@ fn graph_uses_the_same_limited_membership_and_keeps_dependency_order() {
     run(&root, &["wait", "add", "2", "3", "Needed first."]);
     let value = request(
         &root,
-        json!({"schema_version":5,"mode":"view","filter":{"oldest_first":true,"limit":2},"graph":{"direction":"prerequisites"}}),
+        json!({"schema_version":6,"mode":"view","filter":{"oldest_first":true,"limit":2},"graph":{"direction":"prerequisites"}}),
     );
     assert_eq!(view_ids(&value), ["0002", "0003"]);
     let rows = value["graph"]["plan"]["rows"].as_array().unwrap();
@@ -467,7 +469,7 @@ fn graph_uses_the_same_limited_membership_and_keeps_dependency_order() {
     assert_eq!(rows[1]["id"], "0002");
     let empty = request(
         &root,
-        json!({"schema_version":5,"mode":"view","filter":{"limit":0},"graph":{"direction":"prerequisites"}}),
+        json!({"schema_version":6,"mode":"view","filter":{"limit":0},"graph":{"direction":"prerequisites"}}),
     );
     assert!(empty["view"]["issues"].as_array().unwrap().is_empty());
     assert!(
@@ -509,12 +511,12 @@ fn malformed_since_is_rejected_without_inventing_work_metadata() {
         fs::write(root.path().join(".issues/0001-issue-1.md"), &original).unwrap();
     }
     assert!(
-        isled::frontend::request::Request::parse(br#"{"schema_version":4,"mode":"view"}"#).is_err()
+        isled::frontend::request::Request::parse(br#"{"schema_version":5,"mode":"view"}"#).is_err()
     );
     assert_eq!(
         isled::editor::respond(
             &ProjectRoot::explicit(root.path()).unwrap(),
-            br#"{"schema_version":3,"mode":"load","id":"0001"}"#
+            br#"{"schema_version":4,"mode":"load","id":"0001"}"#
         )["ok"],
         false
     );

@@ -8,6 +8,10 @@ pub struct WorkArgs {
 }
 #[derive(Debug, Subcommand)]
 pub enum WorkCommand {
+    /// Discuss and develop the approach without timing.
+    Plan(WorkAtArgs),
+    /// Mark the approach prepared for implementation without timing.
+    Prepare(WorkAtArgs),
     /// Queue an issue without starting its clock.
     Queue(WorkAtArgs),
     /// Return an issue to Not queued and stop any clock.
@@ -68,7 +72,7 @@ pub struct WorkCorrectArgs {
 pub struct WorkShowArgs {
     #[command(flatten)]
     pub target: WorkAtArgs,
-    /// Emit work schema 1 JSON with structured spans and the pending question.
+    /// Emit work schema 3 JSON with structured spans and the pending question.
     #[arg(long)]
     pub json: bool,
 }

@@ -26,7 +26,7 @@ pub fn work_report(
     }
     let document = selected.ok_or(QueryError::MissingIssue(id))?.document()?;
     Ok(WorkReport {
-        schema_version: 2,
+        schema_version: 3,
         id: id.to_string(),
         total_seconds: document.work_log.total_seconds(at),
         work: WorkData::new(&document.issue, &document.work_log),

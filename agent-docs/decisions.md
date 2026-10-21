@@ -368,15 +368,14 @@ loss of tracking data through an older tool.
 The [work tracking guide](../user-docs/work-tracking.md) owns implemented actions
 and correction syntax. Emacs headings show work state and completed time; Work
 history shows clock status and calculates the current running total.
-Snapshot/frontend schema 5 and editor schema 4 carry stable projections, without
+Snapshot/frontend schema 6 and editor schema 5 carry stable projections, without
 time passage changing hashes.
 
-## Preparation stages (planned)
+## Preparation stages
 
-Add **Planning** and **Prepared** to the existing Work state field so advance
+**Planning** and **Prepared** are added to the existing Work state field so advance
 discussion and planning are visible in the Emacs issue list and queryable from
-the CLI. These additions are agreed but not implemented. Keep one current state:
-queueing replaces the preparation stage because its separate status is no longer
+the CLI. Keep one current state: queueing replaces the preparation stage because its separate status is no longer
 needed once the issue enters the execution pipeline. Stages remain optional;
 issues may skip them or return to planning. This adds two built-in states, without
 a second phase field or a configurable state system.
@@ -414,7 +413,7 @@ frontend and updated skill together, with clear failures for incompatible wire
 versions. A deliberate downgrade first uses the new CLI to select an older
 supported state; there is no automatic ledger migration or rewrite.
 
-Update user documentation, help and the skill with implementation. Acceptance
+User documentation, help and the skill accompany the implementation. Acceptance
 covers state transitions, absence of planning clocks, preservation of existing
 spans and prose, record and wire round trips, filtering, ordering and isolated
 Emacs behavior. Review the labels and controls in a disposable graphical preview.

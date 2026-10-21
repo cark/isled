@@ -36,8 +36,10 @@
          (hash (isled-snapshot--field wire 'view_hash))
          (view (isled-snapshot--field wire 'view))
          (changes (isled-snapshot--field wire 'changes)))
-    (unless (and (eql (isled-snapshot--field wire 'schema_version) 5)
-                 (file-name-absolute-p root) (listp changes))
+    (unless (eql (isled-snapshot--field wire 'schema_version) 6)
+      (isled-snapshot--invalid "unsupported frontend schema version: %S (expected 6)"
+                               (isled-snapshot--field wire 'schema_version)))
+    (unless (and (file-name-absolute-p root) (listp changes))
       (isled-snapshot--invalid "invalid bounded response"))
     (unless (eq hash :json-null) (isled-frontend--hash hash))
     (let ((details (mapcar (lambda (value)

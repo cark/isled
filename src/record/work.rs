@@ -23,6 +23,8 @@ pub(super) fn parse_state(
         .ok_or(RecordError::InvalidWorkState)?;
     let state = match kind {
         WorkStateKind::NotQueued => None,
+        WorkStateKind::Planning => Some(WorkState::Planning { since: None }),
+        WorkStateKind::Prepared => Some(WorkState::Prepared { since: None }),
         WorkStateKind::Queued => Some(WorkState::Queued { since: None }),
         WorkStateKind::InProgress => Some(WorkState::InProgress { since: None }),
         WorkStateKind::AwaitingOwner => {

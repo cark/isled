@@ -126,6 +126,16 @@ enforces the lifecycle above and
 its focused process tests live in
 [`scripts/test-private-graphical-emacs.py`](../../scripts/test-private-graphical-emacs.py).
 
+The preparation actions have a private graphical check that exercises `w P`
+and `w m`, verifies untimed transitions, and captures the menu and heading labels:
+
+```sh
+python3 scripts/private-graphical-emacs.py \
+  --script frontends/emacs/test/work-preparation-graphical.el \
+  --load-path frontends/emacs --env "ISLED_TEST_PROGRAM=$PWD/target/debug/isled" \
+  --screen 1080x680x24 --keep-success
+```
+
 ### Interactive candidate previews
 
 For a requested review of a visible candidate on Linux, use
@@ -424,7 +434,7 @@ lint when submitting. Archive acceptance remains MELPA's decision.
   recognition and deliberate file-display adapters. `isled-file-visit.el`
   owns asynchronous Rust validation, source-origin fences and navigation into
   the target view.
-- [`test/`](test/) mirrors those boundaries with ERT coverage and a version 2 fixture.
+- [`test/`](test/) mirrors those boundaries with ERT coverage and a version 6 fixture.
 
 `isled-warnings.el` owns the known-finding header affordance and its ordinary
 history jump; the bounded decoder owns its typed Rust target.

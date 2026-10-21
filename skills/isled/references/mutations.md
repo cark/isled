@@ -91,12 +91,16 @@ supports closure but authority is absent, recommend it and wait for approval.
 
 ## Work state and clocks
 
-Use `work queue`, `unqueue`, `start`, `pause`, `await`, `show` and `correct`.
+Use `work plan`, `prepare`, `queue`, `unqueue`, `start`, `pause`, `await`, `show`
+and `correct`. Plan selects Planning; Prepare selects Prepared. Both stop any
+running clock and preserve history, with no planning timer option. Preparation
+can be skipped or revisited; Queue replaces it.
 Read their live help for options. Start selects In progress and opens a clock;
 `--no-clock` stops any running clock without creating a span. Pause stops timing
 without changing work state. Queue, unqueue and await also stop a running clock.
 Await requires `--reason review` or `clarification`; clarification requires a
-short `--question`. Start clears current owner-wait details.
+short `--question`. Use either handoff during planning or implementation, then
+explicitly choose Plan, Prepare or Start. Each clears current owner-wait details.
 
 There is one worker and at most one running span per issue. Ending a process
 or editor session does not stop it. Supply the actual UTC `--at` to Pause, or
@@ -119,7 +123,7 @@ Normal title, prose, tag, relation and complete-draft edits preserve work data.
 
 ## Complete drafts
 
-`editor --stdin` provides schema-4 load, validate and complete-draft save requests;
+`editor --stdin` provides schema-5 load, validate and complete-draft save requests;
 the consuming project's user documentation owns the exact wire contract. Inspect
 `ok`/`code` in its JSON response even on exit 0. Retain the load version for stale
 save rejection. Validation publishes nothing and consumes no ID. Replacing a

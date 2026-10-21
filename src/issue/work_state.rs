@@ -6,6 +6,8 @@ use std::{fmt, str::FromStr};
 pub enum WorkStateKind {
     #[default]
     NotQueued,
+    Planning,
+    Prepared,
     Queued,
     InProgress,
     AwaitingOwner,
@@ -14,6 +16,8 @@ impl WorkStateKind {
     pub fn as_str(self) -> &'static str {
         match self {
             Self::NotQueued => "not-queued",
+            Self::Planning => "planning",
+            Self::Prepared => "prepared",
             Self::Queued => "queued",
             Self::InProgress => "in-progress",
             Self::AwaitingOwner => "awaiting-owner",
@@ -25,6 +29,8 @@ impl FromStr for WorkStateKind {
     fn from_str(value: &str) -> Result<Self, Self::Err> {
         match value {
             "not-queued" => Ok(Self::NotQueued),
+            "planning" => Ok(Self::Planning),
+            "prepared" => Ok(Self::Prepared),
             "queued" => Ok(Self::Queued),
             "in-progress" => Ok(Self::InProgress),
             "awaiting-owner" => Ok(Self::AwaitingOwner),
@@ -93,6 +99,12 @@ impl OwnerWait {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum WorkState {
+    Planning {
+        since: Option<WorkTime>,
+    },
+    Prepared {
+        since: Option<WorkTime>,
+    },
     Queued {
         since: Option<WorkTime>,
     },
@@ -107,6 +119,8 @@ pub enum WorkState {
 impl WorkState {
     pub fn kind(&self) -> WorkStateKind {
         match self {
+            Self::Planning { .. } => WorkStateKind::Planning,
+            Self::Prepared { .. } => WorkStateKind::Prepared,
             Self::Queued { .. } => WorkStateKind::Queued,
             Self::InProgress { .. } => WorkStateKind::InProgress,
             Self::AwaitingOwner { .. } => WorkStateKind::AwaitingOwner,
@@ -120,14 +134,18 @@ impl WorkState {
     }
     pub fn since(&self) -> Option<WorkTime> {
         match self {
-            Self::Queued { since }
+            Self::Planning { since }
+            | Self::Prepared { since }
+            | Self::Queued { since }
             | Self::InProgress { since }
             | Self::AwaitingOwner { since, .. } => *since,
         }
     }
     pub(crate) fn with_since(mut self, value: Option<WorkTime>) -> Self {
         match &mut self {
-            Self::Queued { since }
+            Self::Planning { since }
+            | Self::Prepared { since }
+            | Self::Queued { since }
             | Self::InProgress { since }
             | Self::AwaitingOwner { since, .. } => *since = value,
         }
