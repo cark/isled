@@ -99,8 +99,10 @@ Read their live help for options. Start selects In progress and opens a clock;
 `--no-clock` stops any running clock without creating a span. Pause stops timing
 without changing work state. Queue, unqueue and await also stop a running clock.
 Await requires `--reason review` or `clarification`; clarification requires a
-short `--question`. Use either handoff during planning or implementation, then
-explicitly choose Plan, Prepare or Start. Each clears current owner-wait details.
+short `--question`. Keep ordinary planning questions in Planning. Use
+Clarification when implementation needs an owner answer before it can continue;
+use Review for work ready for owner review. After the wait, explicitly choose
+Plan, Prepare or Start. Each clears current owner-wait details.
 
 There is one worker and at most one running span per issue. Ending a process
 or editor session does not stop it. Supply the actual UTC `--at` to Pause, or

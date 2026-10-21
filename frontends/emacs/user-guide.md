@@ -274,7 +274,8 @@ Press **`w`** on an issue to keep the next step and its work sessions together.
 
 Choose **Plan** (`P`) while discussing the approach, then **Mark prepared** (`m`)
 when it is settled enough to implement. Both stop any active timer and preserve
-history. Planning itself is untimed.
+history. Planning itself is untimed. Keep this state while discussing questions
+with the owner.
 
 Filter with `s:open w:planning` or `s:open w:prepared` to see these issues together.
 Queueing replaces the preparation stage. You can skip stages or return to them;
@@ -297,9 +298,11 @@ with Start to name an activity such as Implementation or Testing.
 ### Hand work over
 
 Choose **Ready for review** when the result needs a look, or **Ask a question**
-when a decision is missing. Both stop timing. The question stays with the issue
-until you choose the next stage. Use Plan to continue planning, Mark prepared
-when the approach is settled, or Start to begin implementation.
+when implementation needs an owner answer before it can continue. Ordinary
+planning questions stay in Planning. Both handoff actions stop timing. The
+question stays with the issue until you choose the next stage. Use Plan to
+continue planning, Mark prepared when the approach is settled, or Start to begin
+implementation.
 
 Headings show **Planning**, **Prepared**, **Queued**, **In progress**, **Question**
 or **Review**, with nonzero completed time. The heading's help text includes the pending question.

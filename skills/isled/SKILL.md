@@ -75,13 +75,17 @@ for state, owner questions and spans. Read live `help work` before transitions.
 For authorized planning, use `work plan ID`; when the approach is settled, use
 `work prepare ID`. Both are untimed and stop any running clock while keeping
 history. Queueing replaces preparation. Prepared does not imply dependency
-readiness or implementation authority. After an owner handoff, choose Plan to
-continue planning or Start to implement; Start never resumes a planning stage.
+readiness or implementation authority. Keep Planning throughout planning
+discussions, including questions to the owner; waiting for a planning answer
+does not call for Question or Awaiting owner.
 When beginning authorized implementation of a tracked issue, mark it In progress
 with `work start ID` before working. This starts timing; use `--no-clock` when
 the consuming workflow chooses state tracking alone. Pause when work actually
-stops. At an owner handoff, use `work await` with Review or Clarification as
-appropriate. Read-only inspection and brief status questions need no transition.
+stops. Use `work await --reason clarification` when implementation cannot continue
+without an owner answer, and `--reason review` when work is ready for owner review.
+After an owner wait, explicitly choose Plan to revisit the approach or Start to
+continue implementation; Start never resumes a planning stage. Read-only
+inspection and brief status questions need no transition.
 Current-state Since records real state or owner-wait-reason changes. Repeated
 actions, pause/resume and question edits retain it. Older records may have no
 Since; do not infer or backfill their age.

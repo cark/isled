@@ -25,6 +25,8 @@ isled work prepare 42
 the approach is settled enough to implement. Neither starts a timer; entering
 either stops an active timer and keeps its history.
 
+Keep the issue in Planning while discussing questions with the owner.
+
 Queueing replaces the preparation stage. Skip stages or revisit them as needed.
 Prepared does not mean prerequisites are complete or that implementation has
 been authorized. Those decisions belong to your workflow.
@@ -71,14 +73,14 @@ For review:
 isled work await 42 --reason review
 ```
 
-For a decision you need before continuing:
+For a decision you need before continuing implementation:
 
 ```console
 isled work await 42 --reason clarification --question 'Should this also run offline?'
 ```
 
 Clarification needs a non-empty question on one line. Review needs no question.
-Use the same handoff while planning or implementing. After an answer or review,
+Ordinary planning questions stay in Planning. After an answer or review,
 choose `work plan` to continue planning, `work prepare` when the approach is
 settled, or `work start` to implement. These actions clear the owner-wait details
 and keep completed spans.

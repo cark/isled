@@ -305,9 +305,10 @@ and dependency readiness so ordinary issue tracking needs no scheduling or clock
 
 The states are Not queued, Queued, In progress and Awaiting owner.
 Awaiting owner has a visible reason: Review means work ready for owner acceptance;
-Clarification means an answer is needed before work can continue. Entering either
-stops the active span. Distinguishing the reasons preserves the small state model
-while keeping review readiness separate from a task blocked on an owner answer.
+Clarification means implementation needs an owner answer before it can continue.
+Entering either stops the active span. Distinguishing the reasons preserves the
+small state model while keeping review readiness separate from a task blocked on
+an owner answer.
 Store Reason and Question as children of the Work state metadata entry so the
 current wait is readable as one group. Clarification requires a brief, non-empty
 Question there; supporting context may stay in Statement. This lets humans and
@@ -394,8 +395,11 @@ recognize than Planning and Planned.
 Both stages are untimed. Entering either stops an active work span and preserves
 the history; neither starts or resumes a clock. Do not add planning timer options
 in this scope. Start continues to select In progress with its existing timing
-behavior. Review and Question use the existing Awaiting owner state and reasons
-during preparation or implementation. After a handoff, explicitly choose Plan to
+behavior. Planning includes questions and discussion with the owner; waiting for
+a planning answer leaves the issue in Planning. Question uses Awaiting owner with
+Clarification when implementation cannot continue without an owner answer. Review
+marks work ready for owner review. These usage conventions add no transition
+restrictions to the CLI or frontend. After a handoff, explicitly choose Plan to
 continue planning or Start to begin implementation; Start does not infer a prior
 stage.
 
