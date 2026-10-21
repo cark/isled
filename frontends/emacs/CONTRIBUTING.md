@@ -136,6 +136,16 @@ python3 scripts/private-graphical-emacs.py \
   --screen 1080x680x24 --keep-success
 ```
 
+The live-heading clock check covers flat and hierarchical views, expanded bodies,
+hide/show, pause/resume, and stable navigation without per-tick data requests:
+
+```sh
+python3 scripts/private-graphical-emacs.py \
+  --script frontends/emacs/test/work-clock-graphical.el \
+  --load-path frontends/emacs --env "ISLED_TEST_PROGRAM=$PWD/target/debug/isled" \
+  --screen 1080x680x24 --keep-success
+```
+
 ### Interactive candidate previews
 
 For a requested review of a visible candidate on Linux, use
@@ -322,8 +332,11 @@ lint when submitting. Archive acceptance remains MELPA's decision.
 ## Code map
 
 - `isled-work-data.el` validates work summaries and complete spans and formats
-  completed-time labels. `isled-work.el` owns asynchronous work actions and
-  history buffers. Work state and clock invariants remain in Rust.
+  stable and live elapsed-time labels. `isled-work-display.el` owns visible-heading
+  clock overlays and their one-second timer; it never changes row text or requests
+  data. Loading presentation and window notifications reconcile its visible set;
+  hiding or closing a view releases the timer. `isled-work.el` owns asynchronous
+  work actions and history buffers. Work state and clock invariants remain in Rust.
 
 - `isled-cli.el` owns automatic setup and shared CLI readiness; `isled-executable.el`
   checks identity asynchronously and caches evidence only for unchanged files.

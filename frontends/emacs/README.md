@@ -162,7 +162,8 @@ starts another. **Work history** shows every span and their total. Use
 
 Headings keep it brief: **Planning**, **Prepared**, **Queued**, **In progress**,
 **Question** or **Review**,
-with completed time when there is some. Read the pending question in Work history.
+with elapsed work time. Running timers count up in the heading about once a second.
+Read the pending question in Work history.
 
 For a queue, filter with `s:open w:queued` or `s:open r:review`, then press
 **`S`** and choose **Oldest first**. The flat list puts the earliest arrivals

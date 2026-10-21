@@ -295,6 +295,10 @@ Each resumed session adds a span. Breaks stay out of the total. Repeating Start
 while timing keeps the same span; pause first to change its activity. Use `C-u`
 with Start to name an activity such as Implementation or Testing.
 
+While timing, the heading counts up about once a second, including earlier
+sessions: **In progress · 1h 02m 09s**. Pausing returns to the compact completed-time
+display. Start without timing keeps the heading still.
+
 ### Hand work over
 
 Choose **Ready for review** when the result needs a look, or **Ask a question**
@@ -305,7 +309,7 @@ continue planning, Mark prepared when the approach is settled, or Start to begin
 implementation.
 
 Headings show **Planning**, **Prepared**, **Queued**, **In progress**, **Question**
-or **Review**, with nonzero completed time. The heading's help text includes the pending question.
+or **Review**, with elapsed work time. The heading's help text includes the pending question.
 Use `s:open r:review` to find reviews, then `S` → **Oldest first** for arrival
 order. Hierarchy continues to follow dependencies.
 
@@ -313,7 +317,7 @@ order. Hierarchy continues to follow dependencies.
 
 **Work history** opens the question, numbered sessions, clock status and total.
 The total includes a running session at the moment you request it; reopen the
-report for an updated value. Headings show completed time only.
+report for an updated value. Live updates appear in issue headings only.
 
 **Since** is the time the issue entered its current state. Pause and resume keep
 it. Switching between Review and Question starts a new wait; editing the
@@ -708,7 +712,7 @@ Markdown faces.
 | Header errors and warnings | `isled-error-face`, `isled-warning-face` |
 | Issue ID base and ready, waiting or closed state | `isled-issue-id-face`, `isled-ready-issue-id-face`, `isled-waiting-issue-id-face`, `isled-closed-issue-id-face` |
 | Issue title, kind and kind brackets | `isled-issue-title-face`, `isled-issue-kind-face`, `isled-issue-kind-bracket-face` |
-| Work state and completed time | `isled-issue-work-face` |
+| Work state and elapsed time | `isled-issue-work-face` |
 | Expanded body, optional title background and ledger warning area | `isled-expanded-body-face`, `isled-panel-title-face`, `isled-panel-title-background-face`, `isled-ledger-warning-face` |
 | Panel bracket and rule | `isled-body-bracket-face`, `isled-panel-rule-face` |
 | Ready, waiting, closed and missing references | `isled-ready-reference-face`, `isled-waiting-reference-face`, `isled-closed-reference-face`, `isled-missing-target-reference-face` |

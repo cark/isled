@@ -69,6 +69,7 @@ PHASE is nil for all checks, static for compilation/lint, or tests for ERT."
                     "isled-sequence.el"
                     "isled-data.el"
                     "isled-windows.el"
+                    "isled-work-display.el"
                     "isled-viewport.el"
                     "isled-session.el"
                     "isled-navigation.el"
@@ -203,6 +204,7 @@ PHASE is nil for all checks, static for compilation/lint, or tests for ERT."
               (load (expand-file-name "isled-file-routing-test.el" test-directory) nil t)
               (load (expand-file-name "isled-file-visit-test.el" test-directory) nil t)
               (load (expand-file-name "isled-windows-test.el" test-directory) nil t)
+              (load (expand-file-name "isled-work-display-test.el" test-directory) nil t)
               (load (expand-file-name "isled-viewport-test.el" test-directory) nil t)
               (let* ((isled-process-function #'isled-test-process)
                      (isled-test-program program)

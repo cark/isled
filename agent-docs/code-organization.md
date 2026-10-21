@@ -470,6 +470,11 @@ view/history restoration; pure view functions and sections own list presentation
 and the expanded-row index belong to `isled-rows.el`; sections keeps
 index membership synchronized with logical folds. Retained heading values let row updates avoid rebuilding unchanged text. Standard search-reveal folding belongs to
 `isled-fold.el`, with temporary visibility distinct from expansion.
+`isled-work-display.el` owns live clock overlays and scheduling for visible
+headings. Loading and window notifications reconcile their presence; ticks only
+update display strings from typed work data, preserving static heading keys and
+row boundaries. See the [clock rationale](decisions.md#optional-issue-work-tracking)
+and [frontend code map](../frontends/emacs/CONTRIBUTING.md#code-map).
 `isled-viewport.el` activates newly needed cached body presentation over
 actual text-screen ranges before redisplay, without data requests. Applied
 properties remain cached, avoiding eviction-driven reflow. It also prepares one

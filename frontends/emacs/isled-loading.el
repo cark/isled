@@ -18,6 +18,7 @@
 (require 'isled-data)
 (require 'isled-session)
 (require 'isled-windows)
+(require 'isled-work-display)
 (require 'isled-viewport)
 (require 'isled-navigation)
 (require 'isled-filter-query)
@@ -300,6 +301,7 @@ GRAPH is the requested direction."
       (isled--restore-view-state destination)
       (isled--restore-window-anchors anchors))
     (isled-viewport-update)
+    (isled-work-display-update)
     (isled-expansion-complete)))
 
 (defun isled-loading-share (response)
@@ -319,6 +321,7 @@ GRAPH is the requested direction."
   (when (and isled-loading-dirty (isled-windows-visible))
     (isled-loading--present isled-loading-dirty (isled--window-anchors)))
   (isled-viewport-update)
+  (isled-work-display-update)
   (isled-loading-schedule))
 
 (defun isled-loading-schedule ()
@@ -346,6 +349,7 @@ GRAPH is the requested direction."
 (defun isled-loading-stop ()
   "Invalidate replies and timers on buffer death or a major-mode change."
   (isled-windows-stop)
+  (isled-work-display-stop)
   (isled-expansion-clear)
   (when isled-session
     (setq isled-loading-timer nil)

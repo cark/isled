@@ -105,14 +105,17 @@
          (max 0 (floor (float-time (time-subtract (or now (current-time)) start))))
        0)))
 
-(defun isled-work-data-duration (seconds)
-  "Format elapsed SECONDS as a compact human-readable duration."
-  (if (>= seconds 3600) (format "%dh %02dm" (/ seconds 3600) (% (/ seconds 60) 60))
+(defun isled-work-data-duration (seconds &optional running)
+  "Format elapsed SECONDS, keeping seconds beyond an hour when RUNNING."
+  (if (>= seconds 3600)
+      (concat (format "%dh %02dm" (/ seconds 3600) (% (/ seconds 60) 60))
+              (when running (format " %02ds" (% seconds 60))))
     (format "%dm %02ds" (/ seconds 60) (% seconds 60))))
 
-(defun isled-work-data-label (work)
-  "Return a compact state and nonzero completed time for WORK.
-Running elapsed time is available in Work history without a presentation timer."
+(defun isled-work-data-label (work &optional now)
+  "Return a compact state and completed time for WORK.
+With NOW, include the running span at that time and always show its seconds.
+Without NOW, return stable text suitable for heading change detection."
   (if (null work) ""
     (let* ((state (isled-work-data-state work))
            (label (pcase state
@@ -121,11 +124,13 @@ Running elapsed time is available in Work history without a presentation timer."
                     ("in-progress" "In progress")
                     ("awaiting-owner" (if (equal (isled-work-data-reason work) "review")
                                           "Review" "Question"))))
-           (seconds (isled-work-data-recorded-seconds work))
-           (timed (> seconds 0)))
+           (running (and now (isled-work-data-running-since work)))
+           (seconds (if running (isled-work-data-seconds work now)
+                      (isled-work-data-recorded-seconds work)))
+           (timed (or running (> seconds 0))))
       (if (and (string-empty-p label) (not timed)) ""
         (concat "  [" label (if (and timed (not (string-empty-p label))) " · " "")
-                (when timed (isled-work-data-duration seconds)) "]")))))
+                (when timed (isled-work-data-duration seconds running)) "]")))))
 
 (provide 'isled-work-data)
 ;;; isled-work-data.el ends here

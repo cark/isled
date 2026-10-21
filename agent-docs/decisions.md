@@ -367,8 +367,14 @@ state and span history. This keeps ordinary upgrades simple while avoiding silen
 loss of tracking data through an older tool.
 
 The [work tracking guide](../user-docs/work-tracking.md) owns implemented actions
-and correction syntax. Emacs headings show work state and completed time; Work
-history shows clock status and calculates the current running total.
+and correction syntax. Emacs headings show work state and elapsed time. While
+timing, visible headings update about once a second and retain seconds beyond an
+hour, giving the owner visible feedback that the clock is running. Display
+overlays preserve heading text and row positions; each tick derives the total
+from completed spans and the saved start, so delayed callbacks do not cause drift.
+Only visible running headings keep scheduling active, with no per-tick data I/O.
+Work history remains a report calculated when opened, keeping this feature
+focused on the headings where the owner watches progress.
 Snapshot/frontend schema 6 and editor schema 5 carry stable projections, without
 time passage changing hashes.
 

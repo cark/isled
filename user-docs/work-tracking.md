@@ -117,9 +117,14 @@ Press **`w`** on the issue for preparation, queueing, timers, owner waits and hi
 an activity.
 
 Headings show **Planning**, **Prepared**, **Queued**, **In progress**, **Question**
-or **Review**, plus nonzero completed time. **Work history** shows the pending question, Since,
-numbered spans and the total, including any running span at the moment you open
-it. It is a report, not a live stopwatch; reopen it for an updated total.
+or **Review**, with elapsed work time. While a timer runs, visible headings update
+about once a second, including seconds after an hour: **In progress · 1h 02m 09s**.
+The total includes earlier sessions. Stopping returns to the compact completed-time
+display; Start without timing does not tick.
+
+**Work history** shows the pending question, Since, numbered spans and the total,
+including any running span at the moment you open it. Reopen it for an updated
+total.
 
 Filter with `s:open w:planning`, `s:open w:prepared`, `s:open w:queued` or
 `s:open r:review`. Press **`S`** and choose **Oldest first** to see the complete matching queue in arrival order. You can
