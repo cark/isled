@@ -465,13 +465,16 @@ two-screen loading margins rounded outward to chunks across windows. Chunk range
 vector; they neither own cached content nor evict it.
 One shared pre-redisplay observer compares window signatures; it is removed when
 the last participating buffer unregisters, preserving other redisplay functions.
+Signatures include pixel dimensions, font metrics, face remapping and scrolling
+so text scaling can activate newly visible clocks without an existing timer.
 The controller owns interaction, canonical buffer identity, and successful
 view/history restoration; pure view functions and sections own list presentation. Indexed row positions
 and the expanded-row index belong to `isled-rows.el`; sections keeps
 index membership synchronized with logical folds. Retained heading values let row updates avoid rebuilding unchanged text. Standard search-reveal folding belongs to
 `isled-fold.el`, with temporary visibility distinct from expansion.
 `isled-work-display.el` owns live clock overlays and scheduling for visible
-headings. Loading and window notifications reconcile their presence; ticks only
+headings, measuring each window's current pixel layout to include scaled text
+and partial screen lines. Loading and window notifications reconcile their presence; ticks only
 update display strings from typed work data, preserving static heading keys and
 row boundaries. See the [clock rationale](decisions.md#optional-issue-work-tracking)
 and [frontend code map](../frontends/emacs/CONTRIBUTING.md#code-map).

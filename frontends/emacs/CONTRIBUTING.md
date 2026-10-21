@@ -146,6 +146,16 @@ python3 scripts/private-graphical-emacs.py \
   --screen 1080x680x24 --keep-success
 ```
 
+Clock viewport geometry has a separate regression check for smaller and larger
+text, split windows, partial lines, and timers waking or stopping after scaling:
+
+```sh
+python3 scripts/private-graphical-emacs.py \
+  --script frontends/emacs/test/work-clock-geometry-graphical.el \
+  --load-path frontends/emacs --load-path frontends/emacs/test \
+  --screen 1080x680x24 --keep-success
+```
+
 ### Interactive candidate previews
 
 For a requested review of a visible candidate on Linux, use
@@ -335,7 +345,9 @@ lint when submitting. Archive acceptance remains MELPA's decision.
   stable and live elapsed-time labels. `isled-work-display.el` owns visible-heading
   clock overlays and their one-second timer; it never changes row text or requests
   data. Loading presentation and window notifications reconcile its visible set;
-  hiding or closing a view releases the timer. `isled-work.el` owns asynchronous
+  pixel-based layout includes scaled text and partial lines. Font and scrolling
+  changes update visibility even while the timer is stopped; hiding or closing a
+  view releases the timer. `isled-work.el` owns asynchronous
   work actions and history buffers. Work state and clock invariants remain in Rust.
 
 - `isled-cli.el` owns automatic setup and shared CLI readiness; `isled-executable.el`

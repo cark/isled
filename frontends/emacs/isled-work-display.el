@@ -20,17 +20,27 @@
 (defvar-local isled-work-display--timer nil
   "One-shot timer for the next visible clock update.")
 
+(defun isled-work-display--window-end (window)
+  "Return the position after WINDOW's last visible screen line.
+Measure current layout, including text scaling and partial screen lines,
+without relying on geometry cached by an earlier redisplay."
+  (let* ((height (+ (window-body-height window t) (window-vscroll window t)))
+         ;; Skip to the last visible pixel; a zero measurement height stops
+         ;; layout there and returns the containing screen line's position.
+         (last-line (nth 2 (window-text-pixel-size
+                            window (cons (window-start window) (max 0 (1- height)))
+                            nil nil 0))))
+    (save-excursion
+      (goto-char last-line)
+      (vertical-motion 1 window)
+      (point))))
+
 (defun isled-work-display--visible ()
   "Return the set of running rows whose headings intersect visible windows."
   (let ((rows (make-hash-table :test #'eq)))
     (dolist (window (isled-windows-visible))
       (let* ((start (window-start window))
-             ;; `window-end' can still name the old buffer end before the
-             ;; first redisplay or just after a split.  Traverse one screen.
-             (end (save-excursion
-                    (goto-char start)
-                    (vertical-motion (window-body-height window) window)
-                    (point)))
+             (end (isled-work-display--window-end window))
              (first (isled-row-at start)))
         (when end
           (cl-loop for index from (if first (isled-row-index first) 0)

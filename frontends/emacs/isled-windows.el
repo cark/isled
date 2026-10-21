@@ -25,7 +25,7 @@
 (defvar-local isled-windows--notify nil
   "Callback for changes to the current buffer's displaying windows.")
 (defvar-local isled-windows--state nil
-  "Last observed windows, points, starts and body heights.")
+  "Last observed window positions, dimensions and text geometry.")
 
 (defconst isled-windows-chunk-size 32
   "Number of issue headings in one loading chunk.")
@@ -122,7 +122,10 @@ start and point so a destination outside the old window is never excluded."
         (isled-expansion-prune)
         (let ((state (mapcar (lambda (window)
                                (list window (window-point window) (window-start window)
-                                     (window-body-height window) (window-body-width window)
+                                     (window-body-height window t) (window-body-width window t)
+                                     (window-vscroll window t)
+                                     (window-font-height window) (window-font-width window)
+                                     (copy-tree face-remapping-alist) line-spacing
                                      (buffer-chars-modified-tick)))
                              (isled-windows-visible))))
           (unless (equal state isled-windows--state)
