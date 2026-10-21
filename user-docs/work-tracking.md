@@ -8,11 +8,10 @@ Tracking is optional. An ordinary issue is **Not queued**, with no recorded time
 There is one worker and at most one running timer per issue; different issues
 can be worked on in parallel.
 
-Planning and Prepared require the 0.36.0 CLI and matching frontend; until that
-release is published, use a matching source build. Older work tracking and
-arrival-order queries are available from 0.35.0. Older tools cannot read records
-using the new states. Before downgrading, use the new CLI to select an older
-supported state, such as Queued or Not queued. No conversion is needed on upgrade.
+Planning and Prepared require the 0.36.0 CLI and matching frontend. Older tools
+cannot read records using the new states. Before downgrading, use the new CLI to
+select an older supported state, such as Queued or Not queued. No conversion is
+needed on upgrade.
 
 ## Prepare an issue
 

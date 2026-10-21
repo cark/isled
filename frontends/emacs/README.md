@@ -54,7 +54,7 @@ They support the `release` branch, a fixed tag or commit, and development on
 
 ### From the release archive
 
-Download **`isled-0.35.0.tar`** from the [release page](https://github.com/cark/isled/releases).
+Download **`isled-0.36.0.tar`** from the [release page](https://github.com/cark/isled/releases).
 Make the dependencies available through your configured GNU/NonGNU ELPA or
 MELPA archives, and allow upgrades to bundled packages:
 
@@ -153,8 +153,7 @@ question, or request review.
 
 **Plan** marks an approach being discussed. **Mark prepared** means it is settled
 enough to implement. Both are untimed. Find them with `w:planning` or `w:prepared`;
-queueing replaces the preparation stage. These actions require the upcoming
-0.36.0 release or a matching source build.
+queueing replaces the preparation stage.
 
 **Start / resume** starts a timer. **Pause clock** ends that session; resuming
 starts another. **Work history** shows every span and their total. Use

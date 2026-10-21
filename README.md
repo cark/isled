@@ -117,8 +117,7 @@ and forgotten timers.
 
 Use `isled work plan 1` while discussing an approach and `isled work prepare 1`
 when it is settled. Both are untimed; queueing replaces the preparation stage.
-Planning and Prepared need the upcoming 0.36.0 release or a matching source build.
-Earlier work tracking and queue ordering are available from 0.35.0. Keep the CLI
+Planning, Prepared and live heading timers are available in 0.36.0. Keep the CLI
 and Emacs frontend together.
 
 ## Requirements
