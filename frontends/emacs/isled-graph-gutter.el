@@ -35,7 +35,7 @@ Restore the previous wrapping setting once the gutter fits or graph mode ends."
   (let ((overflow
          (and isled-graph-direction isled-graph-layout
               (seq-some (lambda (window)
-                          (>= (1+ (* 2 (isled-graph-plan-lanes (isled-graph-display-plan isled-graph-layout))))
+                          (>= (1+ (* 2 (isled-graph-drawing-lanes (isled-graph-plan-drawing isled-graph-layout))))
                               (window-body-width window)))
                         (isled-windows-visible)))))
     (cond (overflow
@@ -48,7 +48,7 @@ Restore the previous wrapping setting once the gutter fits or graph mode ends."
 
 (defun isled-graph-gutter--space ()
   "Return a constant-size prefix reserving the current graph width."
-  (let ((width (1+ (* 2 (isled-graph-plan-lanes (isled-graph-display-plan isled-graph-layout))))))
+  (let ((width (1+ (* 2 (isled-graph-drawing-lanes (isled-graph-plan-drawing isled-graph-layout))))))
     (unless (equal (get-text-property 0 'display (or isled-graph-gutter--blank " "))
                    `(space :width ,width))
       (setq isled-graph-gutter--blank

@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 
 /// Version of the layout algorithm and its experimental stored representation.
-pub const VERSION: u32 = 4;
+pub const VERSION: u32 = 5;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub enum Direction {

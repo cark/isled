@@ -57,7 +57,7 @@
         };
         isled = pkgs.rustPlatform.buildRustPackage {
           pname = "isled";
-          version = "0.36.0";
+          version = "0.37.0";
           buildFeatures = [ "release-binary" ];
           src = packageSource;
           cargoLock.lockFile = ./Cargo.lock;

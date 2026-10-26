@@ -104,7 +104,7 @@ src/
 ├── graph_layout/    # frontend layout engine and retained diagnostic experiment
 │   ├── ordering.rs  # ID-placed components, following narrower newly ready branches
 │   ├── plan.rs      # sparse destination lanes, stored-plan validation and indexing
-│   ├── drawing.rs   # exact shared destination groups and physical drawing tracks
+│   ├── drawing.rs   # complete-set sharing and sparse right/down physical routes
 │   ├── range.rs     # bounded rows with entering/leaving continuation state
 │   ├── text.rs      # width-bounded diagnostic glyph rendering
 │   ├── store.rs     # experimental preview cache; not used by frontend requests

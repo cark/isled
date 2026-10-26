@@ -49,14 +49,21 @@ fn graph_is_opt_in_and_orders_both_directions_without_body_reads() {
         assert_eq!(rows[source]["lane"], 0);
         assert_ne!(rows[target]["lane"], 0);
         let drawing = &value["graph"]["plan"]["drawing"];
+        assert_eq!(drawing["version"], 1);
         let steps = drawing["steps"].as_array().unwrap();
         assert_eq!(steps.len(), rows.len());
         assert_eq!(steps[source]["row"], source);
         assert_eq!(steps[target]["row"], target);
         assert_eq!(steps[source]["lane"], 0);
-        assert_eq!(steps[target]["start"], source);
-        // Ordinary steps reuse semantic edges rather than duplicating them.
-        assert!(steps.iter().all(|step| step.get("targets").is_none()));
+        assert!(
+            drawing["routes"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|route| route["source"] == source
+                    && route["target"] == target
+                    && route["lane"] == steps[target]["lane"])
+        );
     }
 }
 

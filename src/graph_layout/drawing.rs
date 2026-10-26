@@ -1,170 +1,235 @@
-//! Sparse drawing steps, sharing only complete sets of outgoing dependencies.
+//! Sparse right/down routes, with sharing restricted to complete target sets.
 use super::Plan;
 use serde::Serialize;
 use std::collections::{BTreeSet, HashMap};
 
+/// First versioned drawing format; replaces the old unversioned lane steps.
+pub const VERSION: u32 = 1;
+
 #[derive(Debug, Serialize)]
 pub struct Drawing {
+    version: u32,
     lanes: usize,
     steps: Vec<Step>,
+    routes: Vec<Route>,
 }
 
 #[derive(Debug, Serialize)]
 struct Step {
-    /// Semantic row, or a routing-only shared junction.
     row: Option<usize>,
     lane: usize,
-    start: Option<usize>,
-    /// Shared junction step, only present on participating source rows.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    join: Option<usize>,
-    /// Semantic destinations, only present on shared junctions.
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    targets: Vec<usize>,
-    #[serde(skip)]
-    outgoing: Vec<usize>,
 }
 
-impl Step {
-    fn new(row: Option<usize>, targets: Vec<usize>) -> Self {
-        Self {
-            row,
-            lane: 0,
-            start: None,
-            join: None,
-            targets,
-            outgoing: Vec::new(),
-        }
-    }
+/// Right from source, down this track, then right to target.
+#[derive(Debug, Serialize)]
+struct Route {
+    source: usize,
+    target: usize,
+    lane: usize,
+}
+
+struct Vertex {
+    row: Option<usize>,
+    targets: Vec<usize>,
 }
 
 impl Plan {
-    /// Drawing metadata supplements the unchanged direct-edge plan. Each group
-    /// shares its complete outgoing set, never just overlapping destinations.
+    /// O((V + E) log E) time and O(V + E) space; no glyph matrix or search.
     pub fn drawing(&self) -> Drawing {
-        let groups = shared_sources(self);
-        let mut endings = vec![None; self.rows().len()];
-        let mut membership = vec![None; self.rows().len()];
-        for (group, sources) in groups.iter().enumerate() {
-            endings[*sources.last().unwrap()] = Some(group);
-            for &source in sources {
-                membership[source] = Some(group);
-            }
-        }
-        let mut positions = Vec::with_capacity(self.rows().len());
-        let mut junctions = vec![0; groups.len()];
-        let mut steps = Vec::with_capacity(self.rows().len() + groups.len());
-        for (row, group) in endings.into_iter().enumerate() {
-            positions.push(steps.len());
-            steps.push(Step::new(Some(row), Vec::new()));
-            if let Some(group) = group {
-                junctions[group] = steps.len();
-                steps.push(Step::new(None, self.rows()[row].targets().to_vec()));
-            }
-        }
-        for step in &mut steps {
-            if let Some(row) = step.row {
-                step.join = membership[row].map(|group| junctions[group]);
-                step.outgoing = match step.join {
-                    Some(junction) => vec![junction],
-                    None => self.rows()[row]
-                        .targets()
-                        .iter()
-                        .map(|&r| positions[r])
-                        .collect(),
-                };
-            } else {
-                step.outgoing = step.targets.iter().map(|&r| positions[r]).collect();
-            }
-        }
-        let lanes = place_lanes(&mut steps, self.lanes());
-        Drawing { lanes, steps }
+        place(&vertices(self))
     }
 }
 
-fn shared_sources(plan: &Plan) -> Vec<Vec<usize>> {
+/// Factor identical complete target sets through one routing-only fork.
+fn vertices(plan: &Plan) -> Vec<Vertex> {
     let mut lookup = HashMap::new();
     let mut groups: Vec<Vec<usize>> = Vec::new();
     for (source, row) in plan.rows().iter().enumerate() {
-        if row.targets().len() < 2 {
-            continue;
+        if row.targets().len() > 1 {
+            let group = *lookup.entry(row.targets()).or_insert_with(|| {
+                groups.push(Vec::new());
+                groups.len() - 1
+            });
+            groups[group].push(source);
         }
-        let group = *lookup.entry(row.targets()).or_insert_with(|| {
-            groups.push(Vec::new());
-            groups.len() - 1
+    }
+    let mut endings = vec![None; plan.rows().len()];
+    let mut membership = vec![None; plan.rows().len()];
+    for (group, sources) in groups.iter().enumerate().filter(|(_, s)| s.len() > 1) {
+        endings[*sources.last().unwrap()] = Some(group);
+        for &source in sources {
+            membership[source] = Some(group);
+        }
+    }
+    let mut positions = Vec::new();
+    let mut junctions = vec![0; groups.len()];
+    let mut result = Vec::new();
+    for (row, group) in endings.into_iter().enumerate() {
+        positions.push(result.len());
+        result.push(Vertex {
+            row: Some(row),
+            targets: Vec::new(),
         });
-        groups[group].push(source);
-    }
-    groups
-        .into_iter()
-        .filter(|sources| sources.len() > 1)
-        .collect()
-}
-
-fn place_lanes(steps: &mut [Step], preferred_width: usize) -> usize {
-    let mut lanes = usize::from(!steps.is_empty());
-    let mut free = BTreeSet::new();
-    for source in 0..steps.len() {
-        let lane = steps[source].lane;
-        if lane > 0 {
-            free.insert(lane);
-        }
-        let targets: Vec<_> = steps[source]
-            .outgoing
-            .iter()
-            .copied()
-            .filter(|&target| steps[target].start.is_none())
-            .collect();
-        let allocated =
-            allocate_tracks(&mut free, &mut lanes, lane, targets.len(), preferred_width);
-        // Visit the right-hand branch first, leaving later branches on its left.
-        for (target, lane) in targets.into_iter().zip(allocated.into_iter().rev()) {
-            steps[target].lane = lane;
-            steps[target].start = Some(source);
+        if let Some(group) = group {
+            junctions[group] = result.len();
+            result.push(Vertex {
+                row: None,
+                targets: plan.rows()[row].targets().to_vec(),
+            });
         }
     }
-    lanes
+    for vertex in &mut result {
+        vertex.targets = if let Some(row) = vertex.row {
+            membership[row].map_or_else(
+                || {
+                    plan.rows()[row]
+                        .targets()
+                        .iter()
+                        .map(|&r| positions[r])
+                        .collect()
+                },
+                |group| vec![junctions[group]],
+            )
+        } else {
+            vertex.targets.iter().map(|&r| positions[r]).collect()
+        };
+    }
+    result
 }
 
-fn allocate_tracks(
+fn place(vertices: &[Vertex]) -> Drawing {
+    let mut incoming = vec![BTreeSet::new(); vertices.len()];
+    let reserve = root_pressure(vertices);
+    let mut free: BTreeSet<_> = (1..=reserve).collect();
+    let mut lanes = if vertices.is_empty() { 0 } else { reserve + 1 };
+    let mut nodes = Vec::with_capacity(vertices.len());
+    let mut routes = Vec::new();
+    let mut split = Vec::new();
+    for (source, vertex) in vertices.iter().enumerate() {
+        let lane = incoming[source].last().copied().unwrap_or(0);
+        nodes.push(lane);
+        // A routing-only merge and fork occupy separate lines. Issue nodes
+        // already separate their own incoming and outgoing dependencies.
+        split.push(vertex.row.is_none() && incoming[source].len() > 1);
+        free.extend(incoming[source].iter().copied());
+        let shared = if let [target] = vertex.targets[..] {
+            incoming[target].range(lane.max(1)..).next().copied()
+        } else {
+            None
+        };
+        let mut allocated = shared.map_or_else(
+            || allocate(&mut free, &mut lanes, lane, vertex.targets.len(), reserve),
+            |track| vec![track],
+        );
+        allocated.sort_unstable();
+        for (&target, track) in vertex.targets.iter().zip(allocated.into_iter().rev()) {
+            incoming[target].insert(track);
+            routes.push(Route {
+                source,
+                target,
+                lane: track,
+            });
+        }
+    }
+    physical_steps(vertices, nodes, routes, split, lanes)
+}
+
+fn physical_steps(
+    vertices: &[Vertex],
+    nodes: Vec<usize>,
+    routes: Vec<Route>,
+    split: Vec<bool>,
+    lanes: usize,
+) -> Drawing {
+    let mut starts = Vec::new();
+    let mut ends = Vec::new();
+    let mut steps = Vec::new();
+    let mut physical = Vec::new();
+    for (index, vertex) in vertices.iter().enumerate() {
+        starts.push(steps.len());
+        steps.push(Step {
+            row: vertex.row,
+            lane: nodes[index],
+        });
+        if split[index] {
+            physical.push(Route {
+                source: steps.len() - 1,
+                target: steps.len(),
+                lane: nodes[index],
+            });
+            steps.push(Step {
+                row: None,
+                lane: nodes[index],
+            });
+        }
+        ends.push(steps.len() - 1);
+    }
+    physical.extend(routes.into_iter().map(|r| Route {
+        source: ends[r.source],
+        target: starts[r.target],
+        lane: r.lane,
+    }));
+    physical.sort_unstable_by_key(|r| (r.source, r.target));
+    Drawing {
+        version: VERSION,
+        lanes,
+        steps,
+        routes: physical,
+    }
+}
+
+fn allocate(
     free: &mut BTreeSet<usize>,
     lanes: &mut usize,
     source: usize,
     count: usize,
-    preferred_width: usize,
+    reserve: usize,
 ) -> Vec<usize> {
-    if count == 0 {
-        return Vec::new();
+    let mut result = Vec::with_capacity(count);
+    for _ in 0..count {
+        let available = if source == 0 {
+            free.range(..=reserve)
+                .next_back()
+                .or_else(|| free.first())
+                .copied()
+        } else {
+            free.range(source..).next().copied()
+        };
+        let lane = available.unwrap_or_else(|| {
+            let lane = *lanes;
+            *lanes += 1;
+            lane
+        });
+        free.remove(&lane);
+        result.push(lane);
     }
-    let above = source.max(1);
-    let below = source.checked_sub(count - 1).filter(|&start| start > 0);
-    let start = std::iter::once(above)
-        .chain(below)
-        .filter(|&start| (start..start + count).all(|lane| lane >= *lanes || free.contains(&lane)))
-        // The direct-edge plan already provides a useful width allowance.
-        // Prefer rightward splits within it, but reuse a block below the source
-        // before growing beyond it on consecutive diamonds or shared layers.
-        .min_by_key(|&start| preferred_width.max(start + count));
-    if let Some(start) = start {
-        let result: Vec<_> = (start..start + count).collect();
-        for lane in &result {
-            free.remove(lane);
+    result
+}
+
+/// Simultaneous root tracks; singleton routes to one target may share a track.
+fn root_pressure(vertices: &[Vertex]) -> usize {
+    let mut incoming = vec![false; vertices.len()];
+    for vertex in vertices {
+        for &target in &vertex.targets {
+            incoming[target] = true;
         }
-        *lanes = (*lanes).max(start + count);
-        result
-    } else {
-        let mut result: Vec<_> = (0..count)
-            .map(|_| {
-                free.pop_first().unwrap_or_else(|| {
-                    let lane = *lanes;
-                    *lanes += 1;
-                    lane
-                })
-            })
-            .collect();
-        result.sort_unstable();
-        result
     }
+    let mut endings = vec![0; vertices.len()];
+    let mut singletons = BTreeSet::new();
+    let (mut active, mut maximum) = (0, 0);
+    for (source, vertex) in vertices.iter().enumerate() {
+        active -= endings[source];
+        if !incoming[source] {
+            for &target in &vertex.targets {
+                if vertex.targets.len() > 1 || singletons.insert(target) {
+                    active += 1;
+                    endings[target] += 1;
+                }
+            }
+        }
+        maximum = maximum.max(active);
+    }
+    maximum
 }
 
 #[cfg(test)]

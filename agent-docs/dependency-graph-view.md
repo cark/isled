@@ -43,8 +43,8 @@ column one therefore never imply an edge. Roots are determined from the selected
 visible graph, subject to the strict selection rules below.
 
 Consecutive circles in an active higher lane express a straight chain without
-an extra connector-only row between headings. Add routing rows only where a
-horizontal connection is needed for a branch, join or lane change. Rounded corners
+an extra connector-only row between headings. Put horizontal connections on headings where possible; add routing rows when
+a shared merge and fork need separate lines. Rounded corners
 and directional junctions express the actual direct edges; lane reuse must not
 create apparent connections. This notation replaces
 the reviewed candidate's routing row after every heading as too much vertical
@@ -60,43 +60,40 @@ Forbid four-way junctions (`┼`). Separate a merge followed by a split onto
 distinct routing rows, using corners and T junctions so readers can follow one
 operation at a time. The occasional extra routing line is preferable to an
 ambiguous intersection; its frequency on representative ledgers is not yet
-measured. For the demo, both 0002 and 0004 feed both 0005 and 0008:
+measured. For example, both 0002 and 0004 feed both 0005 and 0008:
 
 ```text
-○              0001 Contract
-╰──┬──╮
-   │  ○        0002 Rust layout
-   ○  │        0004 Emacs gutter
-   ╰──┤
-      ├──╮
-      │  ○     0008 Performance
-      ○  │     0005 Integration
+○─┬─╮    0001 Contract
+  │ ○    0002 Rust layout
+  ○─┤    0004 Emacs gutter
+    ├─╮
+    │ ○  0005 Integration
+    ○    0008 Performance
 ```
 
 Shared routing segments are allowed only when they preserve exactly the actual
 direct dependencies. Joining then splitting must never imply a dependency that
 does not exist. Routing junctions are not additional issue nodes. Within a
 connected group, lane placement and topologically valid row ordering may favor
-clear routing over ID order, as when the demo places 0008 before 0005. Group
+branch continuity over global ID order. Group
 placement by smallest ID remains unchanged.
 
 The implementation groups sources only when their complete destination sets
 are identical. This conservative rule makes the shared segment's meaning exact
 without searching for arbitrary overlapping subgraphs. Rust assigns the extra
-routing steps and tracks; Emacs separates their merge and split strokes into
-horizontal lines. Newly ready work follows issue-ID order, continuing those
+routing steps and tracks, including separate merge and fork lines; Emacs paints
+those physical routes. Newly ready work follows issue-ID order, continuing those
 branches before returning to another ready root. Outgoing edge counts do not
 determine branch order: shared prerequisites can have more targets while still
 belonging to the same work stream.
-Drawing placement uses the direct-edge plan's width as a routing allowance:
-prefer rightward splits within it, then reuse free columns before widening.
-This preserves the demo's clear junctions without making repeated diamonds
-or shared layers drift continually to the right.
+Drawing placement reserves space for overlapping roots, places earlier branches
+on the right, and reuses free tracks only at or right of the source. It never
+moves a continuation left to save width. Repeated diamonds and shared layers
+may therefore drift right. A singleton destination can join an existing track;
+partial multi-target overlap keeps its incoming branches separate.
 
-The current renderer interrupts the vertical stroke at non-joining crossings
-and retains the horizontal stroke. The [next drawing revision](#next-drawing-revision-not-implemented)
-replaces this convention with an explicit crossing glyph. Avoid crossings where
-practical; arbitrary DAGs are not promised a crossing-free layout.
+`╪` marks every non-joining crossing. Avoid crossings where practical; arbitrary
+DAGs are not promised a crossing-free layout.
 
 ### Bodies, ordering and readiness
 
@@ -128,9 +125,11 @@ measured layout serve ordinary graphs without delaying the feature for exception
 shapes. Bounded loading, transport and responsiveness requirements still apply;
 accepting awkward appearance does not establish acceptable rendering cost.
 
-## Next drawing revision (not implemented)
+<a id="next-drawing-revision-not-implemented"></a>
 
-Every directed route in the next revision moves **right or down, never left or
+## Right/down drawing revision
+
+Every directed route moves **right or down, never left or
 up**, including routes on connector-only rows. Nodes and junctions receive from
 above or the left and send below or to the right. In dependents-first mode the
 semantic direction reverses, but the drawing still flows right/down toward the
@@ -176,13 +175,12 @@ over false connections or misleading branch ownership. Exact compactness and
 universal branch locality are not promised.
 
 Retain the window-independent Rust plan and visible-region Emacs painting.
-Implementation acceptance must check final glyph paths as well as logical edges,
+Implementation acceptance checks final glyph paths as well as logical edges,
 in both directions and with filtering. Include shared prerequisites, repeated
 diamonds, crossings between adjacent nodes, and expanded/wrapped bodies. Check
 graphical and terminal Emacs, then measure layout, payload, painting, scrolling
-and expansion on ordinary and difficult 5,000-issue shapes. Actual rendering and
-performance remain implementation work; any necessary wire change needs its
-own compatibility decision.
+and expansion on ordinary and difficult 5,000-issue shapes. The graph-only wire decision is recorded below; readability and representative
+performance remain distinct acceptance checks.
 
 ## Accepted selection
 
@@ -250,9 +248,10 @@ are not a current baseline or proof of another platform's behavior.
 
 ## Rust first pass and caching direction
 
-Rust owns graph layout independently of Emacs. The inspectable
-[text preview](../src/graph_layout/preview.rs) allows reviewing branches and joins
-without a graphical session.
+Rust owns graph layout independently of Emacs. The experimental
+[text preview](../src/graph_layout/preview.rs) inspects logical lane ranges, not
+the frontend's drawing grammar. The shared drawing fixtures and ERT glyph reader
+exercise the actual frontend routes.
 
 The recommended boundary is a window-independent Rust layout plan: ordered
 issue IDs, node lanes, branches, joins and continuing lanes. Emacs turns that
@@ -262,8 +261,9 @@ Rust does not need Emacs window dimensions or body text to choose logical lanes.
 
 Prepare the whole selected graph in Rust, regardless of which bodies Emacs has
 loaded. The wire interface sends all selected compact headings but only
-requested bodies. Compact graph rows carry node lanes, direct target row indices
-and each target's earliest source. Emacs indexes continuing lane intervals once,
+requested bodies. Semantic graph rows carry direct target indices and the original logical lanes.
+Versioned drawing steps and routes carry physical geometry. Emacs validates
+their exact semantic paths and builds an interval tree once,
 then paints only nearby rows without retaining a nodes-times-lanes glyph matrix.
 Emacs must not reconstruct missing graph structure from body requests.
 
@@ -286,6 +286,12 @@ the earlier proposed production caching direction; there is no need to integrate
 the experimental store now.
 
 ## Accepted frontend compatibility boundary
+
+The 0.37.0 pair replaces the old unversioned drawing payload with sparse version-1
+steps and routes. The maintainer approved requiring matching CLI and frontend
+versions, rejecting older drawing data without a compatibility renderer. Ordinary
+CLI commands, issue files, complete snapshots and flat data stay compatible.
+
 
 Extend the existing schema-3 bounded frontend protocol additively. Existing
 flat-view requests retain their behavior, and graph layout data is returned only

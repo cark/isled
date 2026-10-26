@@ -8,6 +8,7 @@
 (require 'isled-browser)
 (require 'isled-view-test)
 (require 'isled-loading-test)
+(require 'isled-graph-fixtures)
 
 (defun isled-graph-test--diamond ()
   "Return the canonical four-row diamond layout."
@@ -19,10 +20,8 @@
 
 (ert-deftest isled-graph-validates-lanes-routes-and-identities ()
   (let ((plan (isled-graph--decode-plan (isled-graph-test--diamond))))
-    (should (equal (isled-graph-continuing plan 0) nil))
-    (should (equal (isled-graph-continuing plan 1) '(1 2)))
-    (should (equal (isled-graph-continuing plan 3) '(1)))
-    (should (equal (isled-graph-continuing plan 4) nil)))
+    (should (equal (gethash "0004" (isled-graph-plan-index plan)) 3))
+    (should (equal (isled-graph-row-targets (aref (isled-graph-plan-rows plan) 0)) '(1 2))))
   (dolist (mutation '((0 id "0000") (1 id "0001") (0 lane 3)
                        (0 targets (1 1)) (0 targets (4)) (1 targets (0))
                        (3 start 0) (2 lane 1) (0 filtered_prerequisites -1)
@@ -37,12 +36,12 @@
     (isled-mode)
     (setq isled--snapshot (isled-view-test--open-snapshot "0001" "0002" "0003" "0004")
           isled-graph-direction 'prerequisites isled-graph-hash "0000000000000001"
-          isled-graph-layout (isled-graph--decode-plan (isled-graph-test--diamond)))
+          isled-graph-layout (isled-graph-fixtures-plan "diamond"))
     (isled--render)
     (cl-letf (((symbol-function 'isled-windows-visible) (lambda () (list (selected-window)))))
       (isled-graph-gutter-update))
-    (should (equal (substring-no-properties (isled-graph-glyphs-heading (isled-graph-gutter--strings 0))) "○      "))
-    (should (equal (substring-no-properties (isled-graph-glyphs-connector (isled-graph-gutter--strings 2))) "  ├─╯  "))
+    (should (equal (substring-no-properties (isled-graph-glyphs-heading (isled-graph-gutter--strings 0))) "○─┬─╮  "))
+    (should (equal (substring-no-properties (isled-graph-glyphs-heading (isled-graph-gutter--strings 2))) "  ○─┤  "))
     (let ((plan isled-graph-layout) (row (aref isled-rows 1)))
       (isled-sections-show row)
       (should (string-prefix-p "  │ │  " (get-text-property
@@ -55,7 +54,7 @@
       (let ((next (aref isled-rows 2)))
         (should (equal (substring-no-properties
                         (overlay-get (isled-row-heading-background next) 'before-string))
-                       "  │ ○  ")))
+                       "  ○─┤  ")))
       (should-not (overlay-get (isled-row-heading-background row) 'after-string))
       ;; Repeated styling neither duplicates graph strings nor changes row text.
       (let ((text (buffer-string))
@@ -78,9 +77,13 @@
                                               (start . ,(if (zerop index) :json-null (1- index)))
                                               (targets . ,(when (< (1+ index) count)
                                                             (list (1+ index))))))))))
+      (setf (alist-get 'drawing wire)
+            `((version . 1) (lanes . 2)
+              (steps . ,(cl-loop for index below count collect `((row . ,index) (lane . ,(if (zerop index) 0 1)))))
+              (routes . ,(cl-loop for index below (1- count) collect `((source . ,index) (target . ,(1+ index)) (lane . 1))))))
       (setq isled--snapshot (apply #'isled-view-test--open-snapshot ids)
             isled-graph-direction 'prerequisites isled-graph-hash "0000000000000001"
-            isled-graph-layout (isled-graph--decode-plan wire))
+            isled-graph-layout (isled-graph-fixtures-decode wire))
       (isled--render)
       (cl-letf (((symbol-function 'isled-windows-visible) (lambda () (list (selected-window))))
                 ((symbol-function 'window-body-height) (lambda (&rest _) 10)))
@@ -95,8 +98,7 @@
           (should (= (length (overlay-get (isled-row-heading-background first) 'before-string)) 1))
           ;; Offscreen placeholders preserve the same number of routing rows.
           (should (equal (buffer-substring-no-properties (isled-row-heading-end first)
-                                                         (isled-row-content first)) " \n"))
-          (should (= (length (get-text-property (isled-row-heading-end first) 'display)) 1))
+                                                         (isled-row-content first)) ""))
           (should-not (overlay-get (isled-row-heading-background first) 'after-string)))))))
 
 (ert-deftest isled-graph-missing-layout-keeps-the-last-good-view ()
@@ -152,7 +154,7 @@
   (isled-loading-test--with-displayed-buffer
     (isled-mode)
     (setq isled-graph-direction 'prerequisites
-          isled-graph-layout (make-isled-graph-plan :lanes 50))
+          isled-graph-layout (make-isled-graph-plan :drawing (make-isled-graph-drawing :lanes 50)))
     (cl-letf (((symbol-function 'window-body-width) (lambda (&rest _) 80)))
       (isled-graph-gutter-overflow)
       (should truncate-lines))
@@ -161,7 +163,7 @@
       (should-not truncate-lines))
     (cl-letf (((symbol-function 'window-body-width) (lambda (&rest _) 80)))
       (isled-graph-gutter-overflow)
-      (setq isled-graph-layout (make-isled-graph-plan :lanes 1))
+      (setq isled-graph-layout (make-isled-graph-plan :drawing (make-isled-graph-drawing :lanes 1)))
       (isled-graph-gutter-overflow)
       (should-not truncate-lines))))
 
@@ -255,12 +257,13 @@
       (delete-directory root t))))
 
 (ert-deftest isled-graph-cut-threads-retain-circles-and-semantic-counts ()
-  (let* ((wire '((lanes . 1)
+  (let* ((wire '((drawing . ((version . 1) (lanes . 1) (steps . (((row . 0) (lane . 0)) ((row . 1) (lane . 0)))) (routes . nil)))
+                 (lanes . 1)
                  (rows . (((id . "0001") (lane . 0) (start . :json-null) (targets . nil)
                            (filtered_prerequisites . 1) (filtered_dependents . 2))
                           ((id . "0002") (lane . 0) (start . :json-null) (targets . nil)
                            (filtered_prerequisites . 0) (filtered_dependents . 0))))))
-         (isled-graph-layout (isled-graph--decode-plan wire)))
+         (isled-graph-layout (isled-graph-fixtures-decode wire)))
     (let ((row (aref (isled-graph-plan-rows isled-graph-layout) 0)))
       (should (= (isled-graph-row-filtered-prerequisites row) 1))
       (should (= (isled-graph-row-filtered-dependents row) 2)))

@@ -1,4 +1,5 @@
-//! Width-bounded diagnostic glyph rendering, separate from logical lane placement.
+//! Legacy experimental logical-range preview, not the frontend drawing grammar.
+//! Retained for inspecting the standalone range/cache experiment.
 use super::{LayoutError, LayoutRange};
 use std::collections::BTreeMap;
 

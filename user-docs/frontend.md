@@ -199,31 +199,40 @@ component, dependency order takes precedence and newly unblocked branches are
 followed first, using issue ID among nodes unblocked together. The number of
 outgoing edges does not determine which branch comes first.
 
-Lane zero is reserved for roots (`start: null`); incoming tracks
-and their terminal issues occupy higher lanes. Algorithm changes invalidate the
-graph token; the branch-order revision uses algorithm version 4.
+Lane zero is reserved for roots (`start: null`); incoming tracks and their
+terminal issues occupy higher lanes. Algorithm changes invalidate the graph
+token; the right/down drawing revision uses algorithm version 5.
 
-`drawing` contains its own `lanes` count and ordered `steps`. Each real step has
-`row` (an index into `plan.rows`), `lane`, and `start` (the earliest incoming
-**step index**, or null). Real rows occur exactly once and in semantic row order.
-Ordinary steps derive outgoing destinations from that row's `targets`, mapped
-to step indices; they do not repeat the edge list on the wire.
+### Drawing routes
 
-### Drawing junctions
+The paired 0.37.0 CLI and frontend replace the old unversioned drawing format.
+`drawing.version` is `1`; older formats are rejected with an instruction to use
+matching versions. Flat data, complete snapshots and issue files are unchanged.
 
-Sources with identical sets of at least two destinations may instead have
-`join`, the index of a later routing-only step. That junction has `row: null`,
-its own `lane` and `start`, and `targets` containing the shared **semantic row
-indices**. At least two sources must feed it, and its outgoing set must equal
-each source's original outgoing set. Junctions never join other junctions.
+`drawing` contains `lanes`, ordered `steps`, and sorted `routes`:
 
-This permits a merge followed by a separate split without inventing edges or
-duplicating issues. Clients validate the drawing against the semantic rows;
-no four-way junction is needed.
+- A step has `row` (an index into `plan.rows`, or null for a routing-only line)
+  and `lane`. Real rows occur exactly once, in semantic order.
+- A route has `source` and `target` **step indices**, and `lane` for its vertical
+  track. It goes right from the source, down that track, then right to the target.
+  Routes are sorted by `(source, target)` with no duplicate pairs.
+- A source with only one destination may merge into that destination's existing
+  track. Otherwise incoming branches remain separate until their intended merge.
+- Sources with identical complete sets of at least two destinations may share a
+  routing-only fork. When its incoming tracks need merging, a separate merge
+  line immediately precedes the fork. Routing lines have no selectable issue or
+  loaded body. Each source must still reach exactly its semantic `targets`.
 
-Text geometry may use several horizontal
-routing lines between issue headings, interrupting vertical strokes at
-non-joining crossings. Routing steps add no selectable issues or loaded bodies.
+Headings carry horizontal connections where possible. Pure merges and forks use
+corners and T junctions; `┼` is forbidden. `╪` crosses two independent paths and
+never joins them. Every path moves right or down, including in the reversed view.
+There is no per-scroll route planning or full rows-by-lanes glyph matrix.
+
+Clients eagerly validate row identity/order, direct paths, right/down geometry,
+column-zero roots and interval occupancy. Overlapping tracks are allowed only
+for a one-destination source joining the same target. A passing track cannot
+intersect an unrelated node. These checks are independent of semantic row lanes,
+which retain their previous meaning and need not match physical drawing lanes.
 
 Prerequisites-first routes run from prerequisites to dependents. Dependents-first
 reverses display traversal only; stored wait meaning does not change. Draw an

@@ -37,7 +37,7 @@
                                                       (start . :json-null) (targets . [])
                                                       (filtered_prerequisites . 0)
                                                       (filtered_dependents . 0))) summary)))
-                                (drawing . ((lanes . 1)
+                                (drawing . ((version . 1) (routes . []) (lanes . 1)
                                             (steps . ,(vconcat
                                                        (cl-loop for index below (length summary)
                                                                 collect `((row . ,index) (lane . 0)

@@ -7,8 +7,8 @@
 ;; Keywords: tools
 
 ;;; Commentary:
-;; Retain Rust's lane assignments and direct routes.  The lane interval index
-;; answers painting queries without traversing dependencies or earlier rows.
+;; Validate Rust's semantic rows and direct edges, and index issue identities.
+;; Physical route validation and painting indexes belong to isled-graph-drawing.
 
 ;;; Code:
 (require 'cl-lib)
@@ -17,9 +17,9 @@
 (declare-function isled-frontend--hash "isled-frontend" (hash))
 (declare-function isled-graph-drawing-decode "isled-graph-drawing" (wire plan))
 
-(cl-defstruct isled-graph-row id lane start targets (routes :unprepared)
+(cl-defstruct isled-graph-row id lane start targets
               (filtered-prerequisites 0) (filtered-dependents 0))
-(cl-defstruct isled-graph-plan lanes rows index tracks drawing)
+(cl-defstruct isled-graph-plan lanes rows index drawing)
 (cl-defstruct isled-graph-response hash direction plan)
 
 (defvar-local isled-graph-direction 'prerequisites "Dependency direction, or nil for flat view.")
@@ -70,7 +70,7 @@
                           :filtered-dependents dependents)))
 
 (defun isled-graph--decode-plan (wire)
-  "Validate WIRE and construct the retained lane interval index."
+  "Validate WIRE and index its semantic row identities."
   (let* ((values (isled-snapshot--field wire 'rows))
          (lanes (isled-snapshot--field wire 'lanes))
          (count (and (listp values) (length values))))
@@ -82,10 +82,9 @@
                        collect (isled-graph--decode-row value lanes count ordinal))) lanes)))
 
 (defun isled-graph--index-rows (rows lanes)
-  "Validate ROWS' tracks and index them across LANES, including routing nodes."
+  "Validate ROWS across LANES and index their issue identities."
   (let* ((count (length rows))
          (starts (make-vector count nil))
-         (tracks (make-vector lanes nil))
          (ends (make-vector lanes nil))
          (index (make-hash-table :test #'equal :size count)))
     (cl-loop for row across rows for ordinal from 0
@@ -105,25 +104,8 @@
                                       (memq ordinal (isled-graph-row-targets
                                                      (aref rows previous))))))
                   (isled-snapshot--invalid "overlapping or inconsistent graph track"))
-             do (aset ends lane ordinal)
-             when start do (push ordinal (aref tracks lane)))
-    (dotimes (lane lanes) (aset tracks lane (vconcat (nreverse (aref tracks lane)))))
-    (make-isled-graph-plan :lanes lanes :rows rows :index index :tracks tracks)))
-
-(defun isled-graph-display-plan (plan)
-  "Return PLAN's drawing geometry, or PLAN for an internal geometry fixture."
-  (or (isled-graph-plan-drawing plan) plan))
-
-(defun isled-graph-drawing-span (plan index)
-  "Return drawing step bounds for semantic row INDEX of PLAN."
-  (let* ((drawing (isled-graph-display-plan plan))
-         (rows (isled-graph-plan-rows drawing))
-         (start (gethash (isled-graph-row-id (aref (isled-graph-plan-rows plan) index))
-                         (isled-graph-plan-index drawing)))
-         (end (1+ start)))
-    (while (and (< end (length rows)) (null (isled-graph-row-id (aref rows end))))
-      (setq end (1+ end)))
-    (cons start end)))
+             do (aset ends lane ordinal))
+    (make-isled-graph-plan :lanes lanes :rows rows :index index)))
 
 (defun isled-graph-order (issues plan)
   "Order ISSUES by PLAN, retaining only currently available identities."
@@ -133,21 +115,6 @@
       (cl-loop for row across (isled-graph-plan-rows plan)
                for issue = (gethash (isled-graph-row-id row) index)
                when issue collect issue))))
-
-(defun isled-graph-continuing (plan boundary)
-  "Return lanes continuing across BOUNDARY using PLAN's indexed intervals."
-  (let ((rows (isled-graph-plan-rows plan)) result)
-    (cl-loop for tracks across (isled-graph-plan-tracks plan) for lane from 0
-             do (let ((low 0) (high (length tracks)))
-                  (while (< low high)
-                    (let ((middle (/ (+ low high) 2)))
-                      (if (< (aref tracks middle) boundary)
-                          (setq low (1+ middle)) (setq high middle))))
-                  (when (and (< low (length tracks))
-                             (< (isled-graph-row-start (aref rows (aref tracks low)))
-                                boundary))
-                    (push lane result))))
-    (nreverse result)))
 
 (provide 'isled-graph-model)
 ;;; isled-graph-model.el ends here

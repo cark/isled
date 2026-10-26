@@ -1,0 +1,3046 @@
+[
+  {
+    "case": "chain",
+    "direction": "prerequisites",
+    "plan": {
+      "drawing": {
+        "lanes": 2,
+        "routes": [
+          {
+            "lane": 1,
+            "source": 0,
+            "target": 1
+          },
+          {
+            "lane": 1,
+            "source": 1,
+            "target": 2
+          }
+        ],
+        "steps": [
+          {
+            "lane": 0,
+            "row": 0
+          },
+          {
+            "lane": 1,
+            "row": 1
+          },
+          {
+            "lane": 1,
+            "row": 2
+          }
+        ],
+        "version": 1
+      },
+      "lanes": 2,
+      "rows": [
+        {
+          "id": "0001",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            1
+          ]
+        },
+        {
+          "id": "0002",
+          "lane": 1,
+          "start": 0,
+          "targets": [
+            2
+          ]
+        },
+        {
+          "id": "0003",
+          "lane": 1,
+          "start": 1,
+          "targets": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "chain",
+    "direction": "dependents",
+    "plan": {
+      "drawing": {
+        "lanes": 2,
+        "routes": [
+          {
+            "lane": 1,
+            "source": 0,
+            "target": 1
+          },
+          {
+            "lane": 1,
+            "source": 1,
+            "target": 2
+          }
+        ],
+        "steps": [
+          {
+            "lane": 0,
+            "row": 0
+          },
+          {
+            "lane": 1,
+            "row": 1
+          },
+          {
+            "lane": 1,
+            "row": 2
+          }
+        ],
+        "version": 1
+      },
+      "lanes": 2,
+      "rows": [
+        {
+          "id": "0003",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            1
+          ]
+        },
+        {
+          "id": "0002",
+          "lane": 1,
+          "start": 0,
+          "targets": [
+            2
+          ]
+        },
+        {
+          "id": "0001",
+          "lane": 1,
+          "start": 1,
+          "targets": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "independent",
+    "direction": "prerequisites",
+    "plan": {
+      "drawing": {
+        "lanes": 2,
+        "routes": [
+          {
+            "lane": 1,
+            "source": 1,
+            "target": 2
+          }
+        ],
+        "steps": [
+          {
+            "lane": 0,
+            "row": 0
+          },
+          {
+            "lane": 0,
+            "row": 1
+          },
+          {
+            "lane": 1,
+            "row": 2
+          },
+          {
+            "lane": 0,
+            "row": 3
+          }
+        ],
+        "version": 1
+      },
+      "lanes": 2,
+      "rows": [
+        {
+          "id": "0001",
+          "lane": 0,
+          "start": null,
+          "targets": []
+        },
+        {
+          "id": "0002",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            2
+          ]
+        },
+        {
+          "id": "0003",
+          "lane": 1,
+          "start": 1,
+          "targets": []
+        },
+        {
+          "id": "0004",
+          "lane": 0,
+          "start": null,
+          "targets": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "independent",
+    "direction": "dependents",
+    "plan": {
+      "drawing": {
+        "lanes": 2,
+        "routes": [
+          {
+            "lane": 1,
+            "source": 1,
+            "target": 2
+          }
+        ],
+        "steps": [
+          {
+            "lane": 0,
+            "row": 0
+          },
+          {
+            "lane": 0,
+            "row": 1
+          },
+          {
+            "lane": 1,
+            "row": 2
+          },
+          {
+            "lane": 0,
+            "row": 3
+          }
+        ],
+        "version": 1
+      },
+      "lanes": 2,
+      "rows": [
+        {
+          "id": "0001",
+          "lane": 0,
+          "start": null,
+          "targets": []
+        },
+        {
+          "id": "0003",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            2
+          ]
+        },
+        {
+          "id": "0002",
+          "lane": 1,
+          "start": 1,
+          "targets": []
+        },
+        {
+          "id": "0004",
+          "lane": 0,
+          "start": null,
+          "targets": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "fork",
+    "direction": "prerequisites",
+    "plan": {
+      "drawing": {
+        "lanes": 3,
+        "routes": [
+          {
+            "lane": 2,
+            "source": 0,
+            "target": 1
+          },
+          {
+            "lane": 1,
+            "source": 0,
+            "target": 2
+          }
+        ],
+        "steps": [
+          {
+            "lane": 0,
+            "row": 0
+          },
+          {
+            "lane": 2,
+            "row": 1
+          },
+          {
+            "lane": 1,
+            "row": 2
+          }
+        ],
+        "version": 1
+      },
+      "lanes": 3,
+      "rows": [
+        {
+          "id": "0001",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            1,
+            2
+          ]
+        },
+        {
+          "id": "0002",
+          "lane": 1,
+          "start": 0,
+          "targets": []
+        },
+        {
+          "id": "0003",
+          "lane": 2,
+          "start": 0,
+          "targets": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "fork",
+    "direction": "dependents",
+    "plan": {
+      "drawing": {
+        "lanes": 2,
+        "routes": [
+          {
+            "lane": 1,
+            "source": 0,
+            "target": 2
+          },
+          {
+            "lane": 1,
+            "source": 1,
+            "target": 2
+          }
+        ],
+        "steps": [
+          {
+            "lane": 0,
+            "row": 0
+          },
+          {
+            "lane": 0,
+            "row": 1
+          },
+          {
+            "lane": 1,
+            "row": 2
+          }
+        ],
+        "version": 1
+      },
+      "lanes": 2,
+      "rows": [
+        {
+          "id": "0002",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            2
+          ]
+        },
+        {
+          "id": "0003",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            2
+          ]
+        },
+        {
+          "id": "0001",
+          "lane": 1,
+          "start": 0,
+          "targets": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "join",
+    "direction": "prerequisites",
+    "plan": {
+      "drawing": {
+        "lanes": 2,
+        "routes": [
+          {
+            "lane": 1,
+            "source": 0,
+            "target": 2
+          },
+          {
+            "lane": 1,
+            "source": 1,
+            "target": 2
+          }
+        ],
+        "steps": [
+          {
+            "lane": 0,
+            "row": 0
+          },
+          {
+            "lane": 0,
+            "row": 1
+          },
+          {
+            "lane": 1,
+            "row": 2
+          }
+        ],
+        "version": 1
+      },
+      "lanes": 2,
+      "rows": [
+        {
+          "id": "0001",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            2
+          ]
+        },
+        {
+          "id": "0002",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            2
+          ]
+        },
+        {
+          "id": "0003",
+          "lane": 1,
+          "start": 0,
+          "targets": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "join",
+    "direction": "dependents",
+    "plan": {
+      "drawing": {
+        "lanes": 3,
+        "routes": [
+          {
+            "lane": 2,
+            "source": 0,
+            "target": 1
+          },
+          {
+            "lane": 1,
+            "source": 0,
+            "target": 2
+          }
+        ],
+        "steps": [
+          {
+            "lane": 0,
+            "row": 0
+          },
+          {
+            "lane": 2,
+            "row": 1
+          },
+          {
+            "lane": 1,
+            "row": 2
+          }
+        ],
+        "version": 1
+      },
+      "lanes": 3,
+      "rows": [
+        {
+          "id": "0003",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            1,
+            2
+          ]
+        },
+        {
+          "id": "0001",
+          "lane": 1,
+          "start": 0,
+          "targets": []
+        },
+        {
+          "id": "0002",
+          "lane": 2,
+          "start": 0,
+          "targets": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "diamond",
+    "direction": "prerequisites",
+    "plan": {
+      "drawing": {
+        "lanes": 3,
+        "routes": [
+          {
+            "lane": 2,
+            "source": 0,
+            "target": 1
+          },
+          {
+            "lane": 1,
+            "source": 0,
+            "target": 2
+          },
+          {
+            "lane": 2,
+            "source": 1,
+            "target": 3
+          },
+          {
+            "lane": 2,
+            "source": 2,
+            "target": 3
+          }
+        ],
+        "steps": [
+          {
+            "lane": 0,
+            "row": 0
+          },
+          {
+            "lane": 2,
+            "row": 1
+          },
+          {
+            "lane": 1,
+            "row": 2
+          },
+          {
+            "lane": 2,
+            "row": 3
+          }
+        ],
+        "version": 1
+      },
+      "lanes": 3,
+      "rows": [
+        {
+          "id": "0001",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            1,
+            2
+          ]
+        },
+        {
+          "id": "0002",
+          "lane": 1,
+          "start": 0,
+          "targets": [
+            3
+          ]
+        },
+        {
+          "id": "0003",
+          "lane": 2,
+          "start": 0,
+          "targets": [
+            3
+          ]
+        },
+        {
+          "id": "0004",
+          "lane": 1,
+          "start": 1,
+          "targets": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "diamond",
+    "direction": "dependents",
+    "plan": {
+      "drawing": {
+        "lanes": 3,
+        "routes": [
+          {
+            "lane": 2,
+            "source": 0,
+            "target": 1
+          },
+          {
+            "lane": 1,
+            "source": 0,
+            "target": 2
+          },
+          {
+            "lane": 2,
+            "source": 1,
+            "target": 3
+          },
+          {
+            "lane": 2,
+            "source": 2,
+            "target": 3
+          }
+        ],
+        "steps": [
+          {
+            "lane": 0,
+            "row": 0
+          },
+          {
+            "lane": 2,
+            "row": 1
+          },
+          {
+            "lane": 1,
+            "row": 2
+          },
+          {
+            "lane": 2,
+            "row": 3
+          }
+        ],
+        "version": 1
+      },
+      "lanes": 3,
+      "rows": [
+        {
+          "id": "0004",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            1,
+            2
+          ]
+        },
+        {
+          "id": "0002",
+          "lane": 1,
+          "start": 0,
+          "targets": [
+            3
+          ]
+        },
+        {
+          "id": "0003",
+          "lane": 2,
+          "start": 0,
+          "targets": [
+            3
+          ]
+        },
+        {
+          "id": "0001",
+          "lane": 1,
+          "start": 1,
+          "targets": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "broad-fork",
+    "direction": "prerequisites",
+    "plan": {
+      "drawing": {
+        "lanes": 6,
+        "routes": [
+          {
+            "lane": 5,
+            "source": 0,
+            "target": 1
+          },
+          {
+            "lane": 4,
+            "source": 0,
+            "target": 2
+          },
+          {
+            "lane": 3,
+            "source": 0,
+            "target": 3
+          },
+          {
+            "lane": 2,
+            "source": 0,
+            "target": 4
+          },
+          {
+            "lane": 1,
+            "source": 0,
+            "target": 5
+          }
+        ],
+        "steps": [
+          {
+            "lane": 0,
+            "row": 0
+          },
+          {
+            "lane": 5,
+            "row": 1
+          },
+          {
+            "lane": 4,
+            "row": 2
+          },
+          {
+            "lane": 3,
+            "row": 3
+          },
+          {
+            "lane": 2,
+            "row": 4
+          },
+          {
+            "lane": 1,
+            "row": 5
+          }
+        ],
+        "version": 1
+      },
+      "lanes": 6,
+      "rows": [
+        {
+          "id": "0001",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        },
+        {
+          "id": "0002",
+          "lane": 1,
+          "start": 0,
+          "targets": []
+        },
+        {
+          "id": "0003",
+          "lane": 2,
+          "start": 0,
+          "targets": []
+        },
+        {
+          "id": "0004",
+          "lane": 3,
+          "start": 0,
+          "targets": []
+        },
+        {
+          "id": "0005",
+          "lane": 4,
+          "start": 0,
+          "targets": []
+        },
+        {
+          "id": "0006",
+          "lane": 5,
+          "start": 0,
+          "targets": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "broad-fork",
+    "direction": "dependents",
+    "plan": {
+      "drawing": {
+        "lanes": 2,
+        "routes": [
+          {
+            "lane": 1,
+            "source": 0,
+            "target": 5
+          },
+          {
+            "lane": 1,
+            "source": 1,
+            "target": 5
+          },
+          {
+            "lane": 1,
+            "source": 2,
+            "target": 5
+          },
+          {
+            "lane": 1,
+            "source": 3,
+            "target": 5
+          },
+          {
+            "lane": 1,
+            "source": 4,
+            "target": 5
+          }
+        ],
+        "steps": [
+          {
+            "lane": 0,
+            "row": 0
+          },
+          {
+            "lane": 0,
+            "row": 1
+          },
+          {
+            "lane": 0,
+            "row": 2
+          },
+          {
+            "lane": 0,
+            "row": 3
+          },
+          {
+            "lane": 0,
+            "row": 4
+          },
+          {
+            "lane": 1,
+            "row": 5
+          }
+        ],
+        "version": 1
+      },
+      "lanes": 2,
+      "rows": [
+        {
+          "id": "0002",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            5
+          ]
+        },
+        {
+          "id": "0003",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            5
+          ]
+        },
+        {
+          "id": "0004",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            5
+          ]
+        },
+        {
+          "id": "0005",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            5
+          ]
+        },
+        {
+          "id": "0006",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            5
+          ]
+        },
+        {
+          "id": "0001",
+          "lane": 1,
+          "start": 0,
+          "targets": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "shared-set",
+    "direction": "prerequisites",
+    "plan": {
+      "drawing": {
+        "lanes": 3,
+        "routes": [
+          {
+            "lane": 1,
+            "source": 0,
+            "target": 2
+          },
+          {
+            "lane": 1,
+            "source": 1,
+            "target": 2
+          },
+          {
+            "lane": 2,
+            "source": 2,
+            "target": 3
+          },
+          {
+            "lane": 1,
+            "source": 2,
+            "target": 4
+          }
+        ],
+        "steps": [
+          {
+            "lane": 0,
+            "row": 0
+          },
+          {
+            "lane": 0,
+            "row": 1
+          },
+          {
+            "lane": 1,
+            "row": null
+          },
+          {
+            "lane": 2,
+            "row": 2
+          },
+          {
+            "lane": 1,
+            "row": 3
+          }
+        ],
+        "version": 1
+      },
+      "lanes": 3,
+      "rows": [
+        {
+          "id": "0001",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            2,
+            3
+          ]
+        },
+        {
+          "id": "0002",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            2,
+            3
+          ]
+        },
+        {
+          "id": "0003",
+          "lane": 1,
+          "start": 0,
+          "targets": []
+        },
+        {
+          "id": "0004",
+          "lane": 2,
+          "start": 0,
+          "targets": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "shared-set",
+    "direction": "dependents",
+    "plan": {
+      "drawing": {
+        "lanes": 3,
+        "routes": [
+          {
+            "lane": 1,
+            "source": 0,
+            "target": 2
+          },
+          {
+            "lane": 1,
+            "source": 1,
+            "target": 2
+          },
+          {
+            "lane": 2,
+            "source": 2,
+            "target": 3
+          },
+          {
+            "lane": 1,
+            "source": 2,
+            "target": 4
+          }
+        ],
+        "steps": [
+          {
+            "lane": 0,
+            "row": 0
+          },
+          {
+            "lane": 0,
+            "row": 1
+          },
+          {
+            "lane": 1,
+            "row": null
+          },
+          {
+            "lane": 2,
+            "row": 2
+          },
+          {
+            "lane": 1,
+            "row": 3
+          }
+        ],
+        "version": 1
+      },
+      "lanes": 3,
+      "rows": [
+        {
+          "id": "0003",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            2,
+            3
+          ]
+        },
+        {
+          "id": "0004",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            2,
+            3
+          ]
+        },
+        {
+          "id": "0001",
+          "lane": 1,
+          "start": 0,
+          "targets": []
+        },
+        {
+          "id": "0002",
+          "lane": 2,
+          "start": 0,
+          "targets": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "partial-overlap",
+    "direction": "prerequisites",
+    "plan": {
+      "drawing": {
+        "lanes": 4,
+        "routes": [
+          {
+            "lane": 3,
+            "source": 0,
+            "target": 1
+          },
+          {
+            "lane": 2,
+            "source": 0,
+            "target": 3
+          },
+          {
+            "lane": 3,
+            "source": 2,
+            "target": 3
+          },
+          {
+            "lane": 1,
+            "source": 2,
+            "target": 4
+          }
+        ],
+        "steps": [
+          {
+            "lane": 0,
+            "row": 0
+          },
+          {
+            "lane": 3,
+            "row": 1
+          },
+          {
+            "lane": 0,
+            "row": 2
+          },
+          {
+            "lane": 3,
+            "row": 3
+          },
+          {
+            "lane": 1,
+            "row": 4
+          }
+        ],
+        "version": 1
+      },
+      "lanes": 3,
+      "rows": [
+        {
+          "id": "0001",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            1,
+            3
+          ]
+        },
+        {
+          "id": "0003",
+          "lane": 1,
+          "start": 0,
+          "targets": []
+        },
+        {
+          "id": "0002",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            3,
+            4
+          ]
+        },
+        {
+          "id": "0004",
+          "lane": 2,
+          "start": 0,
+          "targets": []
+        },
+        {
+          "id": "0005",
+          "lane": 1,
+          "start": 2,
+          "targets": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "partial-overlap",
+    "direction": "dependents",
+    "plan": {
+      "drawing": {
+        "lanes": 4,
+        "routes": [
+          {
+            "lane": 3,
+            "source": 0,
+            "target": 2
+          },
+          {
+            "lane": 2,
+            "source": 1,
+            "target": 2
+          },
+          {
+            "lane": 1,
+            "source": 1,
+            "target": 4
+          },
+          {
+            "lane": 1,
+            "source": 3,
+            "target": 4
+          }
+        ],
+        "steps": [
+          {
+            "lane": 0,
+            "row": 0
+          },
+          {
+            "lane": 0,
+            "row": 1
+          },
+          {
+            "lane": 3,
+            "row": 2
+          },
+          {
+            "lane": 0,
+            "row": 3
+          },
+          {
+            "lane": 1,
+            "row": 4
+          }
+        ],
+        "version": 1
+      },
+      "lanes": 3,
+      "rows": [
+        {
+          "id": "0003",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            2
+          ]
+        },
+        {
+          "id": "0004",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            2,
+            4
+          ]
+        },
+        {
+          "id": "0001",
+          "lane": 1,
+          "start": 0,
+          "targets": []
+        },
+        {
+          "id": "0005",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            4
+          ]
+        },
+        {
+          "id": "0002",
+          "lane": 2,
+          "start": 1,
+          "targets": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "unequal-branches",
+    "direction": "prerequisites",
+    "plan": {
+      "drawing": {
+        "lanes": 3,
+        "routes": [
+          {
+            "lane": 2,
+            "source": 0,
+            "target": 1
+          },
+          {
+            "lane": 1,
+            "source": 0,
+            "target": 4
+          },
+          {
+            "lane": 2,
+            "source": 1,
+            "target": 2
+          },
+          {
+            "lane": 2,
+            "source": 2,
+            "target": 3
+          },
+          {
+            "lane": 1,
+            "source": 4,
+            "target": 5
+          }
+        ],
+        "steps": [
+          {
+            "lane": 0,
+            "row": 0
+          },
+          {
+            "lane": 2,
+            "row": 1
+          },
+          {
+            "lane": 2,
+            "row": 2
+          },
+          {
+            "lane": 2,
+            "row": 3
+          },
+          {
+            "lane": 1,
+            "row": 4
+          },
+          {
+            "lane": 1,
+            "row": 5
+          }
+        ],
+        "version": 1
+      },
+      "lanes": 3,
+      "rows": [
+        {
+          "id": "0001",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            1,
+            4
+          ]
+        },
+        {
+          "id": "0002",
+          "lane": 1,
+          "start": 0,
+          "targets": [
+            2
+          ]
+        },
+        {
+          "id": "0003",
+          "lane": 1,
+          "start": 1,
+          "targets": [
+            3
+          ]
+        },
+        {
+          "id": "0004",
+          "lane": 1,
+          "start": 2,
+          "targets": []
+        },
+        {
+          "id": "0005",
+          "lane": 2,
+          "start": 0,
+          "targets": [
+            5
+          ]
+        },
+        {
+          "id": "0006",
+          "lane": 2,
+          "start": 4,
+          "targets": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "unequal-branches",
+    "direction": "dependents",
+    "plan": {
+      "drawing": {
+        "lanes": 3,
+        "routes": [
+          {
+            "lane": 1,
+            "source": 0,
+            "target": 1
+          },
+          {
+            "lane": 1,
+            "source": 1,
+            "target": 2
+          },
+          {
+            "lane": 1,
+            "source": 2,
+            "target": 5
+          },
+          {
+            "lane": 2,
+            "source": 3,
+            "target": 4
+          },
+          {
+            "lane": 2,
+            "source": 4,
+            "target": 5
+          }
+        ],
+        "steps": [
+          {
+            "lane": 0,
+            "row": 0
+          },
+          {
+            "lane": 1,
+            "row": 1
+          },
+          {
+            "lane": 1,
+            "row": 2
+          },
+          {
+            "lane": 0,
+            "row": 3
+          },
+          {
+            "lane": 2,
+            "row": 4
+          },
+          {
+            "lane": 2,
+            "row": 5
+          }
+        ],
+        "version": 1
+      },
+      "lanes": 3,
+      "rows": [
+        {
+          "id": "0004",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            1
+          ]
+        },
+        {
+          "id": "0003",
+          "lane": 1,
+          "start": 0,
+          "targets": [
+            2
+          ]
+        },
+        {
+          "id": "0002",
+          "lane": 1,
+          "start": 1,
+          "targets": [
+            5
+          ]
+        },
+        {
+          "id": "0006",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            4
+          ]
+        },
+        {
+          "id": "0005",
+          "lane": 2,
+          "start": 3,
+          "targets": [
+            5
+          ]
+        },
+        {
+          "id": "0001",
+          "lane": 1,
+          "start": 2,
+          "targets": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "government-cabinets",
+    "direction": "prerequisites",
+    "plan": {
+      "drawing": {
+        "lanes": 4,
+        "routes": [
+          {
+            "lane": 2,
+            "source": 0,
+            "target": 1
+          },
+          {
+            "lane": 1,
+            "source": 0,
+            "target": 3
+          },
+          {
+            "lane": 3,
+            "source": 1,
+            "target": 2
+          },
+          {
+            "lane": 2,
+            "source": 1,
+            "target": 4
+          },
+          {
+            "lane": 3,
+            "source": 2,
+            "target": 5
+          },
+          {
+            "lane": 2,
+            "source": 3,
+            "target": 4
+          },
+          {
+            "lane": 3,
+            "source": 4,
+            "target": 5
+          }
+        ],
+        "steps": [
+          {
+            "lane": 0,
+            "row": 0
+          },
+          {
+            "lane": 2,
+            "row": 1
+          },
+          {
+            "lane": 3,
+            "row": 2
+          },
+          {
+            "lane": 1,
+            "row": 3
+          },
+          {
+            "lane": 2,
+            "row": 4
+          },
+          {
+            "lane": 3,
+            "row": 5
+          }
+        ],
+        "version": 1
+      },
+      "lanes": 4,
+      "rows": [
+        {
+          "id": "0047",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            1,
+            3
+          ]
+        },
+        {
+          "id": "0048",
+          "lane": 1,
+          "start": 0,
+          "targets": [
+            2,
+            4
+          ]
+        },
+        {
+          "id": "0049",
+          "lane": 1,
+          "start": 1,
+          "targets": [
+            5
+          ]
+        },
+        {
+          "id": "0056",
+          "lane": 2,
+          "start": 0,
+          "targets": [
+            4
+          ]
+        },
+        {
+          "id": "0057",
+          "lane": 3,
+          "start": 1,
+          "targets": [
+            5
+          ]
+        },
+        {
+          "id": "0058",
+          "lane": 1,
+          "start": 2,
+          "targets": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "government-cabinets",
+    "direction": "dependents",
+    "plan": {
+      "drawing": {
+        "lanes": 4,
+        "routes": [
+          {
+            "lane": 2,
+            "source": 0,
+            "target": 1
+          },
+          {
+            "lane": 1,
+            "source": 0,
+            "target": 2
+          },
+          {
+            "lane": 2,
+            "source": 1,
+            "target": 3
+          },
+          {
+            "lane": 3,
+            "source": 2,
+            "target": 3
+          },
+          {
+            "lane": 1,
+            "source": 2,
+            "target": 4
+          },
+          {
+            "lane": 3,
+            "source": 3,
+            "target": 5
+          },
+          {
+            "lane": 3,
+            "source": 4,
+            "target": 5
+          }
+        ],
+        "steps": [
+          {
+            "lane": 0,
+            "row": 0
+          },
+          {
+            "lane": 2,
+            "row": 1
+          },
+          {
+            "lane": 1,
+            "row": 2
+          },
+          {
+            "lane": 3,
+            "row": 3
+          },
+          {
+            "lane": 1,
+            "row": 4
+          },
+          {
+            "lane": 3,
+            "row": 5
+          }
+        ],
+        "version": 1
+      },
+      "lanes": 3,
+      "rows": [
+        {
+          "id": "0058",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            1,
+            2
+          ]
+        },
+        {
+          "id": "0049",
+          "lane": 1,
+          "start": 0,
+          "targets": [
+            3
+          ]
+        },
+        {
+          "id": "0057",
+          "lane": 2,
+          "start": 0,
+          "targets": [
+            3,
+            4
+          ]
+        },
+        {
+          "id": "0048",
+          "lane": 1,
+          "start": 1,
+          "targets": [
+            5
+          ]
+        },
+        {
+          "id": "0056",
+          "lane": 2,
+          "start": 2,
+          "targets": [
+            5
+          ]
+        },
+        {
+          "id": "0047",
+          "lane": 1,
+          "start": 3,
+          "targets": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "long-span",
+    "direction": "prerequisites",
+    "plan": {
+      "drawing": {
+        "lanes": 3,
+        "routes": [
+          {
+            "lane": 2,
+            "source": 0,
+            "target": 1
+          },
+          {
+            "lane": 1,
+            "source": 0,
+            "target": 4
+          },
+          {
+            "lane": 2,
+            "source": 1,
+            "target": 2
+          },
+          {
+            "lane": 2,
+            "source": 2,
+            "target": 3
+          },
+          {
+            "lane": 2,
+            "source": 3,
+            "target": 4
+          }
+        ],
+        "steps": [
+          {
+            "lane": 0,
+            "row": 0
+          },
+          {
+            "lane": 2,
+            "row": 1
+          },
+          {
+            "lane": 2,
+            "row": 2
+          },
+          {
+            "lane": 2,
+            "row": 3
+          },
+          {
+            "lane": 2,
+            "row": 4
+          }
+        ],
+        "version": 1
+      },
+      "lanes": 3,
+      "rows": [
+        {
+          "id": "0001",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            1,
+            4
+          ]
+        },
+        {
+          "id": "0002",
+          "lane": 1,
+          "start": 0,
+          "targets": [
+            2
+          ]
+        },
+        {
+          "id": "0003",
+          "lane": 1,
+          "start": 1,
+          "targets": [
+            3
+          ]
+        },
+        {
+          "id": "0004",
+          "lane": 1,
+          "start": 2,
+          "targets": [
+            4
+          ]
+        },
+        {
+          "id": "0005",
+          "lane": 2,
+          "start": 0,
+          "targets": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "long-span",
+    "direction": "dependents",
+    "plan": {
+      "drawing": {
+        "lanes": 3,
+        "routes": [
+          {
+            "lane": 2,
+            "source": 0,
+            "target": 1
+          },
+          {
+            "lane": 1,
+            "source": 0,
+            "target": 4
+          },
+          {
+            "lane": 2,
+            "source": 1,
+            "target": 2
+          },
+          {
+            "lane": 2,
+            "source": 2,
+            "target": 3
+          },
+          {
+            "lane": 2,
+            "source": 3,
+            "target": 4
+          }
+        ],
+        "steps": [
+          {
+            "lane": 0,
+            "row": 0
+          },
+          {
+            "lane": 2,
+            "row": 1
+          },
+          {
+            "lane": 2,
+            "row": 2
+          },
+          {
+            "lane": 2,
+            "row": 3
+          },
+          {
+            "lane": 2,
+            "row": 4
+          }
+        ],
+        "version": 1
+      },
+      "lanes": 3,
+      "rows": [
+        {
+          "id": "0005",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            1,
+            4
+          ]
+        },
+        {
+          "id": "0004",
+          "lane": 1,
+          "start": 0,
+          "targets": [
+            2
+          ]
+        },
+        {
+          "id": "0003",
+          "lane": 1,
+          "start": 1,
+          "targets": [
+            3
+          ]
+        },
+        {
+          "id": "0002",
+          "lane": 1,
+          "start": 2,
+          "targets": [
+            4
+          ]
+        },
+        {
+          "id": "0001",
+          "lane": 2,
+          "start": 0,
+          "targets": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "dense-shared-set",
+    "direction": "prerequisites",
+    "plan": {
+      "drawing": {
+        "lanes": 4,
+        "routes": [
+          {
+            "lane": 1,
+            "source": 0,
+            "target": 3
+          },
+          {
+            "lane": 1,
+            "source": 1,
+            "target": 3
+          },
+          {
+            "lane": 1,
+            "source": 2,
+            "target": 3
+          },
+          {
+            "lane": 3,
+            "source": 3,
+            "target": 4
+          },
+          {
+            "lane": 2,
+            "source": 3,
+            "target": 5
+          },
+          {
+            "lane": 1,
+            "source": 3,
+            "target": 6
+          }
+        ],
+        "steps": [
+          {
+            "lane": 0,
+            "row": 0
+          },
+          {
+            "lane": 0,
+            "row": 1
+          },
+          {
+            "lane": 0,
+            "row": 2
+          },
+          {
+            "lane": 1,
+            "row": null
+          },
+          {
+            "lane": 3,
+            "row": 3
+          },
+          {
+            "lane": 2,
+            "row": 4
+          },
+          {
+            "lane": 1,
+            "row": 5
+          }
+        ],
+        "version": 1
+      },
+      "lanes": 4,
+      "rows": [
+        {
+          "id": "0001",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            3,
+            4,
+            5
+          ]
+        },
+        {
+          "id": "0002",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            3,
+            4,
+            5
+          ]
+        },
+        {
+          "id": "0003",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            3,
+            4,
+            5
+          ]
+        },
+        {
+          "id": "0004",
+          "lane": 1,
+          "start": 0,
+          "targets": []
+        },
+        {
+          "id": "0005",
+          "lane": 2,
+          "start": 0,
+          "targets": []
+        },
+        {
+          "id": "0006",
+          "lane": 3,
+          "start": 0,
+          "targets": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "dense-shared-set",
+    "direction": "dependents",
+    "plan": {
+      "drawing": {
+        "lanes": 4,
+        "routes": [
+          {
+            "lane": 1,
+            "source": 0,
+            "target": 3
+          },
+          {
+            "lane": 1,
+            "source": 1,
+            "target": 3
+          },
+          {
+            "lane": 1,
+            "source": 2,
+            "target": 3
+          },
+          {
+            "lane": 3,
+            "source": 3,
+            "target": 4
+          },
+          {
+            "lane": 2,
+            "source": 3,
+            "target": 5
+          },
+          {
+            "lane": 1,
+            "source": 3,
+            "target": 6
+          }
+        ],
+        "steps": [
+          {
+            "lane": 0,
+            "row": 0
+          },
+          {
+            "lane": 0,
+            "row": 1
+          },
+          {
+            "lane": 0,
+            "row": 2
+          },
+          {
+            "lane": 1,
+            "row": null
+          },
+          {
+            "lane": 3,
+            "row": 3
+          },
+          {
+            "lane": 2,
+            "row": 4
+          },
+          {
+            "lane": 1,
+            "row": 5
+          }
+        ],
+        "version": 1
+      },
+      "lanes": 4,
+      "rows": [
+        {
+          "id": "0004",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            3,
+            4,
+            5
+          ]
+        },
+        {
+          "id": "0005",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            3,
+            4,
+            5
+          ]
+        },
+        {
+          "id": "0006",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            3,
+            4,
+            5
+          ]
+        },
+        {
+          "id": "0001",
+          "lane": 1,
+          "start": 0,
+          "targets": []
+        },
+        {
+          "id": "0002",
+          "lane": 2,
+          "start": 0,
+          "targets": []
+        },
+        {
+          "id": "0003",
+          "lane": 3,
+          "start": 0,
+          "targets": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "overlapping-pairs",
+    "direction": "prerequisites",
+    "plan": {
+      "drawing": {
+        "lanes": 5,
+        "routes": [
+          {
+            "lane": 4,
+            "source": 0,
+            "target": 2
+          },
+          {
+            "lane": 3,
+            "source": 0,
+            "target": 4
+          },
+          {
+            "lane": 2,
+            "source": 1,
+            "target": 2
+          },
+          {
+            "lane": 1,
+            "source": 1,
+            "target": 5
+          },
+          {
+            "lane": 4,
+            "source": 3,
+            "target": 4
+          },
+          {
+            "lane": 2,
+            "source": 3,
+            "target": 5
+          }
+        ],
+        "steps": [
+          {
+            "lane": 0,
+            "row": 0
+          },
+          {
+            "lane": 0,
+            "row": 1
+          },
+          {
+            "lane": 4,
+            "row": 2
+          },
+          {
+            "lane": 0,
+            "row": 3
+          },
+          {
+            "lane": 4,
+            "row": 4
+          },
+          {
+            "lane": 2,
+            "row": 5
+          }
+        ],
+        "version": 1
+      },
+      "lanes": 4,
+      "rows": [
+        {
+          "id": "0001",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            2,
+            4
+          ]
+        },
+        {
+          "id": "0002",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            2,
+            5
+          ]
+        },
+        {
+          "id": "0004",
+          "lane": 1,
+          "start": 0,
+          "targets": []
+        },
+        {
+          "id": "0003",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            4,
+            5
+          ]
+        },
+        {
+          "id": "0005",
+          "lane": 2,
+          "start": 0,
+          "targets": []
+        },
+        {
+          "id": "0006",
+          "lane": 3,
+          "start": 1,
+          "targets": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "overlapping-pairs",
+    "direction": "dependents",
+    "plan": {
+      "drawing": {
+        "lanes": 5,
+        "routes": [
+          {
+            "lane": 4,
+            "source": 0,
+            "target": 2
+          },
+          {
+            "lane": 3,
+            "source": 0,
+            "target": 4
+          },
+          {
+            "lane": 2,
+            "source": 1,
+            "target": 2
+          },
+          {
+            "lane": 1,
+            "source": 1,
+            "target": 5
+          },
+          {
+            "lane": 4,
+            "source": 3,
+            "target": 4
+          },
+          {
+            "lane": 2,
+            "source": 3,
+            "target": 5
+          }
+        ],
+        "steps": [
+          {
+            "lane": 0,
+            "row": 0
+          },
+          {
+            "lane": 0,
+            "row": 1
+          },
+          {
+            "lane": 4,
+            "row": 2
+          },
+          {
+            "lane": 0,
+            "row": 3
+          },
+          {
+            "lane": 4,
+            "row": 4
+          },
+          {
+            "lane": 2,
+            "row": 5
+          }
+        ],
+        "version": 1
+      },
+      "lanes": 4,
+      "rows": [
+        {
+          "id": "0004",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            2,
+            4
+          ]
+        },
+        {
+          "id": "0005",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            2,
+            5
+          ]
+        },
+        {
+          "id": "0001",
+          "lane": 1,
+          "start": 0,
+          "targets": []
+        },
+        {
+          "id": "0006",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            4,
+            5
+          ]
+        },
+        {
+          "id": "0002",
+          "lane": 2,
+          "start": 0,
+          "targets": []
+        },
+        {
+          "id": "0003",
+          "lane": 3,
+          "start": 1,
+          "targets": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "redundant-edge",
+    "direction": "prerequisites",
+    "plan": {
+      "drawing": {
+        "lanes": 3,
+        "routes": [
+          {
+            "lane": 2,
+            "source": 0,
+            "target": 1
+          },
+          {
+            "lane": 1,
+            "source": 0,
+            "target": 2
+          },
+          {
+            "lane": 2,
+            "source": 1,
+            "target": 2
+          }
+        ],
+        "steps": [
+          {
+            "lane": 0,
+            "row": 0
+          },
+          {
+            "lane": 2,
+            "row": 1
+          },
+          {
+            "lane": 2,
+            "row": 2
+          }
+        ],
+        "version": 1
+      },
+      "lanes": 3,
+      "rows": [
+        {
+          "id": "0001",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            1,
+            2
+          ]
+        },
+        {
+          "id": "0002",
+          "lane": 1,
+          "start": 0,
+          "targets": [
+            2
+          ]
+        },
+        {
+          "id": "0003",
+          "lane": 2,
+          "start": 0,
+          "targets": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "redundant-edge",
+    "direction": "dependents",
+    "plan": {
+      "drawing": {
+        "lanes": 3,
+        "routes": [
+          {
+            "lane": 2,
+            "source": 0,
+            "target": 1
+          },
+          {
+            "lane": 1,
+            "source": 0,
+            "target": 2
+          },
+          {
+            "lane": 2,
+            "source": 1,
+            "target": 2
+          }
+        ],
+        "steps": [
+          {
+            "lane": 0,
+            "row": 0
+          },
+          {
+            "lane": 2,
+            "row": 1
+          },
+          {
+            "lane": 2,
+            "row": 2
+          }
+        ],
+        "version": 1
+      },
+      "lanes": 3,
+      "rows": [
+        {
+          "id": "0003",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            1,
+            2
+          ]
+        },
+        {
+          "id": "0002",
+          "lane": 1,
+          "start": 0,
+          "targets": [
+            2
+          ]
+        },
+        {
+          "id": "0001",
+          "lane": 2,
+          "start": 0,
+          "targets": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "shared-after-fork",
+    "direction": "prerequisites",
+    "plan": {
+      "drawing": {
+        "lanes": 4,
+        "routes": [
+          {
+            "lane": 2,
+            "source": 0,
+            "target": 1
+          },
+          {
+            "lane": 1,
+            "source": 0,
+            "target": 2
+          },
+          {
+            "lane": 2,
+            "source": 1,
+            "target": 3
+          },
+          {
+            "lane": 2,
+            "source": 2,
+            "target": 3
+          },
+          {
+            "lane": 3,
+            "source": 3,
+            "target": 4
+          },
+          {
+            "lane": 2,
+            "source": 3,
+            "target": 5
+          }
+        ],
+        "steps": [
+          {
+            "lane": 0,
+            "row": 0
+          },
+          {
+            "lane": 2,
+            "row": 1
+          },
+          {
+            "lane": 1,
+            "row": 2
+          },
+          {
+            "lane": 2,
+            "row": null
+          },
+          {
+            "lane": 3,
+            "row": 3
+          },
+          {
+            "lane": 2,
+            "row": 4
+          }
+        ],
+        "version": 1
+      },
+      "lanes": 4,
+      "rows": [
+        {
+          "id": "0001",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            1,
+            2
+          ]
+        },
+        {
+          "id": "0002",
+          "lane": 1,
+          "start": 0,
+          "targets": [
+            3,
+            4
+          ]
+        },
+        {
+          "id": "0004",
+          "lane": 2,
+          "start": 0,
+          "targets": [
+            3,
+            4
+          ]
+        },
+        {
+          "id": "0005",
+          "lane": 1,
+          "start": 1,
+          "targets": []
+        },
+        {
+          "id": "0008",
+          "lane": 3,
+          "start": 1,
+          "targets": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "shared-after-fork",
+    "direction": "dependents",
+    "plan": {
+      "drawing": {
+        "lanes": 3,
+        "routes": [
+          {
+            "lane": 1,
+            "source": 0,
+            "target": 2
+          },
+          {
+            "lane": 1,
+            "source": 1,
+            "target": 2
+          },
+          {
+            "lane": 2,
+            "source": 2,
+            "target": 3
+          },
+          {
+            "lane": 1,
+            "source": 2,
+            "target": 4
+          },
+          {
+            "lane": 2,
+            "source": 3,
+            "target": 5
+          },
+          {
+            "lane": 2,
+            "source": 4,
+            "target": 5
+          }
+        ],
+        "steps": [
+          {
+            "lane": 0,
+            "row": 0
+          },
+          {
+            "lane": 0,
+            "row": 1
+          },
+          {
+            "lane": 1,
+            "row": null
+          },
+          {
+            "lane": 2,
+            "row": 2
+          },
+          {
+            "lane": 1,
+            "row": 3
+          },
+          {
+            "lane": 2,
+            "row": 4
+          }
+        ],
+        "version": 1
+      },
+      "lanes": 3,
+      "rows": [
+        {
+          "id": "0005",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            2,
+            3
+          ]
+        },
+        {
+          "id": "0008",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            2,
+            3
+          ]
+        },
+        {
+          "id": "0002",
+          "lane": 1,
+          "start": 0,
+          "targets": [
+            4
+          ]
+        },
+        {
+          "id": "0004",
+          "lane": 2,
+          "start": 0,
+          "targets": [
+            4
+          ]
+        },
+        {
+          "id": "0001",
+          "lane": 1,
+          "start": 2,
+          "targets": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "shared-with-separate-merge",
+    "direction": "prerequisites",
+    "plan": {
+      "drawing": {
+        "lanes": 5,
+        "routes": [
+          {
+            "lane": 2,
+            "source": 0,
+            "target": 1
+          },
+          {
+            "lane": 1,
+            "source": 0,
+            "target": 2
+          },
+          {
+            "lane": 2,
+            "source": 1,
+            "target": 4
+          },
+          {
+            "lane": 3,
+            "source": 2,
+            "target": 3
+          },
+          {
+            "lane": 1,
+            "source": 2,
+            "target": 8
+          },
+          {
+            "lane": 3,
+            "source": 3,
+            "target": 4
+          },
+          {
+            "lane": 3,
+            "source": 4,
+            "target": 5
+          },
+          {
+            "lane": 4,
+            "source": 5,
+            "target": 6
+          },
+          {
+            "lane": 3,
+            "source": 5,
+            "target": 7
+          }
+        ],
+        "steps": [
+          {
+            "lane": 0,
+            "row": 0
+          },
+          {
+            "lane": 2,
+            "row": 1
+          },
+          {
+            "lane": 1,
+            "row": 2
+          },
+          {
+            "lane": 3,
+            "row": 3
+          },
+          {
+            "lane": 3,
+            "row": null
+          },
+          {
+            "lane": 3,
+            "row": null
+          },
+          {
+            "lane": 4,
+            "row": 4
+          },
+          {
+            "lane": 3,
+            "row": 5
+          },
+          {
+            "lane": 1,
+            "row": 6
+          }
+        ],
+        "version": 1
+      },
+      "lanes": 5,
+      "rows": [
+        {
+          "id": "0001",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            1,
+            2
+          ]
+        },
+        {
+          "id": "0002",
+          "lane": 1,
+          "start": 0,
+          "targets": [
+            4,
+            5
+          ]
+        },
+        {
+          "id": "0003",
+          "lane": 2,
+          "start": 0,
+          "targets": [
+            3,
+            6
+          ]
+        },
+        {
+          "id": "0004",
+          "lane": 2,
+          "start": 2,
+          "targets": [
+            4,
+            5
+          ]
+        },
+        {
+          "id": "0006",
+          "lane": 1,
+          "start": 1,
+          "targets": []
+        },
+        {
+          "id": "0007",
+          "lane": 3,
+          "start": 1,
+          "targets": []
+        },
+        {
+          "id": "0005",
+          "lane": 4,
+          "start": 2,
+          "targets": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "shared-with-separate-merge",
+    "direction": "dependents",
+    "plan": {
+      "drawing": {
+        "lanes": 4,
+        "routes": [
+          {
+            "lane": 2,
+            "source": 0,
+            "target": 6
+          },
+          {
+            "lane": 1,
+            "source": 1,
+            "target": 3
+          },
+          {
+            "lane": 1,
+            "source": 2,
+            "target": 3
+          },
+          {
+            "lane": 3,
+            "source": 3,
+            "target": 4
+          },
+          {
+            "lane": 1,
+            "source": 3,
+            "target": 5
+          },
+          {
+            "lane": 3,
+            "source": 4,
+            "target": 7
+          },
+          {
+            "lane": 2,
+            "source": 5,
+            "target": 6
+          },
+          {
+            "lane": 3,
+            "source": 6,
+            "target": 7
+          }
+        ],
+        "steps": [
+          {
+            "lane": 0,
+            "row": 0
+          },
+          {
+            "lane": 0,
+            "row": 1
+          },
+          {
+            "lane": 0,
+            "row": 2
+          },
+          {
+            "lane": 1,
+            "row": null
+          },
+          {
+            "lane": 3,
+            "row": 3
+          },
+          {
+            "lane": 1,
+            "row": 4
+          },
+          {
+            "lane": 2,
+            "row": 5
+          },
+          {
+            "lane": 3,
+            "row": 6
+          }
+        ],
+        "version": 1
+      },
+      "lanes": 4,
+      "rows": [
+        {
+          "id": "0005",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            5
+          ]
+        },
+        {
+          "id": "0006",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            3,
+            4
+          ]
+        },
+        {
+          "id": "0007",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            3,
+            4
+          ]
+        },
+        {
+          "id": "0002",
+          "lane": 2,
+          "start": 1,
+          "targets": [
+            6
+          ]
+        },
+        {
+          "id": "0004",
+          "lane": 3,
+          "start": 1,
+          "targets": [
+            5
+          ]
+        },
+        {
+          "id": "0003",
+          "lane": 1,
+          "start": 0,
+          "targets": [
+            6
+          ]
+        },
+        {
+          "id": "0001",
+          "lane": 2,
+          "start": 3,
+          "targets": []
+        }
+      ]
+    }
+  }
+]

@@ -17,6 +17,11 @@
                           (lambda (issue) (make-isled-graph-row :id (isled-issue-id issue) :lane 0))
                           (isled-snapshot-issues snapshot))))
            (plan (isled-graph--index-rows rows (if (> (length rows) 0) 1 0))))
+      (setf (isled-graph-plan-drawing plan)
+            (isled-graph-drawing-decode
+             `((version . 1) (lanes . ,(isled-graph-plan-lanes plan)) (routes . nil)
+               (steps . ,(cl-loop for index below (length rows)
+                                 collect `((row . ,index) (lane . 0))))) plan))
       (make-isled-graph-response :direction direction :hash "0000000000000001" :plan plan))))
 
 (defun isled-test-process (directory request callback)

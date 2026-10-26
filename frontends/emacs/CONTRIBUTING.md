@@ -47,6 +47,11 @@ on ordinary and difficult DAGs, retaining the documented width limitations. The
 [loading rationale](../../agent-docs/decisions.md#frontend-architecture-and-presentation)
 explains the implemented boundary; timings on one machine do not establish native
 support or universal latency bounds.
+To isolate ordering, physical routing and drawing encoding from ledger/process
+costs, run `cargo test --release --test graph_drawing_performance -- --ignored --nocapture`.
+It measures eight 5,000-node shapes in both directions; the graphical benchmark
+still owns actual decoding, painting, scrolling and expansion costs.
+
 The focused fold regression inspects displayed glyphs after opening and folding
 neighboring bodies, including wrapped text, then scrolls every heading and
 connector through the top row in both directions:
@@ -413,9 +418,9 @@ lint when submitting. Archive acceptance remains MELPA's decision.
   asynchronous body delivery.
 - [`isled-view.el`](isled-view.el) owns pure filtering and selection.
 - [`isled-graph-model.el`](isled-graph-model.el) validates compact Rust layouts,
-  indexes row identities and continuing lanes, and orders selected headings.
-  [`isled-graph-drawing.el`](isled-graph-drawing.el) validates shared drawing
-  steps against those exact dependencies and indexes their physical tracks.
+  indexes row identities and orders selected headings.
+  [`isled-graph-drawing.el`](isled-graph-drawing.el) validates versioned sparse
+  routes against those exact dependencies and indexes their physical tracks.
   [`isled-graph-glyphs.el`](isled-graph-glyphs.el) derives directional node and
   connector lines. [`isled-graph-gutter.el`](isled-graph-gutter.el) paints nearby
   glyphs, anchors nodes outside folds, and composes body panel prefixes. [`isled-graph.el`](isled-graph.el) owns
@@ -423,7 +428,10 @@ lint when submitting. Archive acceptance remains MELPA's decision.
   [`isled-listing.el`](isled-listing.el) owns exclusive hierarchy/ID/oldest-first
   selection and the last flat choice. [`isled-view-state.el`](isled-view-state.el)
   owns the restorable view value shared by those commands and the browser.
-  Rust's omitted-connection
+  The shared [case library](../../tests/fixtures/dependency-cases.json) has Rust
+  payload fixtures and an independent ERT reader of final glyph paths in both
+  directions. It includes branches, partial overlap, shared forks and redundant
+  direct edges. Rust's omitted-connection
   counts preserve the circle marker when filters hide every neighbor; filters use
   the ordinary loading queue.
 - [`isled-presentation.el`](isled-presentation.el) owns semantic

@@ -491,16 +491,22 @@ chains, branches and joins.
 | `•` | An issue with no connections within the selected status set. |
 | `○` | A connected issue. |
 | `│` | A dependency continuing past this row. |
+| `╪` | Two paths crossing without joining. |
 
 Connected groups stay together, ordered by their smallest issue ID. Independent
 issues can appear between groups, but never interrupt one. Within a group,
-dependency order comes first; newly unblocked branches follow, with narrower
-branches and then issue ID breaking ties.
+dependency order comes first; newly unblocked branches follow, with issue ID
+breaking ties.
 
 The first gutter column holds starts in the displayed direction and independent
 issues. Connected threads continue in later columns. Consecutive circles in the
 same later column form a straight chain; branches and joins add horizontal lines.
-A horizontal stroke crossing a vertical one without a junction is not a join.
+Follow paths right or down. In the default direction, they lead from prerequisites
+to the work they unblock; `d` reverses that meaning. Corners and T junctions
+connect paths. At `╪`, keep going straight: the crossing paths are independent.
+
+Horizontal links usually sit on issue headings. Shared prerequisites sometimes
+need a separate routing line so a merge and a fork remain easy to distinguish.
 
 Connectors continue beside expanded bodies and wrapped lines. Folding changes
 their height without moving their columns. If a graph is too wide, widen the

@@ -182,9 +182,12 @@ fallback for older CLIs. This preserves existing flat clients during rollout;
 it requires no issue-file migration. The [bounded protocol](../user-docs/frontend.md#dependency-layout)
 owns graph fields and independent topology hashes. Strict status selection never
 adds hidden nodes or replacement edges; readiness remains ledger-wide.
-The junction revision adds sparse `drawing` metadata while preserving the
-existing semantic row fields. Updated graph clients require that metadata;
-the same updated-CLI boundary applies. Shared routes preserve exact direct edges.
+The drawing revision replaces the old unversioned junction steps with explicitly
+versioned sparse routes while preserving the semantic row fields. The maintainer
+approved requiring a matching CLI and Emacs frontend: reject older drawing
+payloads clearly, without a compatibility renderer. Ordinary CLI commands,
+issue files, complete snapshots and flat-view data remain compatible. Graph
+freshness includes the drawing revision; paths preserve exact direct edges.
 The Emacs browser accepts ordinary filtering in both hierarchical and flat modes;
 only hierarchical mode requests a graph.
 Graph rows add nonzero direct-connection counts for neighbors excluded by
