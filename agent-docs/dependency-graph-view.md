@@ -91,10 +91,10 @@ prefer rightward splits within it, then reuse free columns before widening.
 This preserves the demo's clear junctions without making repeated diamonds
 or shared layers drift continually to the right.
 
-Avoid crossings where practical. For unavoidable non-joining crossings, interrupt
-the vertical stroke and retain the horizontal stroke, replacing the double-line
-`╪` convention. This is distinct from a junction and does not connect the routes;
-arbitrary DAGs are not promised a crossing-free layout.
+The current renderer interrupts the vertical stroke at non-joining crossings
+and retains the horizontal stroke. The [next drawing revision](#next-drawing-revision-not-implemented)
+replaces this convention with an explicit crossing glyph. Avoid crossings where
+practical; arbitrary DAGs are not promised a crossing-free layout.
 
 ### Bodies, ordering and readiness
 
@@ -125,6 +125,62 @@ than dropping information to force a narrow gutter. This lets the simple,
 measured layout serve ordinary graphs without delaying the feature for exceptional
 shapes. Bounded loading, transport and responsiveness requirements still apply;
 accepting awkward appearance does not establish acceptable rendering cost.
+
+## Next drawing revision (not implemented)
+
+Every directed route in the next revision moves **right or down, never left or
+up**, including routes on connector-only rows. Nodes and junctions receive from
+above or the left and send below or to the right. In dependents-first mode the
+semantic direction reverses, but the drawing still flows right/down toward the
+prerequisites. This rule resolves horizontal direction without per-edge arrows.
+
+Keep column zero for displayed starts and independent issues. Adjacent starts
+never imply a connection. An explicit stroke may leave a root downward before
+turning right; a route cannot return left to column zero. Retain each selected
+issue exactly once, including issues with no edges.
+
+The direction rule forbids reclaiming a track by routing a continuing branch
+leftward. Repeated splits and joins may therefore widen a connected component;
+keep that tradeoff visible in the case library and performance evaluation.
+An incoming fork beside a receiving node can make its continuing branch look
+like an outgoing dependency of that node. Keep the split separate; merge only
+the intended branch into the receiving node. A merge may end directly at the
+node, without an extra routing row. Moving a combined split/merge bar above a
+node is insufficient when it still makes unrelated prerequisites look pooled.
+Validate readable branch ownership as well as exact directed edges.
+
+Use `╪` consistently for a non-joining crossing: the horizontal and vertical
+paths continue independently, with no turn between them. A plain `─` is only a
+horizontal stroke. The explicit glyph keeps a compact chain readable when the
+crossing falls between adjacent issue nodes with no intervening `│` strokes.
+A crossing cannot occupy an issue node; place it between the chain's nodes,
+using a routing-only row if needed. The ban on four-way joins (`┼`) remains.
+
+### Implementation recommendation
+
+Extend the existing Rust planner rather than add a general-purpose graph engine.
+Keep component grouping and deterministic topological ordering. Compare removing
+the narrow-branch-first preference against branch continuity on representative
+graphs; issue IDs remain tie-breakers, not a way to infer domain work streams.
+Separate issue order from track placement, then remove unused spacing without
+changing routes. Any local placement search must have explicit work bounds;
+do not enumerate permutations or allocate a complete rows-by-tracks matrix.
+
+Initially share multiple-target routes only when the sources have identical
+complete destination sets. Otherwise keep their branches separate and merge
+only at the intended target. Preserve every direct edge, including redundant
+direct dependencies alongside longer paths. Prefer extra tracks or routing rows
+over false connections or misleading branch ownership. Exact compactness and
+universal branch locality are not promised.
+
+Retain the window-independent Rust plan and visible-region Emacs painting.
+Implementation acceptance must check final glyph paths as well as logical edges,
+in both directions and with filtering. Include shared prerequisites, repeated
+diamonds, crossings between adjacent nodes, and expanded/wrapped bodies. Check
+graphical and terminal Emacs, then measure layout, payload, painting, scrolling
+and expansion on ordinary and difficult 5,000-issue shapes. Actual rendering and
+performance remain implementation work; any necessary wire change needs its
+own compatibility decision.
 
 ## Accepted selection
 
