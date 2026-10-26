@@ -143,6 +143,59 @@ fn chain_and_independent_issues_need_no_connector_rows_or_extra_width() {
 }
 
 #[test]
+fn unrelated_wide_components_do_not_move_a_small_groups_nodes_or_routes() {
+    let small_edges = [(2, 1), (4, 2), (4, 3)];
+    for direction in [Direction::PrerequisitesFirst, Direction::DependentsFirst] {
+        let small = plan(4, &small_edges, direction);
+        let alone = small.drawing();
+        if direction == Direction::PrerequisitesFirst {
+            assert_eq!(alone.lanes, 2);
+        }
+        for offset in [0, 8] {
+            let wide = if offset == 0 { 5 } else { 1 };
+            let edges: Vec<_> = small_edges
+                .iter()
+                .map(|&(a, b)| (a + offset, b + offset))
+                .chain((wide + 1..wide + 7).flat_map(|middle| [(middle, wide), (wide + 7, middle)]))
+                .collect();
+            let together = plan(12, &edges, direction);
+            verify(&together);
+            let drawing = together.drawing();
+            let start = drawing
+                .steps
+                .iter()
+                .position(|step| {
+                    step.row.is_some_and(|row| {
+                        together.rows()[row].id().get() == small.rows()[0].id().get() + offset
+                    })
+                })
+                .unwrap();
+            assert_eq!(
+                drawing.steps[start..start + 4]
+                    .iter()
+                    .map(|step| step.lane)
+                    .collect::<Vec<_>>(),
+                alone.steps.iter().map(|step| step.lane).collect::<Vec<_>>()
+            );
+            let routes: Vec<_> = drawing
+                .routes
+                .iter()
+                .filter(|route| (start..start + 4).contains(&route.source))
+                .map(|route| (route.source - start, route.target - start, route.lane))
+                .collect();
+            assert_eq!(
+                routes,
+                alone
+                    .routes
+                    .iter()
+                    .map(|route| (route.source, route.target, route.lane))
+                    .collect::<Vec<_>>()
+            );
+        }
+    }
+}
+
+#[test]
 fn drawing_case_library_matches_the_frontend_fixtures() {
     use serde_json::{Value, json};
     let inputs: Value = serde_json::from_str(include_str!(

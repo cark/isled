@@ -99,13 +99,18 @@ fn vertices(plan: &Plan) -> Vec<Vertex> {
 
 fn place(vertices: &[Vertex]) -> Drawing {
     let mut incoming = vec![BTreeSet::new(); vertices.len()];
-    let reserve = root_pressure(vertices);
-    let mut free: BTreeSet<_> = (1..=reserve).collect();
-    let mut lanes = if vertices.is_empty() { 0 } else { reserve + 1 };
+    let mut reservations = root_reservations(vertices).into_iter().peekable();
+    let mut free = BTreeSet::new();
+    let (mut reserve, mut next_lane, mut lanes) = (0, 0, 0);
     let mut nodes = Vec::with_capacity(vertices.len());
     let mut routes = Vec::new();
     let mut split = Vec::new();
     for (source, vertex) in vertices.iter().enumerate() {
+        if let Some((_, pressure)) = reservations.next_if(|&(start, _)| start == source) {
+            reserve = pressure;
+            free = (1..=reserve).collect();
+            next_lane = reserve + 1;
+        }
         let lane = incoming[source].last().copied().unwrap_or(0);
         nodes.push(lane);
         // A routing-only merge and fork occupy separate lines. Issue nodes
@@ -118,7 +123,15 @@ fn place(vertices: &[Vertex]) -> Drawing {
             None
         };
         let mut allocated = shared.map_or_else(
-            || allocate(&mut free, &mut lanes, lane, vertex.targets.len(), reserve),
+            || {
+                allocate(
+                    &mut free,
+                    &mut next_lane,
+                    lane,
+                    vertex.targets.len(),
+                    reserve,
+                )
+            },
             |track| vec![track],
         );
         allocated.sort_unstable();
@@ -130,6 +143,7 @@ fn place(vertices: &[Vertex]) -> Drawing {
                 lane: track,
             });
         }
+        lanes = lanes.max(next_lane);
     }
     physical_steps(vertices, nodes, routes, split, lanes)
 }
@@ -206,8 +220,9 @@ fn allocate(
     result
 }
 
-/// Simultaneous root tracks; singleton routes to one target may share a track.
-fn root_pressure(vertices: &[Vertex]) -> usize {
+/// Reserve simultaneous root tracks separately for each contiguous component.
+/// Singleton routes to one target may share a track.
+fn root_reservations(vertices: &[Vertex]) -> Vec<(usize, usize)> {
     let mut incoming = vec![false; vertices.len()];
     for vertex in vertices {
         for &target in &vertex.targets {
@@ -217,7 +232,12 @@ fn root_pressure(vertices: &[Vertex]) -> usize {
     let mut endings = vec![0; vertices.len()];
     let mut singletons = BTreeSet::new();
     let (mut active, mut maximum) = (0, 0);
+    let (mut start, mut end) = (0, 0);
+    let mut reservations = Vec::new();
     for (source, vertex) in vertices.iter().enumerate() {
+        // Ordering keeps components contiguous. Once no edge reaches beyond
+        // this row, the next row starts an independent lane allocation.
+        end = end.max(vertex.targets.last().copied().unwrap_or(source));
         active -= endings[source];
         if !incoming[source] {
             for &target in &vertex.targets {
@@ -228,8 +248,14 @@ fn root_pressure(vertices: &[Vertex]) -> usize {
             }
         }
         maximum = maximum.max(active);
+        if source == end {
+            reservations.push((start, maximum));
+            start = source + 1;
+            maximum = 0;
+            singletons.clear();
+        }
     }
-    maximum
+    reservations
 }
 
 #[cfg(test)]

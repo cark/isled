@@ -2747,6 +2747,315 @@
     }
   },
   {
+    "case": "mixed-width-groups",
+    "direction": "prerequisites",
+    "plan": {
+      "drawing": {
+        "lanes": 3,
+        "routes": [
+          {
+            "lane": 2,
+            "source": 0,
+            "target": 1
+          },
+          {
+            "lane": 1,
+            "source": 0,
+            "target": 2
+          },
+          {
+            "lane": 2,
+            "source": 1,
+            "target": 3
+          },
+          {
+            "lane": 2,
+            "source": 2,
+            "target": 3
+          },
+          {
+            "lane": 1,
+            "source": 4,
+            "target": 5
+          },
+          {
+            "lane": 1,
+            "source": 5,
+            "target": 7
+          },
+          {
+            "lane": 1,
+            "source": 6,
+            "target": 7
+          }
+        ],
+        "steps": [
+          {
+            "lane": 0,
+            "row": 0
+          },
+          {
+            "lane": 2,
+            "row": 1
+          },
+          {
+            "lane": 1,
+            "row": 2
+          },
+          {
+            "lane": 2,
+            "row": 3
+          },
+          {
+            "lane": 0,
+            "row": 4
+          },
+          {
+            "lane": 1,
+            "row": 5
+          },
+          {
+            "lane": 0,
+            "row": 6
+          },
+          {
+            "lane": 1,
+            "row": 7
+          },
+          {
+            "lane": 0,
+            "row": 8
+          }
+        ],
+        "version": 1
+      },
+      "lanes": 3,
+      "rows": [
+        {
+          "id": "0001",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            1,
+            2
+          ]
+        },
+        {
+          "id": "0002",
+          "lane": 1,
+          "start": 0,
+          "targets": [
+            3
+          ]
+        },
+        {
+          "id": "0003",
+          "lane": 2,
+          "start": 0,
+          "targets": [
+            3
+          ]
+        },
+        {
+          "id": "0004",
+          "lane": 1,
+          "start": 1,
+          "targets": []
+        },
+        {
+          "id": "0005",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            5
+          ]
+        },
+        {
+          "id": "0006",
+          "lane": 1,
+          "start": 4,
+          "targets": [
+            7
+          ]
+        },
+        {
+          "id": "0007",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            7
+          ]
+        },
+        {
+          "id": "0008",
+          "lane": 1,
+          "start": 5,
+          "targets": []
+        },
+        {
+          "id": "0009",
+          "lane": 0,
+          "start": null,
+          "targets": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "mixed-width-groups",
+    "direction": "dependents",
+    "plan": {
+      "drawing": {
+        "lanes": 3,
+        "routes": [
+          {
+            "lane": 2,
+            "source": 0,
+            "target": 1
+          },
+          {
+            "lane": 1,
+            "source": 0,
+            "target": 2
+          },
+          {
+            "lane": 2,
+            "source": 1,
+            "target": 3
+          },
+          {
+            "lane": 2,
+            "source": 2,
+            "target": 3
+          },
+          {
+            "lane": 2,
+            "source": 4,
+            "target": 5
+          },
+          {
+            "lane": 1,
+            "source": 4,
+            "target": 7
+          },
+          {
+            "lane": 2,
+            "source": 5,
+            "target": 6
+          }
+        ],
+        "steps": [
+          {
+            "lane": 0,
+            "row": 0
+          },
+          {
+            "lane": 2,
+            "row": 1
+          },
+          {
+            "lane": 1,
+            "row": 2
+          },
+          {
+            "lane": 2,
+            "row": 3
+          },
+          {
+            "lane": 0,
+            "row": 4
+          },
+          {
+            "lane": 2,
+            "row": 5
+          },
+          {
+            "lane": 2,
+            "row": 6
+          },
+          {
+            "lane": 1,
+            "row": 7
+          },
+          {
+            "lane": 0,
+            "row": 8
+          }
+        ],
+        "version": 1
+      },
+      "lanes": 3,
+      "rows": [
+        {
+          "id": "0004",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            1,
+            2
+          ]
+        },
+        {
+          "id": "0002",
+          "lane": 1,
+          "start": 0,
+          "targets": [
+            3
+          ]
+        },
+        {
+          "id": "0003",
+          "lane": 2,
+          "start": 0,
+          "targets": [
+            3
+          ]
+        },
+        {
+          "id": "0001",
+          "lane": 1,
+          "start": 1,
+          "targets": []
+        },
+        {
+          "id": "0008",
+          "lane": 0,
+          "start": null,
+          "targets": [
+            5,
+            7
+          ]
+        },
+        {
+          "id": "0006",
+          "lane": 1,
+          "start": 4,
+          "targets": [
+            6
+          ]
+        },
+        {
+          "id": "0005",
+          "lane": 1,
+          "start": 5,
+          "targets": []
+        },
+        {
+          "id": "0007",
+          "lane": 2,
+          "start": 4,
+          "targets": []
+        },
+        {
+          "id": "0009",
+          "lane": 0,
+          "start": null,
+          "targets": []
+        }
+      ]
+    }
+  },
+  {
     "case": "shared-with-separate-merge",
     "direction": "prerequisites",
     "plan": {

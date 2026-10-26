@@ -86,9 +86,12 @@ those physical routes. Newly ready work follows issue-ID order, continuing those
 branches before returning to another ready root. Outgoing edge counts do not
 determine branch order: shared prerequisites can have more targets while still
 belonging to the same work stream.
-Drawing placement reserves space for overlapping roots, places earlier branches
-on the right, and reuses free tracks only at or right of the source. It never
-moves a continuation left to save width. Repeated diamonds and shared layers
+Drawing placement reserves space for overlapping roots within each connected
+group, places earlier branches on the right, and reuses free tracks only at or
+right of the source. Each group starts with its own lane allocation: a wide
+group cannot push an unrelated chain or merge farther right. Titles still align
+using the widest group's gutter. Placement never moves a continuation left to
+save width. Repeated diamonds and shared layers
 may therefore drift right. A singleton destination can join an existing track;
 partial multi-target overlap keeps its incoming branches separate.
 

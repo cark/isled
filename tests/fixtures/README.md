@@ -2,7 +2,8 @@
 
 `dependency-cases.json` defines graph inputs using prerequisite → dependent
 pairs. It covers chains, roots, branches, joins, complete and partial sharing,
-redundant direct edges, and the government/cabinet example.
+redundant direct edges, unrelated groups of different widths, and the
+government/cabinet example.
 
 Rust compares the current planner with `dependency-drawings.json` in both
 directions. Emacs decodes those same payloads and an independent glyph reader

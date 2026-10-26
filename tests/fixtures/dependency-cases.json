@@ -449,6 +449,15 @@
     ]
   },
   {
+    "id": "mixed-width-groups",
+    "title": "A wide diamond beside a compact merge and an independent issue",
+    "nodes": ["A", "B", "C", "D", "E", "F", "G", "H", "I"],
+    "must_precede": [
+      ["A", "B"], ["A", "C"], ["B", "D"], ["C", "D"],
+      ["E", "F"], ["F", "H"], ["G", "H"]
+    ]
+  },
+  {
     "id": "shared-with-separate-merge",
     "title": "Shared fork whose inputs need their own merge line",
     "nodes": [

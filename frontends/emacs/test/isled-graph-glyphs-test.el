@@ -101,6 +101,14 @@
         (aset (aref broken line) column replacement)
         (should-error (isled-graph-glyphs-test--read broken plan))))))
 
+(ert-deftest isled-graph-glyphs-unrelated-groups-keep-their-own-width ()
+  (let* ((plan (isled-graph-fixtures-plan "mixed-width-groups"))
+         (lines (isled-graph-glyphs-test--lines plan)))
+    (should (equal (mapcar #'string-trim-right (append lines nil))
+                   '("○─┬─╮" "  │ ○" "  ○─┤" "    ○"
+                     "○─╮" "  ○" "○─┤" "  ○" "•")))
+    (isled-graph-glyphs-test--read lines plan)))
+
 (ert-deftest isled-graph-glyphs-crosses-between-consecutive-chain-nodes ()
   ;; Deliberately interleave two components to stress painting, not ordering.
   (let* ((lanes '(0 1 1 0 1 1 1 2))
