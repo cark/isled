@@ -117,11 +117,11 @@ fn illustrative_shared_prerequisites_merge_before_they_split() {
             (Some(2), 2),
             (Some(4), 1),
             (None, 2),
-            (Some(8), 3),
-            (Some(5), 2),
-            (Some(6), 2),
-            (Some(7), 1),
-            (Some(9), 3),
+            (Some(5), 3),
+            (Some(6), 4),
+            (Some(7), 3),
+            (Some(8), 2),
+            (Some(9), 4),
             (Some(3), 0)
         ]
     );

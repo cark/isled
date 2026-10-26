@@ -196,12 +196,12 @@ The plan is null only when the supplied graph token matches. A changed plan has:
 Connected components stay contiguous and are placed by their smallest issue ID;
 independent issues are singleton components in that same order. Inside each
 component, dependency order takes precedence and newly unblocked branches are
-followed first, preferring fewer outgoing edges and then issue ID among nodes
-unblocked together.
+followed first, using issue ID among nodes unblocked together. The number of
+outgoing edges does not determine which branch comes first.
 
 Lane zero is reserved for roots (`start: null`); incoming tracks
 and their terminal issues occupy higher lanes. Algorithm changes invalidate the
-graph token; the junction revision uses algorithm version 3.
+graph token; the branch-order revision uses algorithm version 4.
 
 `drawing` contains its own `lanes` count and ordered `steps`. Each real step has
 `row` (an index into `plan.rows`), `lane`, and `start` (the earliest incoming

@@ -143,7 +143,40 @@ fn connected_groups_stay_intact_with_independents_in_id_order() {
             Direction::PrerequisitesFirst,
             vec![1, 2, 7, 8, 9, 3, 4, 5, 6],
         ),
-        (Direction::DependentsFirst, vec![1, 9, 8, 7, 2, 3, 4, 6, 5]),
+        (Direction::DependentsFirst, vec![1, 9, 7, 2, 8, 3, 4, 6, 5]),
+    ] {
+        let plan = graph.layout(direction).unwrap();
+        assert_eq!(
+            plan.rows()
+                .iter()
+                .map(|row| row.id().get())
+                .collect::<Vec<_>>(),
+            expected
+        );
+        verify(&plan, &graph, direction);
+    }
+}
+
+#[test]
+fn shared_prerequisites_do_not_interleave_the_government_and_cabinet_branches() {
+    let graph = Graph::new(
+        [47, 48, 49, 56, 57, 58].map(id),
+        [
+            (48, 47),
+            (49, 48),
+            (56, 47),
+            (57, 56),
+            (58, 57),
+            (57, 48),
+            (58, 49),
+        ]
+        .map(|(dependent, prerequisite)| (id(dependent), id(prerequisite))),
+        7,
+    )
+    .unwrap();
+    for (direction, expected) in [
+        (Direction::PrerequisitesFirst, vec![47, 48, 49, 56, 57, 58]),
+        (Direction::DependentsFirst, vec![58, 49, 57, 48, 56, 47]),
     ] {
         let plan = graph.layout(direction).unwrap();
         assert_eq!(

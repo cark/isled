@@ -22,10 +22,10 @@ pub(super) fn order(outgoing: &[Vec<usize>]) -> Result<Vec<usize>, LayoutError> 
                     unblocked.push(target);
                 }
             }
-            // Finish narrower branches before opening another broad branch.
-            unblocked.sort_unstable_by_key(|&target| {
-                std::cmp::Reverse((outgoing[target].len(), target))
-            });
+            // Follow issue-ID order within newly ready work. Outgoing degree
+            // does not identify a branch: a shared prerequisite can have more
+            // targets than an unrelated branch without belonging after it.
+            unblocked.sort_unstable_by_key(|&target| std::cmp::Reverse(target));
             ready.extend(unblocked);
         }
     }

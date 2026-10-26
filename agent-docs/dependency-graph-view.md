@@ -84,8 +84,10 @@ The implementation groups sources only when their complete destination sets
 are identical. This conservative rule makes the shared segment's meaning exact
 without searching for arbitrary overlapping subgraphs. Rust assigns the extra
 routing steps and tracks; Emacs separates their merge and split strokes into
-horizontal lines. Newly ready narrow branches precede broader branches to
-reduce overlapping routes, with ID order breaking ties.
+horizontal lines. Newly ready work follows issue-ID order, continuing those
+branches before returning to another ready root. Outgoing edge counts do not
+determine branch order: shared prerequisites can have more targets while still
+belonging to the same work stream.
 Drawing placement uses the direct-edge plan's width as a routing allowance:
 prefer rightward splits within it, then reuse free columns before widening.
 This preserves the demo's clear junctions without making repeated diamonds
