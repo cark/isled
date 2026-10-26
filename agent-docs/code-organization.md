@@ -102,7 +102,7 @@ src/
 ├── wait_graph.rs    # implemented reusable iterative reachability and components
 ├── graph_layout.rs  # canonical selected graph and shared layout entry point
 ├── graph_layout/    # frontend layout engine and retained diagnostic experiment
-│   ├── ordering.rs  # ID-placed components, following narrower newly ready branches
+│   ├── ordering.rs  # ID-placed components, following newly ready branches in ID order
 │   ├── plan.rs      # sparse destination lanes, stored-plan validation and indexing
 │   ├── drawing.rs   # complete-set sharing and sparse right/down physical routes
 │   ├── range.rs     # bounded rows with entering/leaving continuation state

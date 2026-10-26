@@ -201,7 +201,8 @@ outgoing edges does not determine which branch comes first.
 
 Lane zero is reserved for roots (`start: null`); incoming tracks and their
 terminal issues occupy higher lanes. Algorithm changes invalidate the graph
-token; the right/down drawing revision uses algorithm version 5.
+token; the current drawing layout uses algorithm version 6, with lane
+reservations kept independent for each connected component.
 
 ### Drawing routes
 
