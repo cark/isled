@@ -1,7 +1,7 @@
 # Package manager recipes
 
 These recipes install Isled directly from GitHub. The `release` branch follows
-frontend versions whose compatible CLI is already published; `v0.36.0` selects
+frontend versions whose compatible CLI is already published; `v0.37.0` selects
 this release. On first use, the frontend automatically downloads its
 matching CLI.
 
@@ -41,7 +41,7 @@ With Elpaca's usual use-package integration enabled:
 The explicit Transient declaration upgrades the bundled copy. The matching
 [plain recipe](recipes/elpaca.el) also works with the `elpaca` macro.
 
-For a fixed release, replace `:branch "release"` with `:tag "v0.36.0"`.
+For a fixed release, replace `:branch "release"` with `:tag "v0.37.0"`.
 For an exact commit, use `:ref "FULL-COMMIT-ID"` and `:depth nil` so an older
 commit remains reachable. To follow development, use `:branch "main"`.
 See [Elpaca's recipe reference](https://github.com/progfolio/elpaca/blob/master/doc/manual.md#recipes).
@@ -80,7 +80,7 @@ On Emacs 30.1 or newer:
 
 `:rev :newest` follows the branch tip. Without it, use-package normally selects
 the most recent version-header change, which can omit later fixes. Use
-`:rev "v0.36.0"` or `:rev "FULL-COMMIT-ID"` to fix the revision. For development,
+`:rev "v0.37.0"` or `:rev "FULL-COMMIT-ID"` to fix the revision. For development,
 use `:branch "main" :rev :newest`.
 
 For `package-vc-install`, pass the [plain recipe](recipes/package-vc.el) as its
