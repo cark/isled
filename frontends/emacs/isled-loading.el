@@ -66,11 +66,13 @@ The 5,000-issue switch experiment found repeated collections dominated latency.
 This measured 16 MiB allowance batches that work without changing the user's
 threshold outside reply processing or reducing a larger configured value.")
 
-(defun isled-loading-request (mode &optional state callback criteria completion)
+(defun isled-loading-request (mode &optional state callback criteria completion buffer-owned)
   "Queue MODE with destination STATE and optional successful CALLBACK.
 Refresh and view requests obtain summaries first, then schedule nearby details.
 CRITERIA may supply the already parsed destination filter; otherwise parse it.
-COMPLETION is (CRITERIA CALLBACK) for independently fenced contextual choices."
+COMPLETION is (CRITERIA CALLBACK) for independently fenced contextual choices.
+BUFFER-OWNED restores a bookmark independently of temporary display windows;
+newer requests still supersede it through the view generation fence."
   (let* ((filter (if state (isled--view-state-filter state) isled--filter))
          (graph (if state (isled--view-state-graph-direction state) isled-graph-direction))
          (criteria (or criteria (if (eq mode 'choices) '((status . "all"))
@@ -97,7 +99,7 @@ COMPLETION is (CRITERIA CALLBACK) for independently fenced contextual choices."
         (setq mode 'refresh))
       (setq isled-loading-pending
             (list mode state callback
-                  (and (or state callback) (isled-navigation-origin))
+                  (and (not buffer-owned) (or state callback) (isled-navigation-origin))
                   filter criteria completion graph)))
     (isled-loading--start-next)))
 

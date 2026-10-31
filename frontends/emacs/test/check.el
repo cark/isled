@@ -92,6 +92,7 @@ PHASE is nil for all checks, static for compilation/lint, or tests for ERT."
                     "isled-buffers.el"
                     "isled-entry.el"
                     "isled-work.el"
+                    "isled-bookmark.el"
                     "isled-browser.el"
                     "isled-editor-model.el"
                     "isled-editor-form.el"
@@ -194,6 +195,7 @@ PHASE is nil for all checks, static for compilation/lint, or tests for ERT."
               (load (expand-file-name "isled-data-test.el" test-directory) nil t)
               (load (expand-file-name "isled-session-test.el" test-directory) nil t)
               (load (expand-file-name "isled-buffers-test.el" test-directory) nil t)
+              (load (expand-file-name "isled-bookmark-test.el" test-directory) nil t)
               (load (expand-file-name "isled-project-test.el" test-directory) nil t)
               (load (expand-file-name "isled-entry-test.el" test-directory) nil t)
               (load (expand-file-name "isled-editor-test.el" test-directory) nil t)

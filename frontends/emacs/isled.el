@@ -36,6 +36,7 @@ Independent of the version assigned by an Emacs package archive.")
 (autoload 'isled-add-issue "isled-editor" nil t)
 (autoload 'isled-open-source "isled-source" nil t)
 (autoload 'isled-mode "isled-browser" nil t)
+(autoload 'isled-bookmark-jump "isled-bookmark")
 (autoload 'isled-graph-toggle "isled-graph" nil t)
 (autoload 'isled-graph-reverse "isled-graph" nil t)
 

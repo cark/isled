@@ -18,6 +18,9 @@
 (declare-function isled--window-anchors "isled-browser" (&optional preferred-id))
 (declare-function isled--restore-window-anchors "isled-browser" (anchors))
 
+(defvar-local isled-viewport-update-hook nil
+  "Hook run after visible issue bodies have been formatted.")
+
 (defvar-local isled-viewport--motion nil
   "Visible windows with their last row index and direction of travel.")
 
@@ -88,7 +91,8 @@ Search previews format their chosen body directly through the fold callback."
         ;; Hidden Markdown can bring another body into range.  Each successful
         ;; pass formats previously plain rows, so this reaches a fixed point.
         (while (isled-viewport--format-needed windows)
-          (isled--restore-window-anchors anchors))))))
+          (isled--restore-window-anchors anchors)))))
+  (run-hooks 'isled-viewport-update-hook))
 
 (defun isled-viewport--format-needed (windows)
   "Format newly needed rows around WINDOWS and report whether any changed."

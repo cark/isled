@@ -155,6 +155,23 @@ python3 scripts/private-graphical-emacs.py \
   --screen 1080x680x24 --keep-success
 ```
 
+Bookmark persistence is covered by ERT, including a fresh child Emacs process.
+The optional Activities check requires Activities and Persist on explicit load
+paths. It uses a disposable ledger and checks two independently filtered/folded
+views, repeated layout restoration, and a cursor inside an asynchronously loaded
+body (the latter needs graphical redisplay and is skipped in batch ERT):
+
+```sh
+python3 scripts/private-graphical-emacs.py \
+  --script frontends/emacs/test/bookmark-activities-graphical.el \
+  --env ISLED_TEST_PROGRAM="$PWD/target/debug/isled" \
+  --load-path frontends/emacs --load-path frontends/emacs/test \
+  --load-path /path/to/activities --load-path /path/to/persist
+```
+
+Supply the standard frontend dependency load paths as described above. This does
+not install Activities or change an existing Emacs session.
+
 Clock viewport geometry has a separate regression check for smaller and larger
 text, split windows, partial lines, and timers waking or stopping after scaling:
 
@@ -413,6 +430,12 @@ lint when submitting. Archive acceptance remains MELPA's decision.
 - [`isled-navigation.el`](isled-navigation.el) owns window/view
   navigation memories, shared duplicate-suppressing history recording, and
   asynchronous origin checks.
+- [`isled-bookmark.el`](isled-bookmark.el) owns the versioned, readable bookmark
+  representation and its adapter to existing semantic view restoration. Stable
+  view identities preserve independently saved buffers. Buffer-owned loading
+  avoids capturing Activities' temporary layout windows; request generations
+  still reject superseded restoration. A one-shot viewport completion restores
+  an expanded-body cursor after formatting, cancelled by later interaction.
 - [`isled-expansion.el`](isled-expansion.el) owns expansion
   fitting and its window-local, cancellable pre-fit viewport through folding or
   asynchronous body delivery.

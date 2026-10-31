@@ -37,6 +37,7 @@
 (require 'isled-graph)
 (require 'isled-work)
 (require 'isled-listing)
+(require 'isled-bookmark)
 
 (declare-function isled-sections-point-state
                   "isled-sections")
@@ -165,6 +166,7 @@ Each buffer represents one view of a canonical ledger.  Issues are expandable
 sections whose complete canonical content is displayed inline."
   ;; Generated replacements must not retain old rows through undo history.
   (buffer-disable-undo)
+  (setq-local bookmark-make-record-function #'isled-bookmark-make-record)
   (setq-local truncate-lines nil)
   (setq-local word-wrap t)
   (font-lock-mode -1)

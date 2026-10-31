@@ -101,6 +101,31 @@ changes those in every such window. Their cursor positions are preserved where
 possible, and their histories remain separate. If you move away while a jump is
 loading, the delayed result will not take over another window or move you back.
 
+### Saving views with bookmarks
+
+Use the ordinary Emacs bookmark commands: `C-x r m` (`bookmark-set`) saves
+an Isled view and `C-x r b` (`bookmark-jump`) restores it. Use `M-x bookmark-save`
+to write bookmarks to disk, or configure Emacs's `bookmark-save-flag` to suit
+your normal saving policy. Saved bookmarks can reopen a view after its buffer,
+frame or Emacs process has gone away.
+
+An Isled bookmark records the selected project/directory, canonical ledger root,
+filter, graph direction or flat ordering, expanded issues, and issue-relative
+cursor position. It reads current ledger data when restored; it does not save
+rendered content or back/forward history. Independently saved view buffers remain
+independent, and repeated restoration reuses the matching living view.
+
+Missing issues are silently omitted. An unavailable ledger or invalid bookmark
+produces an ordinary message, and a loading failure appears in the view's error
+header. Restoration never substitutes a different ledger. A position inside an
+expanded body is restored after that body loads; subsequent interaction or newer
+navigation cancels a pending cursor adjustment.
+
+Activities can save and restore these views through its existing bookmark
+support, including multiple views in a window layout. Activities remains optional;
+bookmarks themselves save the view, while Activities owns the layout. Existing
+per-window Isled back/forward navigation remains unchanged and session-local.
+
 ### Reading expanded issues
 
 Opening an issue scrolls just enough to show its details when possible. If the
