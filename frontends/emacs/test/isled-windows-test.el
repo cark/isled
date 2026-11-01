@@ -176,6 +176,27 @@
       (when (buffer-live-p first) (kill-buffer first))
       (when (buffer-live-p second) (kill-buffer second)))))
 
+(ert-deftest isled-windows-observation-does-not-select-windows ()
+  (isled-windows-test--with-view
+   (let ((view (current-buffer)) (notifications 0) (selections 0)
+         (select (symbol-function 'select-window)))
+     (isled-windows-track (lambda () (cl-incf notifications)))
+     (with-temp-buffer
+       (set-window-buffer (split-window-right) (current-buffer))
+       (other-window 1)
+       (let ((selected (selected-window)))
+         (cl-letf (((symbol-function 'select-window)
+                    (lambda (&rest args)
+                      (cl-incf selections)
+                      (apply select args))))
+           ;; Both first observation and unchanged redisplay must be passive.
+           (isled-windows--changed)
+           (isled-windows--changed))
+         (should (= selections 0))
+         (should (= notifications 1))
+         (should (eq (selected-window) selected))
+         (should-not (eq (window-buffer selected) view)))))))
+
 (ert-deftest isled-windows-preserves-other-redisplay-functions ()
   (let* ((buffer (generate-new-buffer " *redisplay-owner*"))
          (isled-windows--buffers nil)

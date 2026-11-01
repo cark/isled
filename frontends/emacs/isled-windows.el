@@ -168,7 +168,9 @@ This rejects distant bodies before traversing the prefetch text."
                                (list window (window-point window) (window-start window)
                                      (window-body-height window t) (window-body-width window t)
                                      (window-vscroll window t)
-                                     (window-font-height window) (window-font-width window)
+                                     ;; `window-font-*' selects WINDOW internally,
+                                     ;; disrupting cursor blinking during redisplay.
+                                     (face-font 'default (window-frame window))
                                      (copy-tree face-remapping-alist) line-spacing
                                      (buffer-chars-modified-tick)))
                              (isled-windows-visible))))

@@ -566,7 +566,12 @@ when the session is free; request completion dispatches the latest remaining
 demand without a scheduling delay. Rust stays asynchronous. Movement, scrolling another window, splits,
 resizing, and display changes update demand, including background frame changes
 and minimization/restoration. One shared observer compares small window signatures
-before redisplay and schedules heading traversal only when they change. Hiding the buffer cancels
+before redisplay and schedules heading traversal only when they change.
+Font signatures must be read without selecting windows: the `window-font-*`
+helpers temporarily select their target, which suppresses cursor blinking in
+other windows when called from this observer. Observe the resolved default font
+and buffer face remappings instead.
+Hiding the buffer cancels
 its background formatting demand; a queued batch with no remaining demand launches no process.
 Returning to the range rechecks retained hashes. Observers are removed when the
 last participating view stops loading, is killed, or changes major mode,
