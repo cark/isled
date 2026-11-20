@@ -43,6 +43,12 @@ struct ParsedRecord<'a> {
 }
 
 pub fn audit(snapshot: &StoreSnapshot) -> CheckReport {
+    audit_with_workflow(snapshot, None)
+}
+pub fn audit_with_workflow(
+    snapshot: &StoreSnapshot,
+    workflow: Option<&crate::workflow::Workflow>,
+) -> CheckReport {
     let mut names = snapshot
         .entries
         .iter()
@@ -78,11 +84,57 @@ pub fn audit(snapshot: &StoreSnapshot) -> CheckReport {
             );
         }
         match RecordDocument::parse(entry.filename(), entry.bytes()) {
-            Ok(record) => parsed.push(ParsedRecord {
-                entry,
-                issue: record.issue,
-                order: entry_order,
-            }),
+            Ok(record) => {
+                if let Some(state) = record.issue.work_state()
+                    && let Some(def) = workflow.and_then(|w| w.states.get(state.kind().as_str()))
+                {
+                    if record.work_log.active().is_some()
+                        && matches!(def.clock, crate::workflow::Clock::Off)
+                    {
+                        add_finding(
+                            &mut findings,
+                            entry,
+                            entry_order,
+                            "WORK_POLICY",
+                            b"Work log has a running clock in an untimed state",
+                        );
+                    }
+                    if let Some(reason) = state.owner_wait() {
+                        if !def.reasons.contains_key(reason.reason()) {
+                            add_finding(
+                                &mut findings,
+                                entry,
+                                entry_order,
+                                "WORK_POLICY",
+                                b"Stored reason is absent from the current workflow",
+                            );
+                        } else if def.reasons[reason.reason()].prompt.is_some()
+                            != reason.question().is_some()
+                        {
+                            add_finding(
+                                &mut findings,
+                                entry,
+                                entry_order,
+                                "WORK_POLICY",
+                                b"Stored question differs from current workflow requirements",
+                            );
+                        }
+                    } else if !def.reasons.is_empty() {
+                        add_finding(
+                            &mut findings,
+                            entry,
+                            entry_order,
+                            "WORK_POLICY",
+                            b"Work state requires a reason",
+                        );
+                    }
+                }
+                parsed.push(ParsedRecord {
+                    entry,
+                    issue: record.issue,
+                    order: entry_order,
+                })
+            }
             Err(error) => add_finding(
                 &mut findings,
                 entry,

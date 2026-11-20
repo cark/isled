@@ -15,13 +15,22 @@ use wire::{
 };
 
 pub fn respond(cache: &mut Cache<'_>, request: &Request) -> Result<Vec<u8>, CacheError> {
+    let workflow = crate::workflow::Workflow::read(cache.root())?.0;
+    workflow
+        .validate_filters(&request.filters)
+        .map_err(CacheError::Invalid)?;
+    if let Some(criteria) = &request.choice_filter {
+        workflow
+            .validate_filters(&criteria.filters)
+            .map_err(CacheError::Invalid)?;
+    }
     let changes = if request.mode == Mode::Choices {
         Vec::new()
     } else {
         let ids = request.details.keys().copied().collect();
         let records = cache.inspect_records(&ids)?;
         let mut issues = prepare_issues(cache, &records)?;
-        changed_details(cache, request, &mut issues)?
+        changed_details(cache, request, &mut issues, &workflow)?
     };
     let (graph_rows, graph) = match &request.graph {
         Some(input) => {
@@ -45,7 +54,7 @@ pub fn respond(cache: &mut Cache<'_>, request: &Request) -> Result<Vec<u8>, Cach
         let view = View {
             issues: summaries
                 .iter()
-                .map(|row| SummaryData::new(cache.root(), row))
+                .map(|row| SummaryData::new(cache.root(), row, &workflow))
                 .collect::<Result<_, _>>()?,
             unavailable: cache
                 .frontend_problems()?
@@ -74,22 +83,23 @@ pub fn respond(cache: &mut Cache<'_>, request: &Request) -> Result<Vec<u8>, Cach
         view_hash,
         view,
         changes,
-        first_warning: first_warning(cache)?,
+        first_warning: first_warning(cache, &workflow)?,
         warning_targets: cache
             .warning_ids()?
             .into_iter()
-            .filter_map(|id| warning_target(cache, id).transpose())
+            .filter_map(|id| warning_target(cache, id, &workflow).transpose())
             .collect::<Result<_, _>>()?,
         choices: if request.mode == Mode::Details {
             None
         } else {
             Some(match &request.choice_filter {
                 Some(criteria) => cache.contextual_choices(
+                    &workflow,
                     &criteria.filters,
                     &criteria.kinds,
                     criteria.text.as_ref(),
                 )?,
-                None => cache.frontend_choices()?,
+                None => cache.frontend_choices(&workflow)?,
             })
         },
     })
@@ -102,11 +112,12 @@ fn changed_details(
     cache: &Cache<'_>,
     request: &Request,
     issues: &mut BTreeMap<IssueId, crate::snapshot::SnapshotIssue>,
+    workflow: &crate::workflow::Workflow,
 ) -> Result<Vec<Change>, CacheError> {
     let mut changes = Vec::new();
     let mut target_rows = BTreeMap::new();
     for (&id, known_hash) in &request.details {
-        let payload = detail_payload(cache, id, issues.remove(&id), &mut target_rows)?;
+        let payload = detail_payload(cache, id, issues.remove(&id), &mut target_rows, workflow)?;
         let hash = live_hash(&payload).map_err(json_error)?;
         if known_hash.as_ref() != Some(&hash) {
             changes.push(Change {
@@ -124,8 +135,10 @@ fn detail_payload(
     id: IssueId,
     issue: Option<crate::snapshot::SnapshotIssue>,
     target_rows: &mut BTreeMap<IssueId, Option<crate::cache::Summary>>,
+    workflow: &crate::workflow::Workflow,
 ) -> Result<Payload, CacheError> {
     Ok(if let Some(mut issue) = issue {
+        issue.use_workflow(workflow);
         let target_ids = issue
             .references()
             .iter()
@@ -141,7 +154,7 @@ fn detail_payload(
             }
             if let Some(row) = &target_rows[&target] {
                 known.insert(target);
-                targets.push(SummaryData::new(cache.root(), row)?);
+                targets.push(SummaryData::new(cache.root(), row, workflow)?);
             } else if let Some(problem) = problem(cache, target)? {
                 unavailable.push(problem);
             }
@@ -229,17 +242,24 @@ fn json_error(error: serde_json::Error) -> CacheError {
     CacheError::Invalid(error.to_string())
 }
 
-fn first_warning(cache: &Cache<'_>) -> Result<Option<WarningTarget>, CacheError> {
+fn first_warning(
+    cache: &Cache<'_>,
+    workflow: &crate::workflow::Workflow,
+) -> Result<Option<WarningTarget>, CacheError> {
     let Some(id) = cache.first_warning_id()? else {
         return Ok(None);
     };
-    warning_target(cache, id)
+    warning_target(cache, id, workflow)
 }
 
-fn warning_target(cache: &Cache<'_>, id: IssueId) -> Result<Option<WarningTarget>, CacheError> {
+fn warning_target(
+    cache: &Cache<'_>,
+    id: IssueId,
+    workflow: &crate::workflow::Workflow,
+) -> Result<Option<WarningTarget>, CacheError> {
     if let Some(issue) = cache.frontend_summary(id)? {
         Ok(Some(WarningTarget::Issue {
-            issue: SummaryData::new(cache.root(), &issue)?,
+            issue: SummaryData::new(cache.root(), &issue, workflow)?,
         }))
     } else {
         Ok(problem(cache, id)?.map(|problem| WarningTarget::Problem { problem }))

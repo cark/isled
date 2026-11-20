@@ -22,3 +22,4 @@ pub mod work_log;
 pub mod work_wire;
 
 pub mod editor;
+pub mod workflow;

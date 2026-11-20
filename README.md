@@ -113,7 +113,8 @@ In Emacs, press `w` on the issue for the same actions.
 Find the oldest ready task with
 `isled list --ready --work-state queued --oldest-first --limit 1`.
 The [work guide](user-docs/work-tracking.md) covers questions, review queues
-and forgotten timers.
+and forgotten timers. To define your own states and clock policies, run
+`isled workflow init` and edit the generated TOML.
 
 Use `isled work plan 1` while discussing an approach and `isled work prepare 1`
 when it is settled. Both are untimed; queueing replaces the preparation stage.

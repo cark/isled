@@ -72,7 +72,13 @@ Optional work tracking uses `work` actions and `list --work-state STATE`.
 Missing work fields mean Not queued and no recorded time. Start times work by
 default; `--no-clock` selects In progress without timing. Use `work show --json`
 for state, owner questions and spans. Read live `help work` before transitions.
-For authorized planning, use `work plan ID`; when the approach is settled, use
+For a customized ledger, read `workflow show --json` to discover its states,
+reasons, prompts and clock policies. Use `work set ID STATE` to enter a state,
+`work resume ID` to time work in place and `work pause ID` at handoff. A manual
+state can hold an issue while it waits. Resume its clock when someone starts work.
+`work start ID` selects In progress, so use Resume to keep the project state.
+
+With the default workflow, use `work plan ID`; when the approach is settled, use
 `work prepare ID`. Both are untimed and stop any running clock while keeping
 history. Queueing replaces preparation. Prepared does not imply dependency
 readiness or implementation authority. Keep Planning throughout planning

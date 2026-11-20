@@ -44,8 +44,10 @@ Omitting it preserves the existing flat response and avoids graph extraction.
 | `oldest_first` | False by default; true sorts by Since, then ID, with undated issues last. |
 | `limit` | Optional non-negative integer; caps issues after every criterion, including text. Zero returns none; absent means all matches. |
 
-Work states are `not-queued`, `planning`, `prepared`, `queued`, `in-progress` and `awaiting-owner`.
-Owner reasons are `review` and `clarification`. Rust filters summaries;
+Work filters take IDs from `workflow show --json`. Unknown IDs produce a diagnostic.
+The work projection includes a display `label` for the selected reason or state.
+The default work states are `not-queued`, `planning`, `prepared`, `queued`, `in-progress` and `awaiting-owner`.
+The default owner reasons are `review` and `clarification`. Rust filters summaries;
 tags are not sent per summary. See [text and completion](#filter-selection-and-completion-choices)
 for `text`, conjunctive `kinds` and scoped choices.
 
@@ -290,7 +292,7 @@ or validate dependency neighborhoods. A full refresh remains the reconciliation
 boundary.
 
 Refresh/view responses also contain `choices`, an array of prefixed strings:
-`t:NAME`, `k:NAME`, `s:open`, `s:closed`, `w:STATE` for all six work states, and `r:review`/`r:clarification`. Choices cover the ledger's cached
+`t:NAME`, `k:NAME`, `s:open`, `s:closed`, `w:STATE` for work states, and `r:REASON` for configured reasons. Choices cover the ledger's cached
 metadata, independently of the current filter, and are returned even when `view`
 is null.
 
@@ -308,7 +310,8 @@ an empty ledger yields an empty array.
 
 Statuses appear first (`open`, `closed`),
 then work states in `not-queued`, `planning`, `prepared`, `queued`, `in-progress`, `awaiting-owner`
-order, then owner reasons (`review`, `clarification`), then unique alphabetically
+order when configured. Additional states follow by ID, then configured reasons
+(Review first, then by ID), then unique alphabetically
 ordered tags and kinds.
 
 Work-state choices
@@ -334,4 +337,4 @@ the command's retained file reads.
 
 There is no persistent completion cache or
 text index. Omitting `choice_filter` retains the older ledger-wide choices,
-including both status labels, all six work states and both owner reasons.
+including both status labels, Not queued and all configured states and reasons.

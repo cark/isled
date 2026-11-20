@@ -7,20 +7,41 @@ use crate::{
 use std::collections::BTreeSet;
 
 impl Cache<'_> {
-    pub(crate) fn frontend_choices(&self) -> Result<Vec<String>, CacheError> {
-        let mut choices = vec!["s:open".into(), "s:closed".into()];
+    pub(crate) fn frontend_choices(
+        &self,
+        workflow: &crate::workflow::Workflow,
+    ) -> Result<Vec<String>, CacheError> {
+        let mut choices = vec!["s:open".into(), "s:closed".into(), "w:not-queued".into()];
+        let mut states: Vec<_> = workflow.states.keys().map(String::as_str).collect();
+        // Keep the familiar order for default states, followed by project states by ID.
+        let order = [
+            "planning",
+            "prepared",
+            "queued",
+            "in-progress",
+            "awaiting-owner",
+        ];
+        states.sort_by_key(|id| {
+            order
+                .iter()
+                .position(|value| value == id)
+                .unwrap_or(order.len())
+        });
+        choices.extend(states.into_iter().map(|id| format!("w:{id}")));
+        let reasons: BTreeSet<_> = workflow
+            .states
+            .values()
+            .flat_map(|s| s.reasons.keys())
+            .collect();
+        if reasons.iter().any(|s| s.as_str() == "review") {
+            choices.push("r:review".into());
+        }
         choices.extend(
-            [
-                "not-queued",
-                "planning",
-                "prepared",
-                "queued",
-                "in-progress",
-                "awaiting-owner",
-            ]
-            .map(|state| format!("w:{state}")),
+            reasons
+                .into_iter()
+                .filter(|s| s.as_str() != "review")
+                .map(|id| format!("r:{id}")),
         );
-        choices.extend(["r:review".into(), "r:clarification".into()]);
         self.append_tag_choices(&mut choices)?;
         self.append_kind_choices(&mut choices)?;
         Ok(choices)
@@ -28,6 +49,7 @@ impl Cache<'_> {
 
     pub(crate) fn contextual_choices(
         &self,
+        workflow: &crate::workflow::Workflow,
         filters: &Filters,
         kinds: &[Name],
         text: Option<&SearchSnippets>,
@@ -65,21 +87,13 @@ impl Cache<'_> {
         } else {
             &rows
         };
-        for state in [
-            "not-queued",
-            "planning",
-            "prepared",
-            "queued",
-            "in-progress",
-            "awaiting-owner",
-        ] {
-            if work_rows.iter().any(|row| {
-                row.work().state == state
-                    && filters.status.is_none_or(|status| row.status() == status)
-            }) {
-                choices.push(format!("w:{state}"));
-            }
-        }
+        let states = work_rows
+            .iter()
+            .filter(|row| filters.status.is_none_or(|s| s == row.status()))
+            .map(|row| &row.work().state)
+            .filter(|id| id.as_str() == "not-queued" || workflow.states.contains_key(*id))
+            .collect::<BTreeSet<_>>();
+        choices.extend(states.into_iter().map(|id| format!("w:{id}")));
         let reason_rows = if filters.work_reason.is_some() {
             self.filter_summaries(
                 &Filters {
@@ -97,14 +111,20 @@ impl Cache<'_> {
         } else {
             &rows
         };
-        for reason in ["review", "clarification"] {
-            if reason_rows.iter().any(|row| {
-                row.work().reason == Some(reason)
-                    && filters.status.is_none_or(|status| row.status() == status)
-            }) {
-                choices.push(format!("r:{reason}"));
-            }
-        }
+        let reasons = reason_rows
+            .iter()
+            .filter(|row| filters.status.is_none_or(|s| s == row.status()))
+            .filter(|row| {
+                workflow.states.get(&row.work().state).is_some_and(|state| {
+                    row.work()
+                        .reason
+                        .as_ref()
+                        .is_some_and(|id| state.reasons.contains_key(id))
+                })
+            })
+            .filter_map(|row| row.work().reason.as_deref())
+            .collect::<BTreeSet<_>>();
+        choices.extend(reasons.into_iter().map(|id| format!("r:{id}")));
         let selected = rows
             .iter()
             .filter(|row| filters.status.is_none_or(|status| row.status() == status));
@@ -179,6 +199,7 @@ mod tests {
         let root = ProjectRoot::discover(directory.path()).unwrap();
         let lock = root.acquire_lock().unwrap();
         let cache = Cache::open(&lock).unwrap();
+        let workflow = crate::workflow::Workflow::read(&root).unwrap().0;
         cache.connection.execute(
             "INSERT INTO issues(id,filename,title,status,kind,created) VALUES(1,'0001-test.md','Test','open','z-invalid-','2026-09-05')",
             [],
@@ -190,11 +211,11 @@ mod tests {
                 .unwrap();
         }
         assert!(
-            matches!(cache.frontend_choices(), Err(CacheError::Corrupt(message))
+            matches!(cache.frontend_choices(&workflow), Err(CacheError::Corrupt(message))
             if message == "invalid lowercase hyphenated tag")
         );
         assert!(
-            matches!(cache.contextual_choices(&Filters::default(), &[], None),
+            matches!(cache.contextual_choices(&workflow, &Filters::default(), &[], None),
             Err(CacheError::Corrupt(message)) if message == "invalid lowercase hyphenated tag")
         );
         cache
@@ -202,11 +223,11 @@ mod tests {
             .execute("DELETE FROM issue_tags WHERE tag='priority-unknown'", [])
             .unwrap();
         assert!(
-            matches!(cache.frontend_choices(), Err(CacheError::Corrupt(message))
+            matches!(cache.frontend_choices(&workflow), Err(CacheError::Corrupt(message))
             if message == "name must be lowercase ASCII words separated by hyphens")
         );
         assert!(
-            matches!(cache.contextual_choices(&Filters::default(), &[], None),
+            matches!(cache.contextual_choices(&workflow, &Filters::default(), &[], None),
             Err(CacheError::Corrupt(message))
             if message == "name must be lowercase ASCII words separated by hyphens")
         );

@@ -73,6 +73,20 @@ pub enum Command {
     Check(CheckArgs),
     /// Track optional work state and resumable work time.
     Work(super::WorkArgs),
+    /// Inspect or initialize this ledger's workflow configuration.
+    #[command(subcommand)]
+    Workflow(WorkflowCommand),
+}
+
+#[derive(Debug, Subcommand)]
+pub enum WorkflowCommand {
+    /// Print the effective workflow, using the built-in defaults until configured.
+    Show {
+        #[arg(long)]
+        json: bool,
+    },
+    /// Write the default workflow.toml without replacing an existing file.
+    Init,
 }
 
 #[derive(Debug, Args)]
@@ -153,10 +167,10 @@ pub struct FilterArgs {
     /// Append each issue's canonical absolute path.
     #[arg(long)]
     pub with_path: bool,
-    /// Select not-queued, planning, prepared, queued, in-progress or awaiting-owner.
+    /// Select not-queued or a configured work state (see workflow show).
     #[arg(long)]
     pub work_state: Option<String>,
-    /// Select owner waits for review or clarification.
+    /// Select issues with a configured work reason.
     #[arg(long)]
     pub work_reason: Option<String>,
     /// Order by work-state entry time, with undated issues last.

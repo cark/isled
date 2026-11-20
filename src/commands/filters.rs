@@ -91,9 +91,7 @@ pub(crate) fn parse_filters(
             .work_reason
             .map(|value| {
                 value.parse().map_err(|_| {
-                    AppError::Invocation(format!(
-                        "invalid work reason: {value}; use review or clarification"
-                    ))
+                    AppError::Invocation(format!("invalid work reason: {value}; see workflow show"))
                 })
             })
             .transpose()?,

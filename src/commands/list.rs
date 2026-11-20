@@ -10,6 +10,13 @@ pub(crate) fn run(
     let with_path = arguments.with_path;
     let filters = parse_filters(arguments, StatusDefault::Open)?;
     let project = root()?;
+    if filters.work_state.is_some() || filters.work_reason.is_some() {
+        isled::workflow::Workflow::read(&project)
+            .map_err(AppError::Io)?
+            .0
+            .validate_filters(&filters)
+            .map_err(AppError::Invocation)?;
+    }
     if with_path {
         project.ensure_tsv_output_path()?;
     }

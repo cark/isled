@@ -1,5 +1,5 @@
 //! Small work-action grammar shared by humans and coordinating agents.
-use clap::{Args, Subcommand, ValueEnum};
+use clap::{Args, Subcommand};
 
 #[derive(Debug, Args)]
 pub struct WorkArgs {
@@ -20,6 +20,18 @@ pub enum WorkCommand {
     Start(WorkStartArgs),
     /// Stop timing, leaving the work state unchanged.
     Pause(WorkAtArgs),
+    /// Resume timing in the current work state.
+    Resume(WorkAtArgs),
+    /// Enter a configured state and apply its clock policy.
+    Set {
+        #[command(flatten)]
+        target: WorkAtArgs,
+        state: String,
+        #[arg(long)]
+        reason: Option<String>,
+        #[arg(long)]
+        question: Option<String>,
+    },
     /// Stop timing and wait for owner review or clarification.
     Await(WorkAwaitArgs),
     /// Correct a span's actual stop time (span numbers start at 1).
@@ -45,18 +57,14 @@ pub struct WorkStartArgs {
     #[arg(long, conflicts_with = "no_clock")]
     pub activity: Option<String>,
 }
-#[derive(Clone, Copy, Debug, ValueEnum)]
-pub enum OwnerReason {
-    Review,
-    Clarification,
-}
 #[derive(Debug, Args)]
 pub struct WorkAwaitArgs {
     #[command(flatten)]
     pub target: WorkAtArgs,
-    #[arg(long, value_enum)]
-    pub reason: OwnerReason,
-    /// Required for clarification; omit for review.
+    /// A reason configured for the awaiting-owner state.
+    #[arg(long)]
+    pub reason: String,
+    /// Supply text when the selected reason defines a prompt.
     #[arg(long)]
     pub question: Option<String>,
 }

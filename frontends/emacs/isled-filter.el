@@ -90,6 +90,17 @@ Vertico when enabled.  All interfaces also work with standard Emacs completion."
                 (run-hooks 'isled-filter-completion-update-hook)))
           (run-hooks 'isled-filter-completion-update-hook))))))
 
+(defun isled-filter--prompt-criteria (query)
+  "Parse QUERY and check work IDs against the owning view's ledger choices."
+  (let ((criteria (isled-filter-query-criteria query)))
+    (when (buffer-live-p isled-filter--view)
+      (let ((choices (buffer-local-value 'isled-filter-choices isled-filter--view)))
+        (dolist (field '((work_state . "w:") (work_reason . "r:")))
+          (when-let ((id (alist-get (car field) criteria)))
+            (unless (member (concat (cdr field) id) choices)
+              (user-error "Unknown workflow choice: %s%s" (cdr field) id))))))
+    criteria))
+
 (defun isled-filter--changed ()
   "Preview text edits and request choices for the exact token at point."
   (let* ((query (minibuffer-contents-no-properties))
@@ -104,7 +115,7 @@ Vertico when enabled.  All interfaces also work with standard Emacs completion."
         (user-error (setq feedback (error-message-string failure))))
       (when text-changed
         (condition-case failure
-            (setq criteria (isled-filter-query-criteria query))
+            (setq criteria (isled-filter--prompt-criteria query))
           (user-error (setq feedback (error-message-string failure)))))
       (setq isled-filter--last query isled-filter--position position
             isled-filter-completion-context context
@@ -148,7 +159,7 @@ Vertico when enabled.  All interfaces also work with standard Emacs completion."
   (let* ((query (minibuffer-contents-no-properties))
          (criteria (or (and (equal query isled-filter--last)
                             isled-filter--criteria)
-                       (isled-filter-query-criteria query))))
+                       (isled-filter--prompt-criteria query))))
     (setq isled-filter--accepted-query (cons query criteria))
     (exit-minibuffer)))
 

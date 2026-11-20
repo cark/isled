@@ -498,3 +498,54 @@ fn retained_reciprocal_warning_remains_displayable_when_other_endpoint_is_unread
             .any(|w| w["code"] == "RELATION_RECIPROCAL" && w["needs_reason"] == false)
     );
 }
+
+#[test]
+fn configured_labels_refresh_even_when_no_issue_file_changes() {
+    let dir = fixture::fixture();
+    let root = dir.path();
+    let file = root.join(".issues/workflow.toml");
+    let define = |label: &str| {
+        fs::write(
+            &file,
+            format!("[states.integration]\nlabel='{label}'\nclock='manual'\n"),
+        )
+        .unwrap()
+    };
+    define("Integration");
+    fixture::run_successfully(root, &["work", "set", "1", "integration"]);
+    let first = request(root, input("refresh", json!([{"id":"0001"}])));
+    assert_eq!(first["view"]["issues"][0]["work"]["label"], "Integration");
+    assert!(
+        first["choices"]
+            .as_array()
+            .unwrap()
+            .contains(&json!("w:integration"))
+    );
+    assert!(
+        !first["choices"]
+            .as_array()
+            .unwrap()
+            .contains(&json!("w:queued"))
+    );
+    define("Final integration");
+    let next = request(
+        root,
+        json!({"schema_version":6,"mode":"view",
+        "filter":{"work_state":"integration"}, "view_hash":first["view_hash"],
+        "details":[{"id":"0001","hash":first["changes"][0]["hash"]}]}),
+    );
+    assert_eq!(next["view"]["issues"].as_array().unwrap().len(), 1);
+    assert_eq!(
+        next["changes"][0]["detail"]["issue"]["work"]["label"],
+        "Final integration"
+    );
+    fs::remove_file(file).unwrap();
+    let orphan = request(root, input("refresh", json!([])));
+    assert_eq!(orphan["view"]["issues"][0]["work"]["label"], "integration");
+    assert!(
+        !orphan["choices"]
+            .as_array()
+            .unwrap()
+            .contains(&json!("w:integration"))
+    );
+}

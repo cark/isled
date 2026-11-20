@@ -288,3 +288,14 @@ schema 8 rebuilds the fixed-state projection. Dependency-tree schema 2 is unchan
 Publish the CLI, matching frontend pin and skill together. Before deliberately
 downgrading, use the new CLI to select an older supported state on affected
 records. There is no automatic ledger rewrite or migration.
+
+## Ledger workflow
+
+The CLI and Emacs share the state and reason IDs from `workflow show --json`.
+A missing workflow file uses the built-in definitions. A present file supplies
+all choices. See [work tracking](../user-docs/work-tracking.md#inspect-the-ledger-workflow)
+for transition, timing, and compatibility behavior. Records store IDs and work
+spans independently of display labels. Renaming a label changes the frontend
+view and detail hashes on refresh. Cache schema 9 rebuilds the disposable
+projection to support arbitrary IDs. The paired 0.39.0 frontend accepts
+configured IDs and uses the additive work label.

@@ -77,11 +77,11 @@ impl Cache<'_> {
             sql.push_str(" AND i.kind=?");
             values.push(kind.as_str().to_owned().into());
         }
-        if let Some(state) = filters.work_state {
+        if let Some(state) = &filters.work_state {
             sql.push_str(" AND i.work_state=?");
             values.push(state.as_str().to_owned().into());
         }
-        if let Some(reason) = filters.work_reason {
+        if let Some(reason) = &filters.work_reason {
             sql.push_str(" AND i.work_reason=?");
             values.push(reason.as_str().to_owned().into());
         }
@@ -222,21 +222,21 @@ fn decode_work(row: &rusqlite::Row<'_>) -> Result<crate::work_wire::WorkSummary,
         .map_err(|e: crate::issue::WorkStateError| CacheError::Corrupt(e.to_string()))?;
     let reason: Option<String> = row.get(7)?;
     let question: Option<String> = row.get(8)?;
-    let reason = match (state, reason.as_deref(), question.as_deref()) {
-        (WorkStateKind::AwaitingOwner, Some("review"), None) => Some("review"),
-        (WorkStateKind::AwaitingOwner, Some("clarification"), Some(question)) => {
-            OwnerQuestion::parse(question).map_err(|e| CacheError::Corrupt(e.to_string()))?;
-            Some("clarification")
-        }
-        (state, None, None) if state != WorkStateKind::AwaitingOwner => None,
-        _ => return Err(CacheError::Corrupt("invalid cached owner wait".into())),
-    };
+    if reason.as_deref().is_some_and(|id| !crate::workflow::id(id))
+        || (question.is_some() && reason.is_none())
+        || (reason.is_some() && state == WorkStateKind::NotQueued)
+    {
+        return Err(CacheError::Corrupt("invalid cached work reason".into()));
+    }
+    if let Some(q) = &question {
+        OwnerQuestion::parse(q).map_err(|e| CacheError::Corrupt(e.to_string()))?;
+    }
     let running: Option<String> = row.get(10)?;
     let running = running
         .map(|value| value.parse())
         .transpose()
         .map_err(|e: crate::work_log::WorkLogError| CacheError::Corrupt(e.to_string()))?;
-    if running.is_some() && state != WorkStateKind::InProgress {
+    if running.is_some() && state == WorkStateKind::NotQueued {
         return Err(CacheError::Corrupt("invalid cached running clock".into()));
     }
     let since: Option<String> = row.get(11)?;

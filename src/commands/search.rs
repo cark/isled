@@ -19,6 +19,13 @@ pub(crate) fn run(
     let with_path = arguments.filters.with_path;
     let filters = parse_filters(arguments.filters, StatusDefault::All)?;
     let project = root()?;
+    if filters.work_state.is_some() || filters.work_reason.is_some() {
+        isled::workflow::Workflow::read(&project)
+            .map_err(AppError::Io)?
+            .0
+            .validate_filters(&filters)
+            .map_err(AppError::Invocation)?;
+    }
     let records = project.read_records()?;
     if with_path {
         let paths = output_paths(&project, &records)?;

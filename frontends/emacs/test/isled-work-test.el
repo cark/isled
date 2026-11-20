@@ -32,7 +32,7 @@
     (setf (alist-get 'recorded_seconds wire) 0)
     (should-error (isled-work-data-decode wire t) :type 'isled-work-data-error))
   (let ((wire (copy-tree (isled-work-test--wire))))
-    (setf (alist-get 'state wire) "awaiting-owner"
+    (setf (alist-get 'state wire) "not-queued"
           (alist-get 'reason wire) "clarification"
           (alist-get 'running_since wire) :json-null)
     (should-error (isled-work-data-decode wire) :type 'isled-work-data-error)))
@@ -41,7 +41,7 @@
   (let ((criteria (isled-filter-query-criteria "s:open w:awaiting-owner k:feature")))
     (should (equal (alist-get 'status criteria) "open"))
     (should (equal (alist-get 'work_state criteria) "awaiting-owner")))
-  (should-error (isled-filter-query-criteria "w:unknown") :type 'user-error))
+  (should (equal (alist-get 'work_state (isled-filter-query-criteria "w:dance")) "dance")))
 
 (ert-deftest isled-work-actions-use-the-selected-issue-and-refresh-on-success ()
   (with-temp-buffer
@@ -138,6 +138,43 @@
               (should (isled-work-span-stopped (car (isled-work-data-spans work)))))))
       (delete-directory directory t))))
 
+(ert-deftest isled-work-configured-picker-roundtrips-label-prompt-and-clock ()
+  (skip-unless isled-test-program)
+  (let ((root (make-temp-file "isled-custom-work-" t))
+        (isled-program isled-test-program))
+    (unwind-protect
+        (progn
+          (should (zerop (call-process isled-program nil nil nil "--root" root "init")))
+          (should (zerop (call-process isled-program nil nil nil "--root" root
+                                      "add" "Integration" "Verify the change." "--kind" "feature")))
+          (with-temp-file (expand-file-name ".issues/workflow.toml" root)
+            (insert "[states.integration]\nlabel='Integration'\nclock='auto'\n"
+                    "[states.integration.reasons.check]\nlabel='Final check'\nprompt='Which build?'\n"))
+          (with-temp-buffer
+            (setq major-mode 'isled-mode)
+            (setq-local isled--root root)
+            (let ((row (make-isled-row :issue (isled-issue-create :id "0001")))
+                  refreshed)
+              (cl-letf (((symbol-function 'isled-row-at) (lambda (&rest _) row))
+                        ((symbol-function 'isled-refresh) (lambda () (setq refreshed t)))
+                        ((symbol-function 'completing-read)
+                         (lambda (_prompt entries &rest _) (caar entries)))
+                        ((symbol-function 'read-string)
+                         (lambda (prompt &rest _) (should (equal prompt "Which build? ")) "Release build")))
+                (isled-work-set)
+                (let ((deadline (+ (float-time) 5)))
+                  (while (and (not refreshed) (< (float-time) deadline))
+                    (accept-process-output nil 0.02)))
+                (should refreshed))))
+          (with-temp-buffer
+            (should (zerop (call-process isled-program nil t nil "--root" root "snapshot")))
+            (let* ((issue (car (isled-snapshot-issues (isled-snapshot-decode (buffer-string)))))
+                   (work (isled-issue-work issue)))
+              (should (equal (isled-work-data-question work) "Release build"))
+              (should (isled-work-data-running-since work))
+              (should (string-match-p "Final check" (isled-sections--heading issue))))))
+      (delete-directory root t))))
+
 (ert-deftest isled-work-current-summary-does-not-inherit-stale-detail-spans ()
   (let* ((current (isled-work-data-create :state "awaiting-owner" :reason "review"
                                          :recorded-seconds 2700))
@@ -185,7 +222,7 @@
   (dolist (state '("planning" "prepared"))
     (let ((wire (copy-tree (isled-work-test--wire))))
       (setf (alist-get 'state wire) state)
-      (should-error (isled-work-data-decode wire) :type 'isled-work-data-error)
+      (should (isled-work-data-running-since (isled-work-data-decode wire)))
       (setf (alist-get 'running_since wire) :json-null
             (alist-get 'spans wire) (list (car (alist-get 'spans wire))))
       (let* ((work (isled-work-data-decode wire t))

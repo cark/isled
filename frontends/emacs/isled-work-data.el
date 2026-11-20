@@ -20,7 +20,7 @@
 
 (cl-defstruct (isled-work-data (:constructor isled-work-data-create))
   "Validated work summary with an optional complete span history."
-  (state "not-queued") reason question since (recorded-seconds 0) running-since spans)
+  (state "not-queued") label-text reason question since (recorded-seconds 0) running-since spans)
 
 (cl-defstruct (isled-work-span (:constructor isled-work-span-create))
   "One validated UTC work span."
@@ -44,6 +44,12 @@
       (signal 'isled-work-data-error '("Invalid UTC work date")))
     time))
 
+(defun isled-work-data--id-p (value)
+  "Return non-nil for a stable workflow ID in VALUE."
+  (let ((case-fold-search nil))
+    (and (stringp value)
+         (string-match-p "\\`[a-z][a-z0-9]*\\(?:-[a-z0-9]+\\)*\\'" value))))
+
 (defun isled-work-data-decode (wire &optional complete)
   "Decode WIRE into typed work data; COMPLETE requires validated spans."
   (let* ((state (isled-work-data--field wire 'state))
@@ -52,19 +58,19 @@
          (since (isled-work-data--field wire 'since))
          (seconds (isled-work-data--field wire 'recorded_seconds))
          (running (isled-work-data--field wire 'running_since)))
-    (unless (and (member state '("not-queued" "planning" "prepared" "queued" "in-progress" "awaiting-owner"))
+    (unless (and (isled-work-data--id-p state)
+                 (or (null (assq 'label wire)) (stringp (alist-get 'label wire)))
                  (natnump seconds)
-                 (if (equal state "awaiting-owner")
-                     (or (and (equal reason "review") (null question))
-                         (and (equal reason "clarification") (stringp question)
-                              (not (string-empty-p (string-trim question)))
-                              (not (string-match-p "[\n\r\0]" question))))
-                   (and (null reason) (null question)))
-                 (or (null running) (equal state "in-progress"))
+                 (or (null reason) (and (isled-work-data--id-p reason)
+                                        (not (equal state "not-queued"))))
+                 (or (null question) (and reason (stringp question)
+                                          (not (string-match-p "[\n\r\0]" question))
+                                          (not (string-empty-p (string-trim question)))))
+                 (or (null running) (not (equal state "not-queued")))
                  (or (null since) (not (equal state "not-queued"))))
       (signal 'isled-work-data-error '("Invalid work summary")))
     (let ((work (isled-work-data-create
-                 :state state :reason reason :question question
+                 :state state :label-text (alist-get 'label wire) :reason reason :question question
                  :since (and since (isled-work-data--time since))
                  :recorded-seconds seconds
                  :running-since (and running (isled-work-data--time running)))))
@@ -118,12 +124,13 @@ With NOW, include the running span at that time and always show its seconds.
 Without NOW, return stable text suitable for heading change detection."
   (if (null work) ""
     (let* ((state (isled-work-data-state work))
-           (label (pcase state
+           (label (or (isled-work-data-label-text work) (pcase state
                     ("not-queued" "") ("queued" "Queued")
                     ("planning" "Planning") ("prepared" "Prepared")
                     ("in-progress" "In progress")
                     ("awaiting-owner" (if (equal (isled-work-data-reason work) "review")
-                                          "Review" "Question"))))
+                                          "Review" (or (and (equal (isled-work-data-reason work) "clarification") "Question") (isled-work-data-reason work) state)))
+                    (_ (or (isled-work-data-reason work) state)))))
            (running (and now (isled-work-data-running-since work)))
            (seconds (if running (isled-work-data-seconds work now)
                       (isled-work-data-recorded-seconds work)))

@@ -22,11 +22,17 @@ fn execute(root: &ProjectRoot, input: &[u8]) -> Result<Value, FieldError> {
         return Err(FieldError::new("request", "A complete draft is required"));
     }
     let lock = root.acquire_lock().map_err(store::error)?;
+    let workflow = crate::workflow::Workflow::read(root)
+        .map_err(store::error)?
+        .0;
     let mut records = store::load_records(&lock, request.id, draft.as_ref())?;
-    let current = request
+    let mut current = request
         .id
         .map(|id| editor::editable(&records, id))
         .transpose()?;
+    if let Some(record) = &mut current {
+        record.work.summary.use_workflow(&workflow);
+    }
     if request.mode == Mode::Load {
         return current
             .map(|v| success(v, root))
@@ -80,7 +86,8 @@ fn execute(root: &ProjectRoot, input: &[u8]) -> Result<Value, FieldError> {
         let issue = replacement.record().issue().map_err(store::error)?;
         records.insert(issue.id(), replacement.record().clone());
     }
-    let saved = editor::editable(&records, id)?;
+    let mut saved = editor::editable(&records, id)?;
+    saved.work.summary.use_workflow(&workflow);
     let mut response = success(saved, root);
     if was_closed && !plan.replacements().is_empty() {
         response["warning"] =

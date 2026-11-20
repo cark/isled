@@ -94,6 +94,39 @@ With a prefix argument, prompt for the actual stop time of a forgotten clock."
   (when (string-empty-p (string-trim question)) (user-error "A question is required"))
   (isled-work--run (list "await" "--reason" "clarification" "--question" question)))
 
+(defun isled-work-resume ()
+  "Resume the issue clock in its current state."
+  (interactive) (isled-work--run '("resume")))
+
+(defun isled-work--pick (prompt entries)
+  "Select one configured entry from ENTRIES with PROMPT."
+  (let ((choices (mapcar (lambda (entry)
+                           (cons (format "%s (%s)" (alist-get 'label (cdr entry))
+                                         (car entry)) entry))
+                         entries)))
+    (cdr (assoc (completing-read prompt choices nil t) choices))))
+
+(defun isled-work-set ()
+  "Choose a work state and optional reason from this ledger's workflow."
+  (interactive)
+  (isled-work--target)
+  (let* ((result (isled-snapshot--run-process
+                  isled--root (list "--root" isled--root "workflow" "show" "--json"))))
+    (unless (zerop (isled-command-result-status result))
+      (user-error "%s" (string-trim (isled-command-result-stderr result))))
+    (let* ((wire (json-parse-string (isled-command-result-stdout result)
+                                    :object-type 'alist :null-object nil))
+           (states (alist-get 'states wire)))
+      (unless states (user-error "This workflow has no configured states"))
+      (let* ((state (isled-work--pick "Work state: " states))
+             (reasons (alist-get 'reasons (cdr state)))
+             (reason (and reasons (isled-work--pick "Reason: " reasons)))
+             (prompt (alist-get 'prompt (cdr reason))))
+        (isled-work--run
+         (append (list "set" (symbol-name (car state)))
+                 (when reason (list "--reason" (symbol-name (car reason))))
+                 (when prompt (list "--question" (read-string (concat prompt " "))))))))))
+
 (defun isled-work-show ()
   "Show the issue's work state, pending question and complete span history."
   (interactive) (isled-work--run '("show") t))
@@ -106,20 +139,26 @@ With a prefix argument, prompt for the actual stop time of a forgotten clock."
   (unless (and (integerp span) (> span 0)) (user-error "Span numbers start at 1"))
   (isled-work--run (list "correct" (number-to-string span) "--stop" stop)))
 
+(defun isled-work--default-menu-p ()
+  "Return non-nil when the ledger uses the built-in workflow."
+  (not (file-exists-p (expand-file-name ".issues/workflow.toml" isled--root))))
+
 (transient-define-prefix isled-work ()
   "Show work actions for the issue at point."
   [["Preparation"
-    ("P" "Plan" isled-work-plan)
-    ("m" "Mark prepared" isled-work-prepare)]
+    ("P" "Plan" isled-work-plan :if isled-work--default-menu-p)
+    ("m" "Mark prepared" isled-work-prepare :if isled-work--default-menu-p)]
    ["Work"
-    ("q" "Queue" isled-work-queue)
+    ("q" "Queue" isled-work-queue :if isled-work--default-menu-p)
     ("u" "Not queued" isled-work-unqueue)
-    ("s" "Start / resume" isled-work-start)
-    ("n" "Start without timing" isled-work-start-without-timing)
+    ("w" "Set work state" isled-work-set)
+    ("t" "Resume clock" isled-work-resume)
+    ("s" "Start in progress" isled-work-start :if isled-work--default-menu-p)
+    ("n" "Start without timing" isled-work-start-without-timing :if isled-work--default-menu-p)
     ("p" "Pause clock" isled-work-pause)]
    ["Owner"
-    ("r" "Ready for review" isled-work-await-review)
-    ("a" "Ask a question" isled-work-await-clarification)]
+    ("r" "Ready for review" isled-work-await-review :if isled-work--default-menu-p)
+    ("a" "Ask a question" isled-work-await-clarification :if isled-work--default-menu-p)]
    ["Time"
     ("h" "Work history" isled-work-show)
     ("c" "Correct stop time" isled-work-correct-stop)]]

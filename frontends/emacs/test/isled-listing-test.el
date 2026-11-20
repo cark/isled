@@ -12,7 +12,7 @@
     (should (eq (alist-get 'oldest_first criteria) t))
     (should-not (assq 'limit criteria))
     (should (equal (alist-get 'tags criteria) ["rust"])))
-  (dolist (bad '("r:unknown" "o:date" "n:0" "n:3" "n:-1" "n:all"))
+  (dolist (bad '("r:" "o:date" "n:0" "n:3" "n:-1" "n:all"))
     (should-error (isled-filter-query-criteria bad) :type 'user-error))
   (should (equal (alist-get 'text (isled-filter-query-criteria "\"n:3\"")) ["n:3"]))
   (should (eq (isled-filter-query-order "\"o:oldest-first\" o:id") 'id))

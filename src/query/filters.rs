@@ -29,8 +29,9 @@ pub(super) fn matches_filters(
         || filters.kind.as_ref().is_some_and(|wanted| wanted != kind)
         || filters
             .work_state
-            .is_some_and(|wanted| wanted != view.work_state_kind())
-        || filters.work_reason.is_some_and(|wanted| {
+            .as_ref()
+            .is_some_and(|wanted| wanted != &view.work_state_kind())
+        || filters.work_reason.as_ref().is_some_and(|wanted| {
             view.work_state()
                 .and_then(|state| state.owner_wait())
                 .is_none_or(|wait| wait.reason() != wanted.as_str())

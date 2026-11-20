@@ -75,6 +75,11 @@ pub struct SnapshotIssue {
 }
 
 impl Snapshot {
+    pub fn use_workflow(&mut self, workflow: &crate::workflow::Workflow) {
+        for issue in &mut self.issues {
+            issue.use_workflow(workflow);
+        }
+    }
     pub fn build(root: &[u8], sources: &[SnapshotSource<'_>]) -> Result<Self, SnapshotError> {
         let mut parsed_sources = Vec::new();
         let mut unavailable = Vec::new();
@@ -212,6 +217,9 @@ impl Snapshot {
 }
 
 impl SnapshotIssue {
+    pub(crate) fn use_workflow(&mut self, workflow: &crate::workflow::Workflow) {
+        self.work.summary.use_workflow(workflow);
+    }
     pub fn work(&self) -> &crate::work_wire::WorkData {
         &self.work
     }

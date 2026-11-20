@@ -91,6 +91,13 @@ supports closure but authority is absent, recommend it and wait for approval.
 
 ## Work state and clocks
 
+Discover configured IDs, reasons, prompts and clock policies with
+`isled workflow show --json`. Select a state with `work set ID STATE`, adding
+`--reason REASON` when choices exist and `--question TEXT` when prompted.
+Use `work resume ID` to start timing a manual state in place. Pause before
+handing off. Query configured queues with `list --work-state STATE` or
+`--work-reason REASON`. The following shortcuts describe the default workflow.
+
 Use `work plan`, `prepare`, `queue`, `unqueue`, `start`, `pause`, `await`, `show`
 and `correct`. Plan selects Planning; Prepare selects Prepared. Both stop any
 running clock and preserve history, with no planning timer option. Preparation

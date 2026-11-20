@@ -39,7 +39,7 @@ impl WorkReport {
         if let Some(since) = &summary.since {
             text.push_str(&format!("Since (UTC): {since}\n"));
         }
-        if let Some(reason) = summary.reason {
+        if let Some(reason) = &summary.reason {
             text.push_str(&format!("Reason: {reason}\n"));
         }
         if let Some(question) = &summary.question {

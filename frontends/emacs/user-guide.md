@@ -293,6 +293,15 @@ For the exact validation and save rules, see the [editor contract](../../user-do
 
 ## Work state and time
 
+Press `w w` on an issue to choose from the ledger’s configured states and
+reasons. The selected label appears in the heading. Use `w t` to resume its
+clock in place and `w p` to pause it. A manually timed state can hold work
+for hours before someone picks it up and starts the clock.
+
+See [Customize the ledger workflow](../../user-docs/work-tracking.md#inspect-the-ledger-workflow)
+to define your own labels, prompts and timer behavior. The examples below use
+the default workflow.
+
 Press **`w`** on an issue to keep the next step and its work sessions together.
 
 ### Prepare the approach
@@ -311,8 +320,9 @@ Prepared does not imply dependency readiness or permission to begin.
 | In the Work menu | What happens |
 | --- | --- |
 | Queue | Mark the issue for later; no timer runs. |
-| Start / resume | Mark it In progress and start timing. |
-| Pause clock | End the current session; keep it In progress. |
+| Start in progress | Move to In progress and start timing. |
+| Resume clock | Start timing in the current state if it allows a clock. |
+| Pause clock | Stop timing and keep the current state. |
 | Start without timing | Track the state alone, stopping any running timer. |
 | Not queued | Remove the current work state and stop timing; keep history. |
 

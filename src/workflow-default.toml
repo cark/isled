@@ -1,0 +1,27 @@
+# An issue without a work state is Not queued.
+[states.planning]
+label = "Planning"
+clock = "off"
+
+[states.prepared]
+label = "Prepared"
+clock = "off"
+
+[states.queued]
+label = "Queued"
+clock = "off"
+
+[states.in-progress]
+label = "In progress"
+clock = "auto"
+
+[states.awaiting-owner]
+label = "Awaiting owner"
+clock = "off"
+
+[states.awaiting-owner.reasons.review]
+label = "Review"
+
+[states.awaiting-owner.reasons.clarification]
+label = "Question"
+prompt = "What needs answering?"

@@ -21,38 +21,42 @@ pub(super) fn parse_state(
         .ok()
         .and_then(|text| text.parse::<WorkStateKind>().ok())
         .ok_or(RecordError::InvalidWorkState)?;
-    let state = match kind {
-        WorkStateKind::NotQueued => None,
-        WorkStateKind::Planning => Some(WorkState::Planning { since: None }),
-        WorkStateKind::Prepared => Some(WorkState::Prepared { since: None }),
-        WorkStateKind::Queued => Some(WorkState::Queued { since: None }),
-        WorkStateKind::InProgress => Some(WorkState::InProgress { since: None }),
-        WorkStateKind::AwaitingOwner => {
-            let reason = lines
-                .get(*index)
-                .and_then(|line| line.strip_prefix(b"  - **Reason:** "))
-                .ok_or(RecordError::InvalidWorkState)?;
-            *index += 1;
-            let wait = match reason {
-                b"review" => OwnerWait::Review,
-                b"clarification" => {
-                    let question = lines
-                        .get(*index)
-                        .and_then(|line| line.strip_prefix(b"  - **Question:** "))
-                        .ok_or(RecordError::InvalidWorkState)?;
-                    *index += 1;
-                    OwnerWait::Clarification(
-                        OwnerQuestion::parse(
-                            std::str::from_utf8(question)
-                                .map_err(|_| RecordError::InvalidWorkState)?,
-                        )
-                        .map_err(|_| RecordError::InvalidWorkState)?,
-                    )
-                }
-                _ => return Err(RecordError::InvalidWorkState),
-            };
+    let field = |index: &mut usize, prefix: &[u8]| -> Result<Option<&str>, RecordError> {
+        let Some(value) = lines.get(*index).and_then(|line| line.strip_prefix(prefix)) else {
+            return Ok(None);
+        };
+        *index += 1;
+        Ok(Some(
+            std::str::from_utf8(value).map_err(|_| RecordError::InvalidWorkState)?,
+        ))
+    };
+    let reason = field(index, b"  - **Reason:** ")?;
+    let question = field(index, b"  - **Question:** ")?
+        .map(OwnerQuestion::parse)
+        .transpose()
+        .map_err(|_| RecordError::InvalidWorkState)?;
+    let wait = match (reason, question) {
+        (None, None) => None,
+        (Some("review"), None) => Some(OwnerWait::Review),
+        (Some("clarification"), Some(q)) => Some(OwnerWait::Clarification(q)),
+        (Some(id), q) if crate::workflow::id(id) => Some(OwnerWait::Configured(id.into(), q)),
+        _ => return Err(RecordError::InvalidWorkState),
+    };
+    let state = match (kind, wait) {
+        (WorkStateKind::NotQueued, None) => None,
+        (WorkStateKind::NotQueued, Some(_)) => return Err(RecordError::InvalidWorkState),
+        (WorkStateKind::Planning, None) => Some(WorkState::Planning { since: None }),
+        (WorkStateKind::Prepared, None) => Some(WorkState::Prepared { since: None }),
+        (WorkStateKind::Queued, None) => Some(WorkState::Queued { since: None }),
+        (WorkStateKind::InProgress, None) => Some(WorkState::InProgress { since: None }),
+        (WorkStateKind::AwaitingOwner, Some(wait)) => {
             Some(WorkState::AwaitingOwner { wait, since: None })
         }
+        (kind, wait) => Some(WorkState::Configured {
+            kind,
+            wait,
+            since: None,
+        }),
     };
     let since = lines
         .get(*index)
@@ -129,7 +133,7 @@ pub(super) fn parse_log(
         return Err(RecordError::InvalidWorkLog);
     }
     let log = WorkLog::from_spans(spans).map_err(|_| RecordError::InvalidWorkLog)?;
-    if log.active().is_some() && state.map(WorkState::kind) != Some(WorkStateKind::InProgress) {
+    if log.active().is_some() && state.is_none() {
         return Err(RecordError::InvalidWorkLog);
     }
     Ok(log)

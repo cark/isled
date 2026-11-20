@@ -47,6 +47,9 @@ owns the user-visible rules.
 Schema 8 adds Planning and Prepared to the fixed work-state constraint. Rebuilding
 the projection reads existing Markdown without rewriting it or inventing times.
 
+Schema 9 removes the fixed list of work states and reasons. The cache stores
+stable IDs. The frontend resolves labels from the current workflow on each request.
+
 ## Prepared-statement execution boundary
 
 All runtime data queries and writes use rusqlite's cached prepared statements

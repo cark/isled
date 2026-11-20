@@ -11,7 +11,7 @@ pub(crate) fn run(
     let cache = Cache::open_for_refresh(&lock, None)?;
     cache.report_warnings();
     drop(cache);
-    let view = {
+    let mut view = {
         let records = lock.read_snapshot_records()?;
         let paths = records
             .iter()
@@ -27,6 +27,11 @@ pub(crate) fn run(
             .collect::<Vec<_>>();
         Snapshot::build(project.path_bytes_lossless()?, &sources)?
     };
+    view.use_workflow(
+        &isled::workflow::Workflow::read(&project)
+            .map_err(AppError::Io)?
+            .0,
+    );
     lock.finish()?;
     Ok(snapshot::json::render(&view)?)
 }

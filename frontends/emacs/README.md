@@ -149,14 +149,15 @@ open its Markdown source instead. See [file links and source access](user-guide.
 ## Work state and time
 
 Press **`w`** on an issue to plan it, queue it, start or pause work, ask a
-question, or request review.
+question, or request review. For a customized workflow, `w w` lets you choose
+a project state and reason. `w t` starts its clock when you pick up the work.
 
 **Plan** marks an approach being discussed. **Mark prepared** means it is settled
 enough to implement. Both are untimed. Find them with `w:planning` or `w:prepared`;
 queueing replaces the preparation stage.
 
-**Start / resume** starts a timer. **Pause clock** ends that session; resuming
-starts another. **Work history** shows every span and their total. Use
+**Start in progress** moves the issue to In progress and starts a timer.
+**Pause clock** ends the session. **Resume clock** starts another in the same state. **Work history** shows every span and their total. Use
 **Start without timing** when the state is all you need.
 
 Headings keep it brief: **Planning**, **Prepared**, **Queued**, **In progress**,

@@ -89,6 +89,24 @@ fn run(cli: Cli) -> Result<Vec<u8>, AppError> {
         Command::Snapshot => commands::snapshot::run(root),
         Command::Editor { .. } => commands::editor::run(root),
         Command::Frontend { .. } => commands::frontend::run(root),
+        Command::Workflow(command) => {
+            use isled::{cli::WorkflowCommand, workflow::Workflow};
+            let project = root()?;
+            match command {
+                WorkflowCommand::Init => {
+                    Workflow::init(&project).map_err(AppError::Io)?;
+                    Ok(b"created .issues/workflow.toml\n".to_vec())
+                }
+                WorkflowCommand::Show { json } => {
+                    let (workflow, source) = Workflow::read(&project).map_err(AppError::Io)?;
+                    if json {
+                        Ok(serde_json::to_vec(&workflow)?)
+                    } else {
+                        Ok(source.into_bytes())
+                    }
+                }
+            }
+        }
         Command::Work(arguments) => commands::work::run(arguments, root),
         Command::Wait(arguments) => commands::wait::run(arguments, root),
         Command::Tag(arguments) => commands::tag::run(arguments.command, root),

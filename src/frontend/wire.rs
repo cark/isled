@@ -28,9 +28,12 @@ impl SummaryData {
     pub fn new(
         root: &ProjectRoot,
         row: &Summary,
+        workflow: &crate::workflow::Workflow,
     ) -> Result<Self, crate::filesystem::FilesystemError> {
+        let mut work = row.work().clone();
+        work.use_workflow(workflow);
         Ok(Self {
-            work: row.work().clone(),
+            work,
             id: row.id().to_string(),
             status: row.status().as_str(),
             ready: row.ready(),

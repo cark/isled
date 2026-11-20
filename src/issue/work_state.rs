@@ -2,7 +2,7 @@
 use crate::work_log::WorkTime;
 use std::{fmt, str::FromStr};
 
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub enum WorkStateKind {
     #[default]
     NotQueued,
@@ -11,10 +11,12 @@ pub enum WorkStateKind {
     Queued,
     InProgress,
     AwaitingOwner,
+    Custom(String),
 }
 impl WorkStateKind {
-    pub fn as_str(self) -> &'static str {
+    pub fn as_str(&self) -> &str {
         match self {
+            Self::Custom(id) => id,
             Self::NotQueued => "not-queued",
             Self::Planning => "planning",
             Self::Prepared => "prepared",
@@ -34,6 +36,7 @@ impl FromStr for WorkStateKind {
             "queued" => Ok(Self::Queued),
             "in-progress" => Ok(Self::InProgress),
             "awaiting-owner" => Ok(Self::AwaitingOwner),
+            id if crate::workflow::id(id) => Ok(Self::Custom(id.into())),
             _ => Err(WorkStateError),
         }
     }
@@ -57,16 +60,19 @@ impl OwnerQuestion {
 pub enum OwnerWait {
     Review,
     Clarification(OwnerQuestion),
+    Configured(String, Option<OwnerQuestion>),
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum OwnerWaitReason {
     Review,
     Clarification,
+    Custom(String),
 }
 impl OwnerWaitReason {
-    pub fn as_str(self) -> &'static str {
+    pub fn as_str(&self) -> &str {
         match self {
+            Self::Custom(id) => id,
             Self::Review => "review",
             Self::Clarification => "clarification",
         }
@@ -78,20 +84,23 @@ impl FromStr for OwnerWaitReason {
         match value {
             "review" => Ok(Self::Review),
             "clarification" => Ok(Self::Clarification),
+            id if crate::workflow::id(id) => Ok(Self::Custom(id.into())),
             _ => Err(WorkStateError),
         }
     }
 }
 impl OwnerWait {
-    pub fn reason(&self) -> &'static str {
+    pub fn reason(&self) -> &str {
         match self {
             Self::Review => "review",
             Self::Clarification(_) => "clarification",
+            Self::Configured(id, _) => id,
         }
     }
     pub fn question(&self) -> Option<&str> {
         match self {
             Self::Review => None,
+            Self::Configured(_, q) => q.as_ref().map(OwnerQuestion::as_str),
             Self::Clarification(question) => Some(question.as_str()),
         }
     }
@@ -99,6 +108,11 @@ impl OwnerWait {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum WorkState {
+    Configured {
+        kind: WorkStateKind,
+        wait: Option<OwnerWait>,
+        since: Option<WorkTime>,
+    },
     Planning {
         since: Option<WorkTime>,
     },
@@ -119,6 +133,7 @@ pub enum WorkState {
 impl WorkState {
     pub fn kind(&self) -> WorkStateKind {
         match self {
+            Self::Configured { kind, .. } => kind.clone(),
             Self::Planning { .. } => WorkStateKind::Planning,
             Self::Prepared { .. } => WorkStateKind::Prepared,
             Self::Queued { .. } => WorkStateKind::Queued,
@@ -129,12 +144,14 @@ impl WorkState {
     pub fn owner_wait(&self) -> Option<&OwnerWait> {
         match self {
             Self::AwaitingOwner { wait, .. } => Some(wait),
+            Self::Configured { wait, .. } => wait.as_ref(),
             _ => None,
         }
     }
     pub fn since(&self) -> Option<WorkTime> {
         match self {
-            Self::Planning { since }
+            Self::Configured { since, .. }
+            | Self::Planning { since }
             | Self::Prepared { since }
             | Self::Queued { since }
             | Self::InProgress { since }
@@ -143,7 +160,8 @@ impl WorkState {
     }
     pub(crate) fn with_since(mut self, value: Option<WorkTime>) -> Self {
         match &mut self {
-            Self::Planning { since }
+            Self::Configured { since, .. }
+            | Self::Planning { since }
             | Self::Prepared { since }
             | Self::Queued { since }
             | Self::InProgress { since }

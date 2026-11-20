@@ -13,6 +13,64 @@ cannot read records using the new states. Before downgrading, use the new CLI to
 select an older supported state, such as Queued or Not queued. No conversion is
 needed on upgrade.
 
+## Inspect the ledger workflow
+
+Custom states require the 0.39.0 CLI and matching frontend. Upgrade the tools
+that share the ledger before entering a custom state.
+
+Run `isled workflow show` to see the ledger’s workflow in TOML. Add `--json`
+for structured output. An ordinary ledger uses the built-in definitions.
+
+To create an editable copy, run `isled workflow init`. It writes
+`.issues/workflow.toml` once and preserves existing edits. When present, the
+file supplies the complete set of definitions reported by `workflow show`.
+Keep the existing definitions you want and add your own. For example, a team
+that integrates reviewed changes can give integration its own timer:
+
+```toml
+[states.integration]
+label = "Integration"
+clock = "manual"
+```
+
+```console
+isled work set 42 integration
+isled work resume 42
+isled work pause 42
+isled list --work-state integration --oldest-first
+```
+
+Entering a manual state leaves the clock stopped until someone starts work.
+Use `auto` to start a span on entry or `off` for an untimed state.
+Changing state or reason ends the previous span. Pause and resume keep the
+issue’s place in its queue.
+
+A state can also offer reasons. If you define reasons, select one on entry:
+
+```toml
+[states.integration.reasons.check]
+label = "Final check"
+
+[states.integration.reasons.decision]
+label = "Decision needed"
+prompt = "What needs deciding?"
+```
+
+Use `isled work set 42 integration --reason check`. For `decision`, also pass
+`--question 'Which release should receive this fix?'`. Emacs asks for the text
+using your prompt. Review and Question in the default workflow use this same
+mechanism. A reason inherits its state's clock policy.
+
+Start each ID with a lowercase letter. Use lowercase letters, digits and single
+hyphens between words. Isled reserves `not-queued` for issues without a state.
+Keep labels and prompts on one line, without pipes or surrounding spaces.
+
+Use the same IDs in records, commands and filters. You can rename a
+label without editing issues. Before retiring an ID, move issues out of its
+queue. Existing records and time history remain readable after removal.
+
+The following examples use the default workflow.
+
 ## Prepare an issue
 
 ```console
@@ -49,7 +107,8 @@ adds their time. Waiting and breaks stay out of the total.
 | Plan | Planning | Stopped. |
 | Mark prepared | Prepared | Stopped. |
 | Queue | Queued | Stopped. |
-| Start / resume | In progress | Starts a new span, or keeps the current running span. |
+| Start | In progress | Starts a span or keeps the current one running. |
+| Resume | Unchanged | Starts timing if the state allows it. |
 | Start with `--no-clock` | In progress | Stopped; records no new span. |
 | Pause | Unchanged | Stops the current span. |
 | Await review or clarification | Awaiting owner | Stopped. |
@@ -105,13 +164,15 @@ keeps the wait. Since measures the stay in a state; the work log measures time
 spent working.
 
 Ordinary listing keeps ID order. Omit `--limit` for all matches; zero returns
-none. The limit applies after every filter and text match. State filters use
+none. The limit applies after every filter and text match. Default state filters use
 `not-queued`, `planning`, `prepared`, `queued`, `in-progress` and `awaiting-owner`.
 They combine with readiness, status, kind and tags.
 
 ## In Emacs
 
 Press **`w`** on the issue for preparation, queueing, timers, owner waits and history.
+Choose **Set work state** (`w w`) to see this ledger’s states and reasons.
+Use **Resume clock** (`w t`) to start timing in the current state.
 **Start without timing** records only the state. Use `C-u` with Start to name
 an activity.
 
@@ -168,7 +229,7 @@ otherwise they use one line without pipes or surrounding whitespace.
 | Field | Meaning |
 | --- | --- |
 | `id`, `state` | Issue identity and current work state. |
-| `reason`, `question`, `since` | Owner-wait details and UTC state-entry time; absent values are null. |
+| `reason`, `question`, `since` | Selected reason, its prompt response, and the UTC entry time. Missing values are null. |
 | `recorded_seconds` | Completed work time. |
 | `running_since` | Running span's UTC start, or null. |
 | `total_seconds` | Completed time plus the running span at report time. |

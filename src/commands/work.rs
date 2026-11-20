@@ -1,7 +1,7 @@
 //! Validate and execute one work action under the existing ledger lock.
 use super::{error::AppError, issue_id::parse_issue_id};
 use isled::{
-    cli::{OwnerReason, WorkArgs, WorkCommand},
+    cli::{WorkArgs, WorkCommand},
     filesystem::{FilesystemError, ProjectRoot},
     issue::{OwnerQuestion, OwnerWait},
     mutation::{self, WorkAction},
@@ -20,12 +20,64 @@ pub(crate) fn run(
     arguments: WorkArgs,
     project: impl FnOnce() -> Result<ProjectRoot, FilesystemError>,
 ) -> Result<Vec<u8>, AppError> {
+    let project = project()?;
+    let lock = project.acquire_lock()?;
+    let workflow = isled::workflow::Workflow::read(&project)
+        .map_err(AppError::Io)?
+        .0;
+    let set = |state: &str,
+               reason: Option<&str>,
+               question: Option<&str>,
+               timed: Option<bool>,
+               activity: Option<&str>| {
+        use isled::{issue::WorkState, workflow::Clock};
+        let definition = workflow.state(state).map_err(AppError::Invocation)?;
+        let wait = if let Some(reason) = reason {
+            let r = definition
+                .reasons
+                .get(reason)
+                .ok_or_else(|| AppError::Invocation(format!("unknown work reason: {reason}")))?;
+            if r.prompt.is_some() != question.is_some() {
+                return Err(AppError::Invocation(format!(
+                    "{reason}: {}",
+                    r.prompt.as_deref().unwrap_or("does not accept a question")
+                )));
+            }
+            let q = question
+                .map(OwnerQuestion::parse)
+                .transpose()
+                .map_err(|e| AppError::Invocation(e.to_string()))?;
+            Some(OwnerWait::Configured(reason.into(), q))
+        } else {
+            if !definition.reasons.is_empty() || question.is_some() {
+                return Err(AppError::Invocation(format!("{state} requires --reason")));
+            }
+            None
+        };
+        let active = timed.unwrap_or(matches!(definition.clock, Clock::Auto));
+        if active && matches!(definition.clock, Clock::Off) {
+            return Err(AppError::Invocation(format!("clock is off for {state}")));
+        }
+        let activity = WorkActivity::parse(activity.unwrap_or(&definition.label))
+            .map_err(|e| AppError::Invocation(e.to_string()))?;
+        Ok(WorkAction::Set {
+            state: WorkState::Configured {
+                kind: state
+                    .parse()
+                    .map_err(|_| AppError::Invocation("invalid state".into()))?,
+                wait,
+                since: None,
+            },
+            timed: active,
+            activity,
+            explicit_clock: timed.is_some(),
+        })
+    };
     let (target, action) = match arguments.command {
         WorkCommand::Show(args) => {
             let id = parse_issue_id(&args.target.id)?;
             let at = time(args.target.at.as_deref())?;
-            let project = project()?;
-            let lock = project.acquire_lock()?;
+
             let records = lock.read_issue_records(id)?;
             let report = isled::query::work_report(&records, id, at)?;
             lock.finish()?;
@@ -37,36 +89,60 @@ pub(crate) fn run(
                 Ok(report.render())
             };
         }
-        WorkCommand::Plan(args) => (args, WorkAction::Plan),
-        WorkCommand::Prepare(args) => (args, WorkAction::Prepare),
-        WorkCommand::Queue(args) => (args, WorkAction::Queue),
+        WorkCommand::Plan(args) => (args, set("planning", None, None, None, None)?),
+        WorkCommand::Prepare(args) => (args, set("prepared", None, None, None, None)?),
+        WorkCommand::Queue(args) => (args, set("queued", None, None, None, None)?),
         WorkCommand::Unqueue(args) => (args, WorkAction::Unqueue),
         WorkCommand::Pause(args) => (args, WorkAction::Pause),
-        WorkCommand::Start(args) => {
-            let activity = WorkActivity::parse(args.activity.as_deref().unwrap_or(""))
-                .map_err(|error| AppError::Invocation(error.to_string()))?;
+        WorkCommand::Start(args) => (
+            args.target,
+            set(
+                "in-progress",
+                None,
+                None,
+                Some(!args.no_clock),
+                Some(args.activity.as_deref().unwrap_or("")),
+            )?,
+        ),
+        WorkCommand::Await(args) => (
+            args.target,
+            set(
+                "awaiting-owner",
+                Some(&args.reason),
+                args.question.as_deref(),
+                None,
+                None,
+            )?,
+        ),
+        WorkCommand::Set {
+            target,
+            state,
+            reason,
+            question,
+        } => (
+            target,
+            set(&state, reason.as_deref(), question.as_deref(), None, None)?,
+        ),
+        WorkCommand::Resume(target) => {
+            let id = parse_issue_id(&target.id)?;
+            let records = lock.read_issue_records(id)?;
+            let report = isled::query::work_report(&records, id, time(target.at.as_deref())?)?;
+            let state = workflow
+                .state(&report.work.summary.state)
+                .map_err(AppError::Invocation)?;
+            if matches!(state.clock, isled::workflow::Clock::Off) {
+                return Err(AppError::Invocation(format!(
+                    "clock is off for {}",
+                    report.work.summary.state
+                )));
+            }
             (
-                args.target,
-                WorkAction::Start {
-                    timed: !args.no_clock,
-                    activity,
-                },
-            )
-        }
-        WorkCommand::Await(args) => {
-            let wait = match (args.reason, args.question) {
-                (OwnerReason::Review, None) => OwnerWait::Review,
-                (OwnerReason::Clarification, Some(question)) => OwnerWait::Clarification(
-                    OwnerQuestion::parse(&question)
-                        .map_err(|error| AppError::Invocation(error.to_string()))?,
+                target,
+                WorkAction::Resume(
+                    WorkActivity::parse(&state.label)
+                        .map_err(|e| AppError::Invocation(e.to_string()))?,
                 ),
-                _ => {
-                    return Err(AppError::Invocation(
-                        "clarification requires --question TEXT; review has no question".into(),
-                    ));
-                }
-            };
-            (args.target, WorkAction::AwaitOwner(wait))
+            )
         }
         WorkCommand::Correct(args) => {
             let stopped = time(Some(&args.stop))?;
@@ -88,8 +164,6 @@ pub(crate) fn run(
         .as_deref()
         .map(|text| time(Some(text)))
         .transpose()?;
-    let project = project()?;
-    let lock = project.acquire_lock()?;
     let records = lock.read_issue_records(id)?;
     // Read the default time after acquisition so contention cannot backdate a new span.
     let at = explicit_at.unwrap_or_else(WorkTime::now);

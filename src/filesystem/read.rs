@@ -76,6 +76,10 @@ impl ProjectRoot {
         for entry in directory_entries {
             let name = entry.file_name();
             let (name_bytes, filename_is_utf8) = audit_name(&name);
+            if name_bytes == b"workflow.toml" {
+                require_regular_file(&entry.path(), false)?;
+                continue;
+            }
             if matches!(
                 name_bytes.as_slice(),
                 b".next-id" | b".pre-structured-markdown" | b".cache"

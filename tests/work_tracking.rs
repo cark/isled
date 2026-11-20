@@ -775,7 +775,7 @@ fn preparation_filters_completion_and_fifo_survive_cache_rebuild() {
         let version: i64 = db
             .pragma_query_value(None, "user_version", |row| row.get(0))
             .unwrap();
-        assert_eq!(version, 8);
+        assert_eq!(version, 9);
     }
 }
 

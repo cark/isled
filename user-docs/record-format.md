@@ -105,6 +105,9 @@ for transitions, timers and corrections.
   - **Since:** 2026-10-06 10:30:00
 ```
 
+The default workflow uses these fields. A custom state stores its ID in the
+same field. Its reason and required text, when configured, use Reason and Question.
+
 | State | Children |
 | --- | --- |
 | `not-queued` | None; generated records omit the Work state entry. |
@@ -114,8 +117,8 @@ for transitions, timers and corrections.
 
 Since follows Reason and Question when present. It uses UTC
 `YYYY-MM-DD HH:MM:SS`; missing Since means unknown age. Closed issues have no
-current Work state. Not queued cannot have Since. Planning and Prepared never
-have a running span; completed history remains valid.
+current Work state. Not queued cannot have Since. The state’s clock policy controls whether a span can run. Completed spans
+remain valid when the workflow changes.
 
 Since changes on a real state or owner-wait-reason transition. Repeating an
 action or editing the question keeps it, including an unknown value. Leaving
@@ -143,8 +146,9 @@ Activity can be empty; otherwise it cannot contain a pipe, newline, NUL or
 surrounding whitespace. Cell padding is ignored when reading.
 
 Spans are chronological and cannot overlap. A stop may equal its start or the
-next span's start. Only the last span can have an empty stop, and that running
-span requires In progress. Totals are calculated, not stored.
+next span's start. An empty stop marks a running timer. Only the last span
+can be running. The current state must allow timing (`manual` or `auto`).
+Isled calculates the total from the spans.
 
 Work metadata and activities are structural data, not prose references.
 Older tools cannot read records with these fields; update the CLI and frontend

@@ -19,6 +19,13 @@ pub enum WorkAction {
         activity: WorkActivity,
     },
     Pause,
+    Resume(WorkActivity),
+    Set {
+        state: WorkState,
+        timed: bool,
+        activity: WorkActivity,
+        explicit_clock: bool,
+    },
     AwaitOwner(OwnerWait),
     CorrectStop {
         span: std::num::NonZeroUsize,
@@ -65,6 +72,34 @@ pub fn work_update(
                 at,
             );
         }
+        WorkAction::Resume(activity) => {
+            if document.work_log.active().is_none() {
+                document.work_log.start(at, activity)?;
+            }
+        }
+        WorkAction::Set {
+            state,
+            timed,
+            activity,
+            explicit_clock,
+        } => {
+            let changed = document
+                .issue
+                .work_state
+                .as_ref()
+                .is_none_or(|old| !old.same_phase(state));
+            if changed {
+                document.work_log.stop(at)?;
+            }
+            if changed || *explicit_clock {
+                if *timed {
+                    document.work_log.start(at, activity)?;
+                } else {
+                    document.work_log.stop(at)?;
+                }
+            }
+            transition(&mut document.issue.work_state, state.clone(), at);
+        }
         WorkAction::Pause => {
             document.work_log.stop(at)?;
         }
@@ -94,7 +129,14 @@ pub fn work_update(
 
 fn transition(current: &mut Option<WorkState>, next: WorkState, at: WorkTime) {
     let since = match current.as_ref() {
-        Some(previous) if previous.same_phase(&next) => previous.since(),
+        Some(previous) if previous.same_phase(&next) => {
+            if previous.owner_wait().and_then(OwnerWait::question)
+                == next.owner_wait().and_then(OwnerWait::question)
+            {
+                return;
+            }
+            previous.since()
+        }
         _ => Some(at),
     };
     *current = Some(next.with_since(since));

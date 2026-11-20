@@ -7,19 +7,25 @@ use serde::Serialize;
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize)]
 pub struct WorkSummary {
-    pub state: &'static str,
-    pub reason: Option<&'static str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+    pub state: String,
+    pub reason: Option<String>,
     pub question: Option<String>,
     pub since: Option<String>,
     pub recorded_seconds: u64,
     pub running_since: Option<String>,
 }
 impl WorkSummary {
+    pub(crate) fn use_workflow(&mut self, workflow: &crate::workflow::Workflow) {
+        self.label = Some(workflow.label(&self.state, self.reason.as_deref()).into());
+    }
     pub(crate) fn new(issue: &Issue, log: &WorkLog) -> Self {
         let wait = issue.work_state().and_then(|state| state.owner_wait());
         Self {
-            state: issue.work_state_kind().as_str(),
-            reason: wait.map(|wait| wait.reason()),
+            label: None,
+            state: issue.work_state_kind().as_str().into(),
+            reason: wait.map(|wait| wait.reason().to_owned()),
             question: wait.and_then(|wait| wait.question()).map(str::to_owned),
             since: issue
                 .work_state()
@@ -35,14 +41,15 @@ impl WorkSummary {
     }
     pub(crate) fn from_cached(
         state: WorkStateKind,
-        reason: Option<&'static str>,
+        reason: Option<String>,
         question: Option<String>,
         recorded_seconds: u64,
         running_since: Option<WorkTime>,
         since: Option<WorkTime>,
     ) -> Self {
         Self {
-            state: state.as_str(),
+            label: None,
+            state: state.as_str().into(),
             reason,
             question,
             recorded_seconds,
