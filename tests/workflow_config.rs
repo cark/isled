@@ -19,7 +19,7 @@ fn explicit_workflow_is_complete_and_initialization_preserves_edits() {
     assert!(!file.exists());
     run(&["workflow", "init"], true);
     assert_eq!(fs::read_to_string(&file).unwrap(), defaults);
-    let custom = "[states.dance]\nlabel='The dance'\nclock='manual'\n";
+    let custom = "[states.proofreading]\nlabel='Proofreading'\nclock='manual'\n";
     fs::write(&file, custom).unwrap();
     run(&["workflow", "init"], false);
     assert_eq!(run(&["workflow", "show"], true), custom);
@@ -29,7 +29,7 @@ fn explicit_workflow_is_complete_and_initialization_preserves_edits() {
     run(&["check"], true);
     fs::write(
         file,
-        "[states.dance]\nlabel='The dance'\nclock='occasionally'",
+        "[states.proofreading]\nlabel='Proofreading'\nclock='occasionally'",
     )
     .unwrap();
     run(&["workflow", "show"], false);

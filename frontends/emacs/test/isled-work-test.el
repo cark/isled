@@ -41,7 +41,7 @@
   (let ((criteria (isled-filter-query-criteria "s:open w:awaiting-owner k:feature")))
     (should (equal (alist-get 'status criteria) "open"))
     (should (equal (alist-get 'work_state criteria) "awaiting-owner")))
-  (should (equal (alist-get 'work_state (isled-filter-query-criteria "w:dance")) "dance")))
+  (should (equal (alist-get 'work_state (isled-filter-query-criteria "w:proofreading")) "proofreading")))
 
 (ert-deftest isled-work-actions-use-the-selected-issue-and-refresh-on-success ()
   (with-temp-buffer
