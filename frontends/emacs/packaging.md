@@ -85,8 +85,11 @@ use `:branch "main" :rev :newest`.
 
 For `package-vc-install`, pass the [plain recipe](recipes/package-vc.el) as its
 first argument and an optional tag or commit as its second argument. Omitting
-that second argument follows the branch tip. `.elpaignore` excludes contributor
-scripts, recipes, tests and demos from byte compilation of the cloned repository.
+that second argument follows the branch tip.
+
+Emacs 30 reads `.elpaignore` at the repository root. Emacs 31 reads it in
+`frontends/emacs`, the recipe’s Lisp directory. Both files keep contributor
+code out of byte compilation.
 See the Emacs Info node `(emacs) Fetching Package Sources` and
 `(use-package) Install package from VC`.
 

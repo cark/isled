@@ -62,6 +62,12 @@
       (unless (and (file-exists-p (expand-file-name name directory))
                    (file-exists-p (expand-file-name (concat name "c") directory)))
         (error "Recipe omitted library or bytecode for %s" name)))
+    (when (equal manager "package-vc")
+      (dolist (relative '("scripts" "frontends/emacs/test" "frontends/emacs/demo"
+                          "frontends/emacs/recipes"))
+        (when-let* ((compiled (car (directory-files-recursively
+                                    (expand-file-name relative source) "\\.elc\\'"))))
+          (error "package-vc compiled contributor code: %s" compiled))))
     (dolist (dependency '((markdown-mode . "2.6") (transient . "0.8.0")))
       (let ((file (locate-library (symbol-name (car dependency)))))
         (unless file (error "Missing dependency %s" (car dependency)))
